@@ -1,16 +1,58 @@
-# React + Vite
+# ComicPath
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+An AI-native comic book reading guide. Search any character, team, or series and get a ranked, categorized reading guide built by Claude.
 
-Currently, two official plugins are available:
+## Getting started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## API key setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The app calls the Anthropic API from the browser. For local development, add your key to `.env.local` (git-ignored):
 
-## Expanding the Oxlint configuration
+```
+VITE_ANTHROPIC_API_KEY=sk-ant-...
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Then pass it as `x-api-key` in `src/lib/api.js`. In production, route requests through a backend proxy so the key is never exposed client-side.
+
+## Project structure
+
+```
+src/
+  App.jsx                    Top-level state & view routing
+  components/
+    SearchBar.jsx            Search input + quick picks
+    ResultsView.jsx          Character header + story sections
+    StorySection.jsx         Grouped story category with label
+    StoryCard.jsx            Individual story — expandable, saveable
+    ReadingListPanel.jsx     Slide-in saved-items sidebar
+  hooks/
+    useReadingList.js        Persisted reading list (localStorage)
+  lib/
+    api.js                   Anthropic API client + prompt builder
+  styles/
+    global.css               CSS custom properties + reset
+```
+
+## Story categories
+
+| Color  | Category               | Meaning                                      |
+|--------|------------------------|----------------------------------------------|
+| Purple | Canon & Essential      | Must-read; core to understanding the character |
+| Amber  | Worth Reading          | Good stories for fans who want more          |
+| Coral  | Elseworlds & Alternates | Fun what-ifs; not required                  |
+| Gray   | You Can Skip           | Low value; completionist fodder              |
+
+## Roadmap
+
+- [ ] Comics API integration (Marvel API, Comic Vine) with AI cross-checking
+- [ ] Timeline visualization
+- [ ] Reading order / sequenced view
+- [ ] Cover image thumbnails
+- [ ] Reading progress tracker
+- [ ] Backend proxy for API key security
+- [ ] Design system pass
