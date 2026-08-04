@@ -1,5 +1,9 @@
 {
   "buildCommand": "vite build",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/groq/:path*", "destination": "/api/groq/:path*" },
+    { "source": "/api/comicvine/:path*", "destination": "/api/comicvine/:path*" }
+  ]
 }

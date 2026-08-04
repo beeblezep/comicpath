@@ -1,24 +1,20 @@
-export const config = { runtime: 'edge' };
+export default async function handler(req, res) {
+  const path = req.url.replace(/^\/api\/groq/, '');
+  const target = `https://api.groq.com${path}`;
 
-export default async function handler(request) {
-  const url = new URL(request.url);
-  const path = url.pathname.replace(/^\/api\/groq/, '');
-  const target = `https://api.groq.com${path}${url.search}`;
+  try {
+    const response = await fetch(target, {
+      method: req.method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
+    });
 
-  const headers = new Headers(request.headers);
-  headers.set('Authorization', `Bearer ${process.env.GROQ_API_KEY}`);
-  headers.delete('host');
-
-  const res = await fetch(target, {
-    method: request.method,
-    headers,
-    body: request.method !== 'GET' ? request.body : undefined,
-  });
-
-  return new Response(res.body, {
-    status: res.status,
-    headers: {
-      'Content-Type': res.headers.get('Content-Type') || 'application/json',
-    },
-  });
+    const data = await response.text();
+    res.status(response.status).setHeader('Content-Type', 'application/json').send(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
