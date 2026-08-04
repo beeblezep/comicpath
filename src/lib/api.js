@@ -2,7 +2,7 @@
    ComicPath — Anthropic API client
    ============================================================ */
 
-const API_URL = 'https://api.anthropic.com/v1/messages';
+const API_URL = '/api/groq/openai/v1/chat/completions';
 
 /**
  * Build the structured prompt for a character/team/theme search.
@@ -102,17 +102,19 @@ export async function fetchComicGuide(query) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
+      model: 'llama-3.3-70b-versatile',
+      max_tokens: 4000,
       messages: [{ role: 'user', content: buildPrompt(query) }],
     }),
   });
 
   if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${response.statusText}`);
+    const body = await response.json().catch(() => ({}));
+    const msg = body.error?.message || response.statusText;
+    throw new Error(`API error ${response.status}: ${msg}`);
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.text ?? '';
+  const text = data.choices?.[0]?.message?.content ?? '';
   return parseResponse(text);
 }
