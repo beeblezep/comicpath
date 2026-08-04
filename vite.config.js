@@ -15,6 +15,15 @@ export default defineConfig(({ mode }) => {
             'Authorization': `Bearer ${env.GROQ_API_KEY}`,
           },
         },
+        '/api/comicvine': {
+          target: 'https://comicvine.gamespot.com/api',
+          changeOrigin: true,
+          rewrite: (path) => {
+            const rewritten = path.replace(/^\/api\/comicvine/, '');
+            const sep = rewritten.includes('?') ? '&' : '?';
+            return `${rewritten}${sep}api_key=${env.COMICVINE_API_KEY}&format=json`;
+          },
+        },
       },
     },
   }

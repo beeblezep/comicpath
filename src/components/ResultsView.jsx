@@ -51,7 +51,7 @@ export function ResultsView({ data, readingList, onReset }) {
             {character.name}
           </h2>
           <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-muted)', marginBottom: 8 }}>
-            {character.publisher} · First appeared {character.firstAppearance}
+            {[character.publisher, character.firstAppearance && `First appeared ${character.firstAppearance}`].filter(Boolean).join(' · ')}
           </p>
           <p style={{ fontSize: 'var(--font-size-sm)', lineHeight: 1.6 }}>
             {character.description}
