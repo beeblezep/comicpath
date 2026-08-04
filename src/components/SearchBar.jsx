@@ -9,12 +9,19 @@ const QUICK_PICKS = [
   'Saga',
 ];
 
+const MODES = [
+  { key: 'full', label: 'Full Guide', desc: 'Complete reading path from origin to present' },
+  { key: 'catch-up', label: 'Catch Up', desc: 'Jump back in from a recent starting point' },
+  { key: 'deep-dive', label: 'Deep Dive', desc: 'Prerequisites for the latest major arc' },
+];
+
 export function SearchBar({ onSearch, loading }) {
   const [value, setValue] = useState('');
+  const [mode, setMode] = useState('full');
 
   function submit() {
     const q = value.trim();
-    if (q) onSearch(q);
+    if (q) onSearch(q, mode);
   }
 
   return (
@@ -63,11 +70,35 @@ export function SearchBar({ onSearch, loading }) {
         </button>
       </div>
 
+      <div style={{ display: 'flex', gap: 0, marginBottom: 14, borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+        {MODES.map(m => (
+          <button
+            key={m.key}
+            onClick={() => setMode(m.key)}
+            disabled={loading}
+            title={m.desc}
+            style={{
+              flex: 1,
+              padding: '8px 4px',
+              background: mode === m.key ? 'var(--color-canon)' : 'var(--color-surface)',
+              color: mode === m.key ? '#fff' : 'var(--color-muted)',
+              border: 'none',
+              fontSize: 12,
+              fontWeight: mode === m.key ? 600 : 400,
+              cursor: 'pointer',
+              borderRight: m.key !== 'deep-dive' ? '1px solid var(--color-border)' : 'none',
+            }}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {QUICK_PICKS.map(label => (
           <button
             key={label}
-            onClick={() => { setValue(label); onSearch(label); }}
+            onClick={() => { setValue(label); onSearch(label, mode); }}
             disabled={loading}
             style={{
               padding: '5px 12px',
