@@ -18,6 +18,11 @@
   --color-elseworld: #e8594a;
   --color-skip:      #4a4a5c;
 
+  /* Reading-path tier colors */
+  --color-tier-essential:   var(--color-canon);
+  --color-tier-recommended: var(--color-secondary);
+  --color-tier-optional:    var(--color-muted);
+
   /* Spacing scale */
   --space-xs: 4px;
   --space-sm: 8px;

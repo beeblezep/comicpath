@@ -18,7 +18,34 @@ DISAMBIGUATION & CONTINUITY RULES (follow strictly):
 5. NEVER MIX CONTINUITIES: Do not recommend stories from one continuity as essential reading for a different continuity's version of the character.
 `;
 
-function buildPrompt(query, cvData) {
+const READING_PATH_SCHEMA = `
+"readingPath": {
+  "mode": "full | catch-up | deep-dive",
+  "mainLine": [
+    {
+      "id": "rp1",
+      "title": "Story or arc title",
+      "year": "YYYY or YYYY–YYYY",
+      "issues": "e.g. Batman #404–407",
+      "why": "One sentence on why this belongs on the path.",
+      "tier": "essential | recommended | optional",
+      "branches": [
+        [
+          { "id": "rp1b1", "title": "Tie-in title", "year": "YYYY", "issues": "issue ref", "why": "One sentence.", "tier": "recommended" }
+        ]
+      ]
+    }
+  ],
+  "pathNote": "One sentence tip about this reading path."
+}`;
+
+const MODE_INSTRUCTIONS = {
+  full: '6-10 mainLine nodes spanning the character\'s publication history from origin to present. Include branches for important tie-ins and crossovers.',
+  'catch-up': '3-5 mainLine nodes starting from a recent good entry point (e.g. a relaunch or new creative team) to get the reader current. Minimal branches — only truly essential tie-ins.',
+  'deep-dive': '4-8 mainLine nodes showing the prerequisites and lead-up to the character\'s most relevant current or recent arc. Branches for stories that add depth to the main arc.',
+};
+
+function buildPrompt(query, cvData, mode = 'full') {
   let contextBlock = '';
   if (cvData) {
     const c = cvData.character;
@@ -106,7 +133,8 @@ Return ONLY a JSON object with this exact structure — no markdown, no preamble
   "aiNote": "1–2 sentence personalized tip: a good entry point, a current renaissance, or reading-order advice.",
   "timeline": [
     { "title": "Short label", "year": 1987, "type": "canon" }
-  ]
+  ],
+  ${READING_PATH_SCHEMA}
 }
 
 Rules:
@@ -115,6 +143,7 @@ Rules:
 - elseworldsStories: 2–3 entries.
 - skipStories: 2–3 entries.
 - timeline: 6–10 items spanning the character's publication history.
+- readingPath: ${MODE_INSTRUCTIONS[mode] || MODE_INSTRUCTIONS.full} Each mainLine node may have 0–3 branches, each branch is an array of 1–3 tie-in nodes. Use unique IDs like "rp1", "rp2", "rp1b1", etc. The "tier" field must be one of: "essential", "recommended", "optional".
 - All text written for adults new to or returning to comics.
 - NEVER use "Unknown" as any field value. If you don't know a specific detail, use your best knowledge to provide a real answer. Every title, publisher, year, and description must be a real, specific value.`;
 }
@@ -155,10 +184,52 @@ function validateResponse(data) {
     throw new Error('Invalid response: no canon stories returned');
   }
 
+  data.readingPath = validateReadingPath(data.readingPath);
+
   return data;
 }
 
-export async function fetchComicGuide(query) {
+const VALID_TIERS = new Set(['essential', 'recommended', 'optional']);
+
+function validateReadingPath(rp) {
+  if (!rp || !Array.isArray(rp.mainLine) || rp.mainLine.length === 0) return null;
+
+  let idCounter = 1;
+  const mainLine = rp.mainLine.slice(0, 10).map((node) => {
+    const id = node.id || `rp${idCounter}`;
+    idCounter++;
+    const tier = VALID_TIERS.has(node.tier) ? node.tier : 'recommended';
+    const branches = (node.branches || []).slice(0, 3).map((branch) => {
+      if (!Array.isArray(branch)) return null;
+      return branch.slice(0, 3).map((bn) => {
+        const bid = bn.id || `rp${idCounter}b`;
+        idCounter++;
+        return {
+          id: bid,
+          title: bn.title || 'Untitled',
+          year: bn.year || '',
+          issues: bn.issues || '',
+          why: bn.why || '',
+          tier: VALID_TIERS.has(bn.tier) ? bn.tier : 'optional',
+        };
+      });
+    }).filter(Boolean);
+
+    return {
+      id,
+      title: node.title || 'Untitled',
+      year: node.year || '',
+      issues: node.issues || '',
+      why: node.why || '',
+      tier,
+      branches,
+    };
+  });
+
+  return { mode: rp.mode || 'full', mainLine, pathNote: rp.pathNote || '' };
+}
+
+export async function fetchComicGuide(query, mode = 'full') {
   let cvData = null;
   try {
     cvData = await searchComicVine(query);
@@ -171,8 +242,8 @@ export async function fetchComicGuide(query) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
-      max_tokens: 4000,
-      messages: [{ role: 'user', content: buildPrompt(query, cvData) }],
+      max_tokens: 6000,
+      messages: [{ role: 'user', content: buildPrompt(query, cvData, mode) }],
     }),
   });
 

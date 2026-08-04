@@ -14,11 +14,11 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(false);
   const readingList = useReadingList();
 
-  async function handleSearch(query) {
+  async function handleSearch(query, mode) {
     setView(VIEW.LOADING);
     setError(null);
     try {
-      const result = await fetchComicGuide(query);
+      const result = await fetchComicGuide(query, mode);
       setData(result);
       setView(VIEW.RESULTS);
     } catch (err) {
