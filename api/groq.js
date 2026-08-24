@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
-  const path = req.url.replace(/^\/api\/groq/, '');
-  const target = `https://api.groq.com${path}`;
+  const proxyPath = req.query.__path || '';
+  const target = `https://api.groq.com/${proxyPath}`;
 
   try {
     const response = await fetch(target, {
