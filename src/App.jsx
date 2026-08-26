@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { fetchComicGuide } from './lib/api';
 import { useReadingList } from './hooks/useReadingList';
+import { useAlreadyRead } from './hooks/useAlreadyRead';
 import { SearchBar } from './components/SearchBar';
 import { ResultsView } from './components/ResultsView';
 import { ReadingListPanel } from './components/ReadingListPanel';
@@ -13,6 +14,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const readingList = useReadingList();
+  const alreadyRead = useAlreadyRead();
 
   async function handleSearch(query, mode) {
     setView(VIEW.LOADING);
@@ -95,7 +97,7 @@ export default function App() {
       )}
 
       {view === VIEW.RESULTS && data && (
-        <ResultsView data={data} readingList={readingList} onReset={handleReset} />
+        <ResultsView data={data} readingList={readingList} alreadyRead={alreadyRead} onReset={handleReset} />
       )}
 
       {view === VIEW.ERROR && (

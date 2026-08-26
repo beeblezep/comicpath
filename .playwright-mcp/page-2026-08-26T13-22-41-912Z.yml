@@ -1,0 +1,227 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - button "ComicPath" [ref=e5] [cursor=pointer]
+    - button "Saved" [ref=e6] [cursor=pointer]
+  - generic [ref=e29]:
+    - generic [ref=e30]:
+      - button "← Search" [ref=e31] [cursor=pointer]
+      - text: ›Batman
+    - generic [ref=e32]:
+      - generic [ref=e33]: BT
+      - generic [ref=e34]:
+        - heading "Batman" [level=2] [ref=e35]
+        - paragraph [ref=e36]: DC Comics · First appeared 1939
+        - paragraph [ref=e37]: Bruce Wayne, orphaned as a child, swore vengeance against crime and became Batman, a master detective and martial artist who operates from Gotham City. Armed with a high‑tech arsenal and a bat‑themed persona, he fights both street‑level thugs and cosmic threats.
+        - generic [ref=e38]:
+          - generic [ref=e39]: hero
+          - generic [ref=e40]: detective
+          - generic [ref=e41]: vigilante
+          - generic [ref=e42]: DC
+    - generic [ref=e43]: ✦Start with Year One, then move to The Long Halloween and Hush before tackling the New 52/Rebirth runs for a balanced experience.
+    - generic [ref=e44]:
+      - button "Guide" [ref=e45] [cursor=pointer]
+      - button "Reading Path" [ref=e46] [cursor=pointer]
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e50]: Canon & Essential
+        - generic [ref=e51]: "5"
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - generic [ref=e55]: "Batman: Year One"
+            - generic [ref=e56]:
+              - button "☆" [ref=e57] [cursor=pointer]
+              - button "▾" [ref=e58] [cursor=pointer]
+          - paragraph [ref=e59]: Defines Batman’s modern origin and introduces Jim Gordon, setting the tone for decades of storytelling.
+          - generic [ref=e60]:
+            - generic [ref=e61]: Trade Paperback
+            - generic [ref=e62]: "1987"
+            - generic [ref=e63]: "Batman #404–407"
+            - generic [ref=e64]: Start here
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - generic [ref=e67]: "Batman: The Long Halloween"
+            - generic [ref=e68]:
+              - button "☆" [ref=e69] [cursor=pointer]
+              - button "▾" [ref=e70] [cursor=pointer]
+          - paragraph [ref=e71]: A seminal mystery that explores Gotham’s mob roots and deepens the Batman‑Harvey Dent relationship.
+          - generic [ref=e72]:
+            - generic [ref=e73]: Trade Paperback
+            - generic [ref=e74]: 1996–1997
+            - generic [ref=e75]: "Batman: The Long Halloween #1–13"
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - generic [ref=e78]: "Batman: Hush"
+            - button "☆" [ref=e80] [cursor=pointer]
+          - paragraph [ref=e81]: A modern blockbuster arc that pits Batman against a mysterious new foe while spotlighting his rogues’ gallery.
+          - generic [ref=e82]:
+            - generic [ref=e83]: Trade Paperback
+            - generic [ref=e84]: 2002–2003
+            - generic [ref=e85]: "Batman #608–619"
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - generic [ref=e88]: "Batman (The New 52) #1–52"
+            - button "☆" [ref=e90] [cursor=pointer]
+          - paragraph [ref=e91]: Reboots the character for a new generation, redefining his relationships and introducing fresh villains.
+          - generic [ref=e92]:
+            - generic [ref=e93]: Omnibus
+            - generic [ref=e94]: 2011–2012
+            - generic [ref=e95]: "Batman (vol. 5) #1–52"
+        - generic [ref=e96]:
+          - generic [ref=e97]:
+            - generic [ref=e98]: "Batman (Rebirth) #1–50"
+            - button "☆" [ref=e100] [cursor=pointer]
+          - paragraph [ref=e101]: Continues the post‑New‑52 continuity, blending classic themes with contemporary storytelling.
+          - generic [ref=e102]:
+            - generic [ref=e103]: Trade Paperback
+            - generic [ref=e104]: 2016–2018
+            - generic [ref=e105]: "Batman (vol. 6) #1–50"
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - generic [ref=e109]: Worth Reading
+        - generic [ref=e110]: "3"
+      - generic [ref=e111]:
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - generic [ref=e114]: "Detective Comics (Classic) #27"
+            - button "☆" [ref=e116] [cursor=pointer]
+          - paragraph [ref=e117]: First appearance of Batman; essential for historical context.
+          - generic [ref=e118]:
+            - generic [ref=e119]: Single Issue
+            - generic [ref=e120]: "1939"
+            - generic [ref=e121]: "Detective Comics #27"
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - generic [ref=e124]: "Batman: Legends of the Dark Knight"
+            - button "☆" [ref=e126] [cursor=pointer]
+          - paragraph [ref=e127]: Anthology series offering diverse takes on Batman’s early years.
+          - generic [ref=e128]:
+            - generic [ref=e129]: Trade Paperback
+            - generic [ref=e130]: 1989–2007
+            - generic [ref=e131]: "Legends of the Dark Knight #1–214"
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - generic [ref=e134]: "Batman: No Man's Land"
+            - button "☆" [ref=e136] [cursor=pointer]
+          - paragraph [ref=e137]: Epic city‑wide event showing Gotham after a massive earthquake.
+          - generic [ref=e138]:
+            - generic [ref=e139]: Trade Paperback
+            - generic [ref=e140]: "1999"
+            - generic [ref=e141]: "Batman #1–13 (2000) & tie‑ins"
+    - generic [ref=e142]:
+      - generic [ref=e143]:
+        - generic [ref=e145]: Elseworlds & Alternates
+        - generic [ref=e146]: "3"
+      - generic [ref=e147]:
+        - generic [ref=e148]:
+          - generic [ref=e149]:
+            - generic [ref=e150]: "Batman: The Dark Knight Returns"
+            - button "☆" [ref=e152] [cursor=pointer]
+          - paragraph [ref=e153]: Iconic alternate‑future tale that re‑imagines an aged Bruce Wayne.
+          - generic [ref=e154]:
+            - generic [ref=e155]: Trade Paperback
+            - generic [ref=e156]: "1986"
+            - generic [ref=e157]: "Batman: The Dark Knight Returns #1–4"
+        - generic [ref=e158]:
+          - generic [ref=e159]:
+            - generic [ref=e160]: "Batman: Gotham by Gaslight"
+            - button "☆" [ref=e162] [cursor=pointer]
+          - paragraph [ref=e163]: First true Elseworlds story, placing Batman in Victorian‑era Gotham.
+          - generic [ref=e164]:
+            - generic [ref=e165]: Single Issue
+            - generic [ref=e166]: "1989"
+            - generic [ref=e167]: "Batman: Gotham by Gaslight #1"
+        - generic [ref=e168]:
+          - generic [ref=e169]:
+            - generic [ref=e170]: "Batman: Year 100"
+            - button "☆" [ref=e172] [cursor=pointer]
+          - paragraph [ref=e173]: A dystopian glimpse of Batman a century after his debut.
+          - generic [ref=e174]:
+            - generic [ref=e175]: Single Issue
+            - generic [ref=e176]: "2006"
+            - generic [ref=e177]: "Batman: Year 100 #1"
+    - generic [ref=e178]:
+      - generic [ref=e179]:
+        - generic [ref=e181]: You Can Skip
+        - generic [ref=e182]: "3"
+      - generic [ref=e183]:
+        - generic [ref=e184]:
+          - generic [ref=e185]: "Batman: Knightfall"
+          - paragraph [ref=e187]: Long, convoluted saga; can be skipped without missing core continuity.
+          - generic [ref=e188]: "1993"
+        - generic [ref=e190]:
+          - generic [ref=e191]: "Batman: The Cult"
+          - paragraph [ref=e193]: A darker, less‑influential story that isn’t required for main narrative.
+          - generic [ref=e194]: "1988"
+        - generic [ref=e196]:
+          - generic [ref=e197]: "Batman: Arkham Asylum – Graphic Novel"
+          - paragraph [ref=e199]: Standalone horror tale; enjoyable but not essential to Batman’s main arc.
+          - generic [ref=e200]: "1989"
+    - generic [ref=e202]:
+      - img [ref=e203]:
+        - generic [ref=e216] [cursor=pointer]:
+          - generic: "Detective Comics #27 – Bat…"
+          - generic: essential · 1939
+        - generic [ref=e218] [cursor=pointer]:
+          - generic: "Batman #1 – First solo title"
+          - generic: essential · 1940
+        - generic [ref=e220] [cursor=pointer]:
+          - generic: "Batman: Year One"
+          - generic: essential · 1987
+        - generic [ref=e222] [cursor=pointer]:
+          - generic: "Batman: The Long Halloween"
+          - generic: essential · 1996–1997
+        - generic [ref=e224] [cursor=pointer]:
+          - generic: "Batman: Hush"
+          - generic: essential · 2002–2003
+        - generic [ref=e226] [cursor=pointer]:
+          - generic: "Batman (The New 52) #1"
+          - generic: recommended · 2011
+        - generic [ref=e228] [cursor=pointer]:
+          - generic: "Batman (Rebirth) #1"
+          - generic: recommended · 2016
+        - generic [ref=e230] [cursor=pointer]:
+          - generic: "Batman: The Dark Knight Re…"
+          - generic: optional · 1986
+        - generic [ref=e232] [cursor=pointer]:
+          - generic: "Batman: Gotham by Gaslight"
+          - generic: optional · 1989
+        - generic [ref=e234] [cursor=pointer]:
+          - generic: "Batman: Year 100"
+          - generic: optional · 2006
+        - generic [ref=e236] [cursor=pointer]:
+          - generic: "Batman: Dark Victory"
+          - generic: recommended · 1999–2000
+        - generic [ref=e238] [cursor=pointer]:
+          - generic: "Detective Comics #1000 – M…"
+          - generic: optional · 2019
+      - generic: Batman
+      - button "← Back" [ref=e240] [cursor=pointer]
+      - generic [ref=e242]:
+        - button "Essential" [ref=e243] [cursor=pointer]
+        - button "Recommended" [ref=e244] [cursor=pointer]
+        - button "Optional" [ref=e245] [cursor=pointer]
+        - button "Show removed" [ref=e246] [cursor=pointer]
+        - generic [ref=e247]: 12 / 12
+      - generic:
+        - generic: scroll to zoom
+        - generic: drag to pan
+        - generic: esc to close
+      - generic [ref=e248]:
+        - generic [ref=e249]: 03 / 12
+        - 'heading "Batman: Year One" [level=2] [ref=e250]'
+        - paragraph [ref=e251]: Essential · 1987
+        - paragraph [ref=e253]: "Batman #404–407"
+        - paragraph [ref=e254]: Redefines the modern origin of Batman and Jim Gordon.
+        - generic [ref=e255]:
+          - generic [ref=e256]: origin
+          - generic [ref=e257]: reboot
+        - generic [ref=e258]:
+          - button "Mark read" [ref=e259] [cursor=pointer]
+          - button "Save" [ref=e260] [cursor=pointer]
+          - button "Hide" [ref=e261] [cursor=pointer]
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - heading "Reading list" [level=2] [ref=e26]
+      - button "✕" [ref=e27] [cursor=pointer]
+    - paragraph [ref=e28]: Star stories to add them here.

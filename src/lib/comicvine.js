@@ -154,3 +154,110 @@ export async function searchComicVine(query) {
     storyArcs: arcs,
   };
 }
+
+async function searchVolumes(query) {
+  const params = new URLSearchParams({
+    query,
+    resources: 'volume',
+    limit: '5',
+    field_list: 'id,name,deck,start_year,count_of_issues,publisher',
+  });
+  const json = await cvFetch(`/search/?${params}`);
+  return (json.results || []).map((v) => ({
+    id: v.id,
+    name: v.name,
+    deck: v.deck,
+    startYear: v.start_year,
+    issueCount: v.count_of_issues,
+    publisher: v.publisher?.name ?? null,
+  }));
+}
+
+async function searchStoryArcs(query) {
+  const params = new URLSearchParams({
+    query,
+    resources: 'story_arc',
+    limit: '5',
+    field_list: 'id,name,deck,publisher',
+  });
+  const json = await cvFetch(`/search/?${params}`);
+  return (json.results || []).map((a) => ({
+    id: a.id,
+    name: a.name,
+    deck: a.deck,
+    publisher: a.publisher?.name ?? null,
+  }));
+}
+
+const TITLE_SIGNALS = [
+  'vol', 'vol.', 'volume', '#', 'issue', 'omnibus',
+  'trade', 'tpb', 'hardcover', 'deluxe', 'compendium',
+];
+
+function looksLikeTitle(query) {
+  const q = query.toLowerCase();
+  if (TITLE_SIGNALS.some((s) => q.includes(s))) return true;
+  if (/\d{4}/.test(q)) return true;
+  if (q.includes(':')) return true;
+  return false;
+}
+
+export async function searchComicVineSmartly(query) {
+  const titleHint = looksLikeTitle(query);
+
+  if (titleHint) {
+    const [volumes, arcs, characters] = await Promise.all([
+      searchVolumes(query).catch(() => []),
+      searchStoryArcs(query).catch(() => []),
+      searchCharacter(query).catch(() => []),
+    ]);
+
+    const qLower = query.toLowerCase();
+
+    const bestVolume = volumes.find((v) => v.name.toLowerCase().includes(qLower)
+      || qLower.includes(v.name.toLowerCase()));
+    if (bestVolume) {
+      return {
+        queryType: 'volume',
+        target: bestVolume,
+        character: null,
+        volumes: [],
+        storyArcs: [],
+      };
+    }
+
+    const bestArc = arcs.find((a) => a.name.toLowerCase().includes(qLower)
+      || qLower.includes(a.name.toLowerCase()));
+    if (bestArc) {
+      return {
+        queryType: 'storyArc',
+        target: bestArc,
+        character: null,
+        volumes: [],
+        storyArcs: [],
+      };
+    }
+
+    if (volumes.length > 0) {
+      return {
+        queryType: 'volume',
+        target: volumes[0],
+        character: null,
+        volumes: [],
+        storyArcs: [],
+      };
+    }
+
+    if (arcs.length > 0) {
+      return {
+        queryType: 'storyArc',
+        target: arcs[0],
+        character: null,
+        volumes: [],
+        storyArcs: [],
+      };
+    }
+  }
+
+  return searchComicVine(query);
+}
