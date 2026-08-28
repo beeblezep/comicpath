@@ -2,7 +2,7 @@
    ComicPath — API client (Groq LLM + ComicVine enrichment)
    ============================================================ */
 
-import { searchComicVineSmartly } from './comicvine.js';
+import { searchComicVineSmartly, searchVolumes, searchStoryArcs } from './comicvine.js';
 
 const API_URL = '/api/groq/openai/v1/chat/completions';
 
@@ -268,6 +268,139 @@ function readingPathToGraph(rp) {
     edges,
     pathNote: rp.pathNote || '',
   };
+}
+
+/* ── Related-titles prompt for path builder ──────────────── */
+
+function buildRelatedTitlesPrompt(title, cvContext, existingTitles) {
+  let contextBlock = '';
+  if (cvContext) {
+    const lines = [`Target: ${cvContext.name || title}`];
+    if (cvContext.publisher) lines.push(`Publisher: ${cvContext.publisher}`);
+    if (cvContext.startYear) lines.push(`Year: ${cvContext.startYear}`);
+    if (cvContext.issueCount) lines.push(`Issues: ${cvContext.issueCount}`);
+    if (cvContext.deck) lines.push(`Description: ${cvContext.deck}`);
+    contextBlock = `\nVERIFIED DATA from ComicVine:\n${lines.join('\n')}\n`;
+  }
+
+  const excludeList = existingTitles.length > 0
+    ? `\nDo NOT include any of these titles (they are already in the reading path):\n${existingTitles.map((t) => `- ${t}`).join('\n')}\n`
+    : '';
+
+  return `You are ComicPath, an expert comic book guide.
+
+Given the comic title "${title}", suggest 4-8 related titles a reader should know about. Include direct prequels, sequels, crossovers, and thematically connected stories.
+${contextBlock}${excludeList}
+Return ONLY a JSON object — no markdown, no preamble, no trailing text.
+
+Structure:
+{
+  "relatedNodes": [
+    {
+      "title": "Story or arc title",
+      "year": "YYYY or YYYY-YYYY",
+      "issues": "e.g. Batman #404-407",
+      "why": "One sentence on why this matters.",
+      "tier": "essential | recommended | optional",
+      "weight": 3,
+      "tags": ["origin", "crossover", "sequel"]
+    }
+  ],
+  "edges": [
+    {
+      "sourceTitle": "exact title of one node",
+      "targetTitle": "exact title of another node",
+      "type": "leads-to | prerequisite | branches-from | crossover",
+      "label": "optional short label"
+    }
+  ]
+}
+
+Rules:
+- 4-8 related titles. Categorize each as essential, recommended, or optional.
+- weight: 1-5 (5 = most important).
+- Edges should connect "${title}" to the related titles. Also include edges between related titles where relationships exist.
+- Use real titles with accurate issue numbers from actual publications.
+- tier: essential = must-read context, recommended = enriches the experience, optional = for completists.
+- Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in).
+- Never use "Unknown" — always provide real values.`;
+}
+
+function parseRelatedTitlesResponse(text) {
+  const clean = text.replace(/```json|```/gi, '').trim();
+  let parsed;
+  try {
+    parsed = JSON.parse(clean);
+  } catch {
+    const match = clean.match(/\{[\s\S]*\}/);
+    if (match) parsed = JSON.parse(match[0]);
+    else throw new Error('Response was not valid JSON');
+  }
+
+  const nodes = (parsed.relatedNodes || []).slice(0, 10).map((n) => ({
+    title: n.title || 'Untitled',
+    year: n.year || '',
+    issues: n.issues || '',
+    why: n.why || '',
+    tier: VALID_TIERS.has(n.tier) ? n.tier : 'recommended',
+    weight: Math.min(5, Math.max(1, Number(n.weight) || 3)),
+    tags: Array.isArray(n.tags) ? n.tags : [],
+  }));
+
+  const edges = (parsed.edges || []).slice(0, 20).map((e) => ({
+    sourceTitle: e.sourceTitle || '',
+    targetTitle: e.targetTitle || '',
+    type: VALID_EDGE_TYPES.has(e.type) ? e.type : 'leads-to',
+    label: e.label || '',
+  }));
+
+  if (nodes.length === 0) {
+    throw new Error('No related titles returned');
+  }
+
+  return { relatedNodes: nodes, edges };
+}
+
+export async function fetchRelatedTitles(title, existingTitles = []) {
+  let cvContext = null;
+  try {
+    const [volumes, arcs] = await Promise.all([
+      searchVolumes(title).catch(() => []),
+      searchStoryArcs(title).catch(() => []),
+    ]);
+    const match = volumes[0] || arcs[0] || null;
+    if (match) {
+      cvContext = {
+        name: match.name,
+        publisher: match.publisher?.name || match.publisher || '',
+        startYear: match.start_year || match.startYear || '',
+        issueCount: match.count_of_issues || match.issueCount || '',
+        deck: match.deck || '',
+      };
+    }
+  } catch (err) {
+    console.warn('ComicVine lookup failed for related titles:', err.message);
+  }
+
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'openai/gpt-oss-120b',
+      max_tokens: 4000,
+      messages: [{ role: 'user', content: buildRelatedTitlesPrompt(title, cvContext, existingTitles) }],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const msg = body.error?.message || response.statusText;
+    throw new Error(`API error ${response.status}: ${msg}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content ?? '';
+  return parseRelatedTitlesResponse(text);
 }
 
 export async function fetchComicGuide(query, mode = 'full') {

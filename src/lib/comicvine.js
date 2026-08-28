@@ -155,7 +155,7 @@ export async function searchComicVine(query) {
   };
 }
 
-async function searchVolumes(query) {
+export async function searchVolumes(query) {
   const params = new URLSearchParams({
     query,
     resources: 'volume',
@@ -173,7 +173,7 @@ async function searchVolumes(query) {
   }));
 }
 
-async function searchStoryArcs(query) {
+export async function searchStoryArcs(query) {
   const params = new URLSearchParams({
     query,
     resources: 'story_arc',

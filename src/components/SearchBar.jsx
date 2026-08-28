@@ -13,15 +13,21 @@ const MODES = [
   { key: 'full', label: 'Full Guide', desc: 'Complete reading path from origin to present' },
   { key: 'catch-up', label: 'Catch Up', desc: 'Jump back in from a recent starting point' },
   { key: 'deep-dive', label: 'Deep Dive', desc: 'Prerequisites for the latest major arc' },
+  { key: 'build', label: 'Build Path', desc: 'Build your own reading path from any title' },
 ];
 
-export function SearchBar({ onSearch, loading }) {
+export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
   const [value, setValue] = useState('');
   const [mode, setMode] = useState('full');
 
   function submit() {
     const q = value.trim();
-    if (q) onSearch(q, mode);
+    if (!q) return;
+    if (mode === 'build') {
+      onBuildPath?.(q);
+    } else {
+      onSearch(q, mode);
+    }
   }
 
   return (
@@ -66,7 +72,7 @@ export function SearchBar({ onSearch, loading }) {
             opacity: loading || !value.trim() ? 0.5 : 1,
           }}
         >
-          {loading ? 'Loading...' : 'Explore'}
+          {loading ? 'Loading...' : mode === 'build' ? 'Build' : 'Explore'}
         </button>
       </div>
 
@@ -86,13 +92,31 @@ export function SearchBar({ onSearch, loading }) {
               fontSize: 12,
               fontWeight: mode === m.key ? 600 : 400,
               cursor: 'pointer',
-              borderRight: m.key !== 'deep-dive' ? '1px solid var(--color-border)' : 'none',
+              borderRight: m.key !== 'build' ? '1px solid var(--color-border)' : 'none',
             }}
           >
             {m.label}
           </button>
         ))}
       </div>
+
+      {hasSavedPath && (
+        <button
+          onClick={() => onBuildPath?.('')}
+          style={{
+            display: 'block', width: '100%', marginBottom: 14,
+            padding: '10px 16px', textAlign: 'left',
+            background: 'rgba(124,92,252,0.08)',
+            border: '1px solid rgba(124,92,252,0.25)',
+            borderRadius: 'var(--radius-sm)',
+            color: '#7c5cfc',
+            fontSize: 12,
+            cursor: 'pointer',
+          }}
+        >
+          Resume saved reading path →
+        </button>
+      )}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {QUICK_PICKS.map(label => (

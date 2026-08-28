@@ -12,11 +12,12 @@ const TIER_LABELS = {
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
-export function ConstellationDetail({ node, open, readingList, alreadyRead, character, onToggleRead, onHide, onClose, nodeIndex, totalNodes }) {
+export function ConstellationDetail({ node, open, readingList, alreadyRead, character, onToggleRead, onHide, onClose, nodeIndex, totalNodes, onExpand, expandable, expanding }) {
   const color = node ? (TIER_COLORS[node.tier] || TIER_COLORS.recommended) : '#7c7c8a';
 
+  const prefix = character || (node ? node.title : '');
   const slug = node
-    ? `${character}-${node.title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    ? `${prefix}-${node.title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-')
     : '';
 
   const isRead = node ? alreadyRead.isRead(slug) : false;
@@ -85,6 +86,24 @@ export function ConstellationDetail({ node, open, readingList, alreadyRead, char
           )}
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {onExpand && (
+              <button
+                onClick={() => !expanding && expandable && onExpand(node.id)}
+                disabled={expanding || !expandable}
+                style={{
+                  width: '100%', fontFamily: MONO,
+                  fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                  padding: '10px 14px', marginBottom: 4,
+                  border: `1px solid ${expandable ? color : '#2a2b38'}`,
+                  background: expandable ? `${color}22` : 'transparent',
+                  color: expandable ? color : '#555',
+                  cursor: expandable && !expanding ? 'pointer' : 'default',
+                  opacity: expanding ? 0.6 : 1,
+                }}
+              >
+                {expanding ? 'Expanding…' : expandable ? '+ Expand' : 'Expanded ✓'}
+              </button>
+            )}
             <button
               onClick={() => onToggleRead(slug)}
               style={{

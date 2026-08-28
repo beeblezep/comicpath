@@ -2,19 +2,23 @@ import { useState } from 'react';
 import { fetchComicGuide } from './lib/api';
 import { useReadingList } from './hooks/useReadingList';
 import { useAlreadyRead } from './hooks/useAlreadyRead';
+import { usePathBuilder } from './hooks/usePathBuilder';
 import { SearchBar } from './components/SearchBar';
 import { ResultsView } from './components/ResultsView';
 import { ReadingListPanel } from './components/ReadingListPanel';
+import { PathBuilder } from './components/PathBuilder';
 
-const VIEW = { SEARCH: 'search', LOADING: 'loading', RESULTS: 'results', ERROR: 'error' };
+const VIEW = { SEARCH: 'search', LOADING: 'loading', RESULTS: 'results', ERROR: 'error', BUILDER: 'builder' };
 
 export default function App() {
   const [view, setView] = useState(VIEW.SEARCH);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [builderQuery, setBuilderQuery] = useState('');
   const readingList = useReadingList();
   const alreadyRead = useAlreadyRead();
+  const pathBuilder = usePathBuilder();
 
   async function handleSearch(query, mode) {
     setView(VIEW.LOADING);
@@ -29,9 +33,15 @@ export default function App() {
     }
   }
 
+  function handleBuildPath(query) {
+    setBuilderQuery(query);
+    setView(VIEW.BUILDER);
+  }
+
   function handleReset() {
     setView(VIEW.SEARCH);
     setData(null);
+    setBuilderQuery('');
   }
 
   return (
@@ -87,7 +97,12 @@ export default function App() {
       </header>
 
       {(view === VIEW.SEARCH || view === VIEW.LOADING) && (
-        <SearchBar onSearch={handleSearch} loading={view === VIEW.LOADING} />
+        <SearchBar
+          onSearch={handleSearch}
+          onBuildPath={handleBuildPath}
+          loading={view === VIEW.LOADING}
+          hasSavedPath={pathBuilder.hasSavedPath}
+        />
       )}
 
       {view === VIEW.LOADING && (
@@ -98,6 +113,15 @@ export default function App() {
 
       {view === VIEW.RESULTS && data && (
         <ResultsView data={data} readingList={readingList} alreadyRead={alreadyRead} onReset={handleReset} />
+      )}
+
+      {view === VIEW.BUILDER && (
+        <PathBuilder
+          readingList={readingList}
+          alreadyRead={alreadyRead}
+          onReset={handleReset}
+          initialQuery={builderQuery}
+        />
       )}
 
       {view === VIEW.ERROR && (

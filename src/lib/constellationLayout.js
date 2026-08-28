@@ -7,14 +7,18 @@ export function nodeRadius(weight) {
   return BASE_RADIUS + (weight || 3) * WEIGHT_SCALE;
 }
 
-export function computeConstellationLayout(nodes, edges, width, height, targetTitle) {
+export function computeConstellationLayout(nodes, edges, width, height, targetTitle, previousPositions) {
   if (!nodes || nodes.length === 0) return { positions: new Map(), edgePaths: [] };
 
-  const simNodes = nodes.map((n) => ({
-    id: n.id,
-    weight: n.weight || 3,
-    isTarget: targetTitle && n.title === targetTitle,
-  }));
+  const simNodes = nodes.map((n) => {
+    const prev = previousPositions?.get(n.id);
+    return {
+      id: n.id,
+      weight: n.weight || 3,
+      isTarget: targetTitle && n.title === targetTitle,
+      ...(prev ? { x: prev.x, y: prev.y } : {}),
+    };
+  });
 
   const nodeMap = new Map(simNodes.map((n) => [n.id, n]));
 

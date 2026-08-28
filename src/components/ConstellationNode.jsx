@@ -6,7 +6,7 @@ const TIER_COLORS = {
   optional: '#7c7c8a',
 };
 
-export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hidden, onClick }) {
+export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hidden, expandable, onClick }) {
   if (hidden) return null;
 
   const r = nodeRadius(node.weight);
@@ -20,6 +20,16 @@ export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hi
       style={{ cursor: 'pointer', transition: 'opacity .25s ease' }}
       opacity={opacity}
     >
+      {expandable && !alreadyRead && (
+        <circle
+          cx={x} cy={y} r={r + 8}
+          fill="none"
+          stroke={color}
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+          opacity={0.4}
+        />
+      )}
       <circle
         cx={x} cy={y} r={r}
         fill="#1b1c26"

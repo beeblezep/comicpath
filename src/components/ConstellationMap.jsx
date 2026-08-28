@@ -16,7 +16,7 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-export function ConstellationMap({ graph, readingList, alreadyRead, character, onClose }) {
+export function ConstellationMap({ graph, readingList, alreadyRead, character, onClose, onExpand, expandedIds, expandingId, title }) {
   const [focusedId, setFocusedId] = useState(null);
   const [hiddenIds, setHiddenIds] = useState(new Set());
   const [tierFilter, setTierFilter] = useState(new Set(['essential', 'recommended', 'optional']));
@@ -30,10 +30,13 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
   const vbTarget = useRef({ x: 0, y: 0, w: CANVAS_W, h: CANVAS_H });
   const vbCurrent = useRef({ x: 0, y: 0, w: CANVAS_W, h: CANVAS_H });
 
-  const { positions, edgePaths } = useMemo(
-    () => computeConstellationLayout(graph.nodes, graph.edges, CANVAS_W, CANVAS_H, graph.targetTitle),
-    [graph],
-  );
+  const prevPositions = useRef(null);
+
+  const { positions, edgePaths } = useMemo(() => {
+    const result = computeConstellationLayout(graph.nodes, graph.edges, CANVAS_W, CANVAS_H, graph.targetTitle, prevPositions.current);
+    prevPositions.current = result.positions;
+    return result;
+  }, [graph]);
 
   const fullBounds = useMemo(() => {
     if (!containerRef.current) return { x: 0, y: 0, w: CANVAS_W, h: CANVAS_H };
@@ -281,6 +284,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
               dimmed={dimmed}
               alreadyRead={alreadyRead.isRead(slug)}
               hidden={hiddenIds.has(node.id)}
+              expandable={expandedIds ? !expandedIds.has(node.id) : false}
               onClick={handleNodeClick}
             />
           );
@@ -294,7 +298,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
         textTransform: 'uppercase', color: '#7c7c8a',
         pointerEvents: 'none',
       }}>
-        {character || 'Reading Path'}
+        {title || character || 'Reading Path'}
       </div>
 
       {/* HUD: top-right back button */}
@@ -356,6 +360,9 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
         onClose={() => { setFocusedId(null); zoomToFull(); }}
         nodeIndex={focusedIndex}
         totalNodes={graph.nodes.length}
+        onExpand={onExpand}
+        expandable={focusedId && expandedIds ? !expandedIds.has(focusedId) : false}
+        expanding={focusedId === expandingId}
       />
     </div>
   );
