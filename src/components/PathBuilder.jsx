@@ -41,14 +41,14 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery })
     setPhase(PHASE.BUILDING);
   }, [pb]);
 
-  const handleExpand = useCallback(async (nodeId) => {
+  const handleExpand = useCallback(async (nodeId, refinementPrompt) => {
     const node = pb.graph.nodes.find((n) => n.id === nodeId);
     if (!node) return;
 
     setExpandingId(nodeId);
     try {
       const existingTitles = pb.graph.nodes.map((n) => n.title);
-      const { relatedNodes, edges } = await fetchRelatedTitles(node.title, existingTitles);
+      const { relatedNodes, edges } = await fetchRelatedTitles(node.title, existingTitles, refinementPrompt);
 
       const { graph: merged } = mergeExpansion(pb.graph, nodeId, relatedNodes, edges);
       pb.setGraph(merged);

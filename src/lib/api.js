@@ -272,7 +272,7 @@ function readingPathToGraph(rp) {
 
 /* ── Related-titles prompt for path builder ──────────────── */
 
-function buildRelatedTitlesPrompt(title, cvContext, existingTitles) {
+function buildRelatedTitlesPrompt(title, cvContext, existingTitles, refinementPrompt = '') {
   let contextBlock = '';
   if (cvContext) {
     const lines = [`Target: ${cvContext.name || title}`];
@@ -287,10 +287,14 @@ function buildRelatedTitlesPrompt(title, cvContext, existingTitles) {
     ? `\nDo NOT include any of these titles (they are already in the reading path):\n${existingTitles.map((t) => `- ${t}`).join('\n')}\n`
     : '';
 
+  const refinementBlock = refinementPrompt
+    ? `\nIMPORTANT — The reader has a specific request for this expansion:\n"${refinementPrompt}"\nPrioritize titles and connections that match this request. Still include essential context even if not explicitly mentioned, but weight your suggestions toward what the reader asked for.\n`
+    : '';
+
   return `You are ComicPath, an expert comic book guide.
 
 Given the comic title "${title}", suggest 4-8 related titles a reader should know about. Include direct prequels, sequels, crossovers, and thematically connected stories.
-${contextBlock}${excludeList}
+${contextBlock}${excludeList}${refinementBlock}
 Return ONLY a JSON object — no markdown, no preamble, no trailing text.
 
 Structure:
@@ -361,7 +365,7 @@ function parseRelatedTitlesResponse(text) {
   return { relatedNodes: nodes, edges };
 }
 
-export async function fetchRelatedTitles(title, existingTitles = []) {
+export async function fetchRelatedTitles(title, existingTitles = [], refinementPrompt = '') {
   let cvContext = null;
   try {
     const [volumes, arcs] = await Promise.all([
@@ -388,7 +392,7 @@ export async function fetchRelatedTitles(title, existingTitles = []) {
     body: JSON.stringify({
       model: 'openai/gpt-oss-120b',
       max_tokens: 4000,
-      messages: [{ role: 'user', content: buildRelatedTitlesPrompt(title, cvContext, existingTitles) }],
+      messages: [{ role: 'user', content: buildRelatedTitlesPrompt(title, cvContext, existingTitles, refinementPrompt) }],
     }),
   });
 

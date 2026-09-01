@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 const TIER_COLORS = {
   essential: '#7c5cfc',
   recommended: '#e8a33d',
@@ -22,6 +24,9 @@ export function ConstellationDetail({ node, open, readingList, alreadyRead, char
 
   const isRead = node ? alreadyRead.isRead(slug) : false;
   const isSaved = node ? readingList.has(slug) : false;
+
+  const [refinement, setRefinement] = useState('');
+  useEffect(() => { setRefinement(''); }, [node?.id]);
 
   return (
     <div
@@ -87,22 +92,48 @@ export function ConstellationDetail({ node, open, readingList, alreadyRead, char
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {onExpand && (
-              <button
-                onClick={() => !expanding && expandable && onExpand(node.id)}
-                disabled={expanding || !expandable}
-                style={{
-                  width: '100%', fontFamily: MONO,
-                  fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
-                  padding: '10px 14px', marginBottom: 4,
-                  border: `1px solid ${expandable ? color : '#2a2b38'}`,
-                  background: expandable ? `${color}22` : 'transparent',
-                  color: expandable ? color : '#555',
-                  cursor: expandable && !expanding ? 'pointer' : 'default',
-                  opacity: expanding ? 0.6 : 1,
-                }}
-              >
-                {expanding ? 'Expanding…' : expandable ? '+ Expand' : 'Expanded ✓'}
-              </button>
+              <>
+                {expandable && !expanding && (
+                  <textarea
+                    value={refinement}
+                    onChange={(e) => setRefinement(e.target.value)}
+                    placeholder="e.g. focus on Lazarus Planet, include Superman…"
+                    rows={2}
+                    style={{
+                      width: '100%', fontFamily: MONO,
+                      fontSize: 12, lineHeight: 1.6,
+                      padding: '8px 10px', marginBottom: 4,
+                      background: '#14141d',
+                      border: '1px solid #2a2b38',
+                      color: '#c9c7bd',
+                      resize: 'vertical',
+                      minHeight: 48, maxHeight: 120,
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                )}
+                <button
+                  onClick={() => {
+                    if (!expanding && expandable) {
+                      onExpand(node.id, refinement);
+                      setRefinement('');
+                    }
+                  }}
+                  disabled={expanding || !expandable}
+                  style={{
+                    width: '100%', fontFamily: MONO,
+                    fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                    padding: '10px 14px', marginBottom: 4,
+                    border: `1px solid ${expandable ? color : '#2a2b38'}`,
+                    background: expandable ? `${color}22` : 'transparent',
+                    color: expandable ? color : '#555',
+                    cursor: expandable && !expanding ? 'pointer' : 'default',
+                    opacity: expanding ? 0.6 : 1,
+                  }}
+                >
+                  {expanding ? 'Expanding…' : expandable ? '+ Expand' : 'Expanded ✓'}
+                </button>
+              </>
             )}
             <button
               onClick={() => onToggleRead(slug)}
