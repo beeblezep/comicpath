@@ -93,11 +93,13 @@ export function ConstellationDetail({ node, open, readingList, alreadyRead, char
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {onExpand && (
               <>
-                {expandable && !expanding && (
+                {!expanding && (
                   <textarea
                     value={refinement}
                     onChange={(e) => setRefinement(e.target.value)}
-                    placeholder="e.g. focus on Lazarus Planet, include Superman…"
+                    placeholder={expandable
+                      ? "e.g. focus on Lazarus Planet, include Superman…"
+                      : "e.g. now include Robin stories, add crossover events…"}
                     rows={2}
                     style={{
                       width: '100%', fontFamily: MONO,
@@ -114,24 +116,24 @@ export function ConstellationDetail({ node, open, readingList, alreadyRead, char
                 )}
                 <button
                   onClick={() => {
-                    if (!expanding && expandable) {
+                    if (!expanding) {
                       onExpand(node.id, refinement);
                       setRefinement('');
                     }
                   }}
-                  disabled={expanding || !expandable}
+                  disabled={expanding}
                   style={{
                     width: '100%', fontFamily: MONO,
                     fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
                     padding: '10px 14px', marginBottom: 4,
-                    border: `1px solid ${expandable ? color : '#2a2b38'}`,
-                    background: expandable ? `${color}22` : 'transparent',
-                    color: expandable ? color : '#555',
-                    cursor: expandable && !expanding ? 'pointer' : 'default',
+                    border: `1px solid ${expandable ? color : '#3a3b48'}`,
+                    background: expandable ? `${color}22` : 'rgba(58,59,72,0.15)',
+                    color: expandable ? color : '#8a8a97',
+                    cursor: expanding ? 'default' : 'pointer',
                     opacity: expanding ? 0.6 : 1,
                   }}
                 >
-                  {expanding ? 'Expanding…' : expandable ? '+ Expand' : 'Expanded ✓'}
+                  {expanding ? 'Expanding…' : expandable ? '+ Expand' : '+ Expand again'}
                 </button>
               </>
             )}
