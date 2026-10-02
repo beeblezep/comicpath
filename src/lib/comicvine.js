@@ -2,7 +2,10 @@ const BASE = '/api/comicvine';
 
 async function cvFetch(path) {
   const res = await fetch(`${BASE}${path}`);
-  if (!res.ok) throw new Error(`ComicVine ${res.status}: ${res.statusText}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(`ComicVine ${res.status}: ${body.error || res.statusText}`);
+  }
   const json = await res.json();
   if (json.error !== 'OK' && json.status_code !== 1) {
     throw new Error(`ComicVine error: ${json.error}`);
@@ -186,6 +189,21 @@ export async function searchStoryArcs(query) {
     name: a.name,
     deck: a.deck,
     publisher: a.publisher?.name ?? null,
+  }));
+}
+
+export async function getVolumeIssues(volumeId, limit = 60) {
+  const params = new URLSearchParams({
+    filter: `volume:${volumeId}`,
+    field_list: 'issue_number,name,cover_date',
+    sort: 'cover_date:asc',
+    limit: String(limit),
+  });
+  const json = await cvFetch(`/issues/?${params}`);
+  return (json.results || []).map((i) => ({
+    number: i.issue_number,
+    name: i.name,
+    coverDate: i.cover_date,
   }));
 }
 

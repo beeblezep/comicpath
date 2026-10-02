@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { usePathBuilder } from '../hooks/usePathBuilder';
 import { fetchRelatedTitles } from '../lib/api';
 import { mergeExpansion } from '../lib/graphMerge';
@@ -9,11 +9,18 @@ const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
 const PHASE = { SEARCH: 'search', BUILDING: 'building' };
 
-export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery }) {
+export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, history }) {
   const pb = usePathBuilder();
   const [phase, setPhase] = useState(pb.hasSavedPath ? PHASE.BUILDING : PHASE.SEARCH);
-  const [expandingId, setExpandingId] = useState(null);
+  const [expandingIds, setExpandingIds] = useState(new Set());
   const [toast, setToast] = useState(null);
+
+  // Latest graph, so an expansion that finishes after another merges into
+  // the up-to-date graph instead of the one captured when it started.
+  const graphRef = useRef(pb.graph);
+  graphRef.current = pb.graph;
+
+  const seedNodeId = (pb.graph.nodes.find((n) => n.tags?.includes('seed')) || pb.graph.nodes[0])?.id || null;
 
   function showToast(msg) {
     setToast(msg);
@@ -41,24 +48,47 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery })
     setPhase(PHASE.BUILDING);
   }, [pb]);
 
-  const handleExpand = useCallback(async (nodeId, refinementPrompt) => {
-    const node = pb.graph.nodes.find((n) => n.id === nodeId);
-    if (!node) return;
+  const handleExpandMany = useCallback(async (nodeIds, refinementPrompt, source = 'chat') => {
+    const nodes = nodeIds
+      .map((id) => graphRef.current.nodes.find((n) => n.id === id))
+      .filter(Boolean);
+    if (nodes.length === 0) return;
 
-    setExpandingId(nodeId);
+    const ids = nodes.map((n) => n.id);
+    const entryId = history.add({
+      prompt: refinementPrompt || '',
+      nodeIds: ids,
+      nodeTitles: nodes.map((n) => n.title),
+      source,
+      status: 'pending',
+    });
+
+    setExpandingIds((prev) => new Set([...prev, ...ids]));
     try {
-      const existingTitles = pb.graph.nodes.map((n) => n.title);
-      const { relatedNodes, edges } = await fetchRelatedTitles(node.title, existingTitles, refinementPrompt);
+      const existingTitles = graphRef.current.nodes.map((n) => n.title);
+      const { relatedNodes, edges } = await fetchRelatedTitles(nodes.map((n) => n.title), existingTitles, refinementPrompt);
 
-      const { graph: merged } = mergeExpansion(pb.graph, nodeId, relatedNodes, edges);
+      const { graph: merged, newNodeIds } = mergeExpansion(graphRef.current, ids[0], relatedNodes, edges);
+      graphRef.current = merged;
       pb.setGraph(merged);
-      pb.markExpanded(nodeId);
+      ids.forEach((id) => pb.markExpanded(id));
+      history.update(entryId, { status: 'done', added: newNodeIds.length });
     } catch (err) {
-      showToast(err.message || 'Failed to expand. Try again.');
+      const msg = err.message || 'Failed to expand. Try again.';
+      history.update(entryId, { status: 'error', error: msg });
+      showToast(msg);
     } finally {
-      setExpandingId(null);
+      setExpandingIds((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
     }
-  }, [pb]);
+  }, [pb, history]);
+
+  const handleExpand = useCallback((nodeId, refinementPrompt) => {
+    return handleExpandMany([nodeId], refinementPrompt, 'drawer');
+  }, [handleExpandMany]);
 
   const handleClose = useCallback(() => {
     onReset();
@@ -66,8 +96,9 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery })
 
   const handleStartNew = useCallback(() => {
     pb.reset();
+    history.clear();
     setPhase(PHASE.SEARCH);
-  }, [pb]);
+  }, [pb, history]);
 
   if (phase === PHASE.SEARCH) {
     return (
@@ -106,28 +137,14 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery })
         character={null}
         onClose={handleClose}
         onExpand={handleExpand}
+        onExpandMany={handleExpandMany}
         expandedIds={pb.expandedIds}
-        expandingId={expandingId}
+        expandingIds={expandingIds}
+        history={history.entries}
+        seedNodeId={seedNodeId}
+        onNewPath={handleStartNew}
         title={pb.seedTitle || 'Reading Path'}
       />
-
-      {/* New Path button — top area, left of back */}
-      <button
-        onClick={handleStartNew}
-        style={{
-          position: 'fixed', top: 24, left: 34,
-          fontFamily: MONO, fontSize: 11, letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          padding: '8px 18px', marginTop: 24,
-          border: '1px solid #2a2b38',
-          background: 'rgba(8,8,13,0.8)',
-          color: '#7c7c8a',
-          cursor: 'pointer',
-          zIndex: 115,
-        }}
-      >
-        New Path
-      </button>
 
       {/* Toast overlay */}
       {toast && (

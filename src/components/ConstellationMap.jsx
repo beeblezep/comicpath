@@ -4,6 +4,7 @@ import { ConstellationEdge } from './ConstellationEdge';
 import { ConstellationNode } from './ConstellationNode';
 import { ConstellationDetail } from './ConstellationDetail';
 import { ConstellationToolbar } from './ConstellationToolbar';
+import { ConstellationChat, CHAT_WIDTH } from './ConstellationChat';
 
 const CANVAS_W = 1600;
 const CANVAS_H = 1000;
@@ -16,11 +17,16 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-export function ConstellationMap({ graph, readingList, alreadyRead, character, onClose, onExpand, expandedIds, expandingId, title }) {
+export function ConstellationMap({ graph, readingList, alreadyRead, character, onClose, onExpand, onExpandMany, expandedIds, expandingIds, history, seedNodeId, onNewPath, title }) {
   const [focusedId, setFocusedId] = useState(null);
   const [hiddenIds, setHiddenIds] = useState(new Set());
   const [tierFilter, setTierFilter] = useState(new Set(['essential', 'recommended', 'optional']));
   const [showHidden, setShowHidden] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [chatOpen, setChatOpen] = useState(true);
+
+  const hasChat = !!onExpandMany;
+  const leftOffset = hasChat && chatOpen ? CHAT_WIDTH + 34 : 34;
 
   const svgRef = useRef(null);
   const containerRef = useRef(null);
@@ -87,6 +93,11 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'Escape') {
+        const tag = e.target?.tagName;
+        if (tag === 'TEXTAREA' || tag === 'INPUT') {
+          e.target.blur();
+          return;
+        }
         if (focusedId) setFocusedId(null);
         else if (onClose) onClose();
       }
@@ -134,8 +145,21 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
     return edgePaths.filter((e) => visibleSet.has(e.sourceId) && visibleSet.has(e.targetId));
   }, [edgePaths, visibleNodes]);
 
-  const handleNodeClick = useCallback((id) => {
+  const toggleSelected = useCallback((id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleNodeClick = useCallback((id, e) => {
     if (dragging.current?.didDrag) return;
+    if (hasChat && (e?.shiftKey || e?.metaKey)) {
+      toggleSelected(id);
+      return;
+    }
     setFocusedId((prev) => {
       if (prev === id) {
         zoomToFull();
@@ -144,7 +168,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
       zoomToNode(id);
       return id;
     });
-  }, [zoomToNode, zoomToFull]);
+  }, [zoomToNode, zoomToFull, hasChat, toggleSelected]);
 
   const handleBackgroundClick = useCallback(() => {
     if (dragging.current?.didDrag) return;
@@ -168,6 +192,12 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
 
   const handleHide = useCallback((id) => {
     setHiddenIds((prev) => new Set(prev).add(id));
+    setSelectedIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
     setFocusedId(null);
     zoomToFull();
   }, [zoomToFull]);
@@ -285,6 +315,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
               alreadyRead={alreadyRead.isRead(slug)}
               hidden={hiddenIds.has(node.id)}
               expandable={expandedIds ? !expandedIds.has(node.id) : false}
+              selected={selectedIds.has(node.id)}
               onClick={handleNodeClick}
             />
           );
@@ -293,13 +324,35 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
 
       {/* HUD: top-left title */}
       <div style={{
-        position: 'fixed', top: 30, left: 34,
+        position: 'fixed', top: 30, left: leftOffset,
         fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em',
         textTransform: 'uppercase', color: '#7c7c8a',
         pointerEvents: 'none',
+        transition: 'left .35s cubic-bezier(.2,.8,.2,1)',
       }}>
         {title || character || 'Reading Path'}
       </div>
+
+      {/* HUD: top-left new path button */}
+      {onNewPath && (
+        <button
+          onClick={onNewPath}
+          style={{
+            position: 'fixed', top: 24, left: leftOffset,
+            fontFamily: MONO, fontSize: 11, letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            padding: '8px 18px', marginTop: 24,
+            border: '1px solid #2a2b38',
+            background: 'rgba(8,8,13,0.8)',
+            color: '#7c7c8a',
+            cursor: 'pointer',
+            zIndex: 105,
+            transition: 'left .35s cubic-bezier(.2,.8,.2,1)',
+          }}
+        >
+          New Path
+        </button>
+      )}
 
       {/* HUD: top-right back button */}
       <button
@@ -322,8 +375,9 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
 
       {/* HUD: bottom-left toolbar */}
       <div style={{
-        position: 'fixed', bottom: 30, left: 34,
+        position: 'fixed', bottom: 30, left: leftOffset,
         zIndex: 105,
+        transition: 'left .35s cubic-bezier(.2,.8,.2,1)',
       }}>
         <ConstellationToolbar
           tierFilter={tierFilter}
@@ -362,8 +416,25 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
         totalNodes={graph.nodes.length}
         onExpand={onExpand}
         expandable={focusedId && expandedIds ? !expandedIds.has(focusedId) : false}
-        expanding={focusedId === expandingId}
+        expanding={!!focusedId && !!expandingIds?.has(focusedId)}
       />
+
+      {hasChat && (
+        <ConstellationChat
+          open={chatOpen}
+          onToggle={() => setChatOpen((p) => !p)}
+          nodes={graph.nodes}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelected}
+          onSetSelection={(ids) => setSelectedIds(new Set(ids))}
+          onClearSelection={() => setSelectedIds(new Set())}
+          seedNodeId={seedNodeId}
+          focusedNode={focusedNode}
+          history={history || []}
+          busy={!!expandingIds && expandingIds.size > 0}
+          onSend={(ids, prompt) => onExpandMany(ids, prompt, 'chat')}
+        />
+      )}
     </div>
   );
 }

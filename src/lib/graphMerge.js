@@ -71,6 +71,32 @@ export function mergeExpansion(existingGraph, sourceNodeId, relatedNodes, relate
     });
   }
 
+  // New nodes the model left unattached to the existing graph (directly or via
+  // other new nodes) would float free, so anchor each such group to the source.
+  if (sourceNode) {
+    const attached = new Set(existingGraph.nodes.map((n) => n.id));
+    const spread = () => {
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const e of newEdges) {
+          if (attached.has(e.source) !== attached.has(e.target)) {
+            attached.add(e.source);
+            attached.add(e.target);
+            grew = true;
+          }
+        }
+      }
+    };
+    spread();
+    for (const id of newNodeIds) {
+      if (attached.has(id)) continue;
+      newEdges.push({ source: sourceNode.id, target: id, type: 'branches-from', label: '' });
+      attached.add(id);
+      spread();
+    }
+  }
+
   return {
     graph: {
       targetTitle: existingGraph.targetTitle,

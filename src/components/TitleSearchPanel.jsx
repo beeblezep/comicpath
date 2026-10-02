@@ -7,20 +7,28 @@ export function TitleSearchPanel({ onSelect, initialQuery }) {
   const [value, setValue] = useState(initialQuery || '');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [error, setError] = useState(null);
   const debounceRef = useRef(null);
 
   const doSearch = useCallback(async (query) => {
     const q = query.trim();
     if (!q) {
       setResults([]);
+      setError(null);
       return;
     }
     setSearching(true);
+    setError(null);
     try {
-      const [volumes, arcs] = await Promise.all([
-        searchVolumes(q).catch(() => []),
-        searchStoryArcs(q).catch(() => []),
+      const [volRes, arcRes] = await Promise.allSettled([
+        searchVolumes(q),
+        searchStoryArcs(q),
       ]);
+      if (volRes.status === 'rejected' && arcRes.status === 'rejected') {
+        throw volRes.reason;
+      }
+      const volumes = volRes.status === 'fulfilled' ? volRes.value : [];
+      const arcs = arcRes.status === 'fulfilled' ? arcRes.value : [];
 
       const seen = new Set();
       const combined = [];
@@ -51,8 +59,9 @@ export function TitleSearchPanel({ onSelect, initialQuery }) {
         });
       }
       setResults(combined);
-    } catch {
+    } catch (err) {
       setResults([]);
+      setError(err.message || 'Search failed.');
     } finally {
       setSearching(false);
     }
@@ -157,7 +166,14 @@ export function TitleSearchPanel({ onSelect, initialQuery }) {
         </div>
       )}
 
-      {!searching && value.trim() && results.length === 0 && (
+      {!searching && error && (
+        <p style={{ color: '#e06666', fontSize: 13, padding: '12px 0' }}>
+          Search failed — {error}.
+          {import.meta.env.DEV && ' Check that the API keys are set in .env and restart the dev server.'}
+        </p>
+      )}
+
+      {!searching && !error && value.trim() && results.length === 0 && (
         <p style={{ color: 'var(--color-muted)', fontSize: 13, padding: '12px 0' }}>
           No results found. Try a different title.
         </p>

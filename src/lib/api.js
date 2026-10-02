@@ -1,10 +1,54 @@
 /* ============================================================
-   ComicPath — API client (Groq LLM + ComicVine enrichment)
+   ComicPath — API client (Claude LLM with Groq fallback + ComicVine enrichment)
    ============================================================ */
 
-import { searchComicVineSmartly, searchVolumes, searchStoryArcs } from './comicvine.js';
+import { searchComicVineSmartly, searchVolumes, searchStoryArcs, getVolumeIssues } from './comicvine.js';
 
-const API_URL = '/api/groq/openai/v1/chat/completions';
+const CLAUDE_URL = '/api/claude';
+const GROQ_URL = '/api/groq/openai/v1/chat/completions';
+
+async function callClaude(prompt) {
+  const response = await fetch(CLAUDE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`${response.status}: ${body.error || response.statusText}`);
+  if (!body.text) throw new Error('empty response');
+  return body.text;
+}
+
+async function callGroq(prompt, maxTokens) {
+  const response = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'openai/gpt-oss-120b',
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    const msg = body.error?.message || response.statusText;
+    throw new Error(`API error ${response.status}: ${msg}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content ?? '';
+}
+
+// Claude is preferred; Groq answers when Claude is not configured or fails.
+async function callLLM(prompt, groqMaxTokens) {
+  try {
+    return await callClaude(prompt);
+  } catch (err) {
+    console.warn('Claude unavailable, falling back to Groq:', err.message);
+    return callGroq(prompt, groqMaxTokens);
+  }
+}
 
 /* ── Disambiguation rules ─────────────────────────────────── */
 const DISAMBIGUATION_RULES = `
@@ -272,28 +316,103 @@ function readingPathToGraph(rp) {
 
 /* ── Related-titles prompt for path builder ──────────────── */
 
-function buildRelatedTitlesPrompt(title, cvContext, existingTitles, refinementPrompt = '') {
-  let contextBlock = '';
-  if (cvContext) {
-    const lines = [`Target: ${cvContext.name || title}`];
-    if (cvContext.publisher) lines.push(`Publisher: ${cvContext.publisher}`);
-    if (cvContext.startYear) lines.push(`Year: ${cvContext.startYear}`);
-    if (cvContext.issueCount) lines.push(`Issues: ${cvContext.issueCount}`);
-    if (cvContext.deck) lines.push(`Description: ${cvContext.deck}`);
-    contextBlock = `\nVERIFIED DATA from ComicVine:\n${lines.join('\n')}\n`;
+// "The Zoo, Part One" / "The Straw Man: Part 3" / "Abomination, Conclusion" → arc name
+function arcNameOf(issueName) {
+  return (issueName || '')
+    .replace(/[\s,:–-]+(part\s+[\w-]+|conclusion|finale|prologue|epilogue)\b.*$/i, '')
+    .trim();
+}
+
+function groupIssuesIntoArcs(issues) {
+  const arcs = [];
+  for (const issue of issues) {
+    const name = arcNameOf(issue.name);
+    const year = issue.coverDate?.slice(0, 4) || '';
+    const last = arcs[arcs.length - 1];
+    if (last && name && last.name.toLowerCase() === name.toLowerCase()) {
+      last.last = issue.number;
+      last.endYear = year || last.endYear;
+    } else {
+      arcs.push({ name, first: issue.number, last: issue.number, startYear: year, endYear: year });
+    }
   }
+  return arcs;
+}
+
+function buildRequestContextBlock(requestContext) {
+  if (!requestContext) return '';
+  const { volumes, arcs } = requestContext;
+  if (volumes.length === 0 && arcs.length === 0) return '';
+
+  const volLines = volumes.map((v) => {
+    const meta = [v.publisher, v.startYear, v.issueCount ? `${v.issueCount} issues` : ''].filter(Boolean).join(', ');
+    const head = `  - ${v.name}${meta ? ` (${meta})` : ''}${v.deck?.trim() ? ': ' + v.deck.trim() : ''}`;
+    if (!v.issues?.length) return head;
+    const arcLines = groupIssuesIntoArcs(v.issues)
+      .map((a) => {
+        const range = a.first === a.last ? `#${a.first}` : `#${a.first}-${a.last}`;
+        const years = a.startYear && a.endYear && a.startYear !== a.endYear ? `${a.startYear}-${a.endYear}` : a.startYear;
+        return `      ${range}${a.name ? ` "${a.name}"` : ''}${years ? ` (${years})` : ''}`;
+      })
+      .join('\n');
+    return `${head}\n    Story arcs by issue:\n${arcLines}`;
+  });
+  const arcLines = arcs.map((a) => `  - ${a.name}${a.publisher ? ` (${a.publisher})` : ''}${a.deck?.trim() ? ': ' + a.deck.trim() : ''}`);
+
+  return `
+ComicVine title-search results for the reader's request. These are real publications and may be NEWER than your training data, so trust an entry that matches the request even if you don't recognize it. It is a raw keyword search, though: entries that merely share a word with the request are noise — never return an entry just because it is listed here.
+${volLines.length ? `Series:\n${volLines.join('\n')}\n` : ''}${arcLines.length ? `Story arcs:\n${arcLines.join('\n')}\n` : ''}`;
+}
+
+function buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt = '', requestContext = null) {
+  const contextBlock = cvContexts
+    .map((ctx, i) => {
+      if (!ctx) return '';
+      const lines = [`Target: ${ctx.name || titles[i]}`];
+      if (ctx.publisher) lines.push(`Publisher: ${ctx.publisher}`);
+      if (ctx.startYear) lines.push(`Year: ${ctx.startYear}`);
+      if (ctx.issueCount) lines.push(`Issues: ${ctx.issueCount}`);
+      if (ctx.deck) lines.push(`Description: ${ctx.deck}`);
+      return `\nVERIFIED DATA from ComicVine:\n${lines.join('\n')}\n`;
+    })
+    .join('');
 
   const excludeList = existingTitles.length > 0
     ? `\nDo NOT include any of these titles (they are already in the reading path):\n${existingTitles.map((t) => `- ${t}`).join('\n')}\n`
     : '';
 
+  const multi = titles.length > 1;
+  const quoted = titles.map((t) => `"${t}"`).join(', ');
+
+  // A refinement request replaces the generic "related titles" task rather than
+  // nudging it — otherwise the model just returns the title's best-known stories.
   const refinementBlock = refinementPrompt
-    ? `\nIMPORTANT — The reader has a specific request for this expansion:\n"${refinementPrompt}"\nPrioritize titles and connections that match this request. Still include essential context even if not explicitly mentioned, but weight your suggestions toward what the reader asked for.\n`
+    ? `${buildRequestContextBlock(requestContext)}
+HOW TO FULFIL THE REQUEST:
+- Every title you return must directly satisfy the request "${refinementPrompt}". Do NOT fall back on the generic best-known stories for ${quoted}.
+- If the request names a specific series, imprint, line, character, creator, or event, return story arcs from it or stories directly tied to it.
+- Start from your own knowledge of what the reader means. Use the ComicVine results only where an entry is clearly the thing they asked for, or to get accurate issue numbers and years.
+- When the results include a series the reader asked for by name along with its story arcs, return those arcs: one node per arc, titled "Series Name: Arc Name" with issues like "Series Name #1-6", using the listed issue ranges and years exactly. Cover the arcs in order rather than stopping partway.
+- Return stories, not editions: never return collected, reprint, deluxe/"Absolute Edition" hardcover, or foreign-language editions as separate titles.
+- If only a few titles genuinely match, return fewer rather than padding with unrelated ones.
+`
     : '';
+
+  const intro = refinementPrompt
+    ? `A reader is building a reading path around ${multi ? 'these comic titles' : 'the comic title'}: ${quoted}. They asked:\n"${refinementPrompt}"\nSuggest up to 8 titles that fulfil this request.`
+    : multi
+      ? `Given these comic titles: ${quoted}, suggest 4-8 related titles a reader should know about that are relevant to them. Include direct prequels, sequels, crossovers, and thematically connected stories.`
+      : `Given the comic title ${quoted}, suggest 4-8 related titles a reader should know about. Include direct prequels, sequels, crossovers, and thematically connected stories.`;
+  const countRule = refinementPrompt
+    ? '- Up to 8 titles, all matching the reader\'s request. Categorize each as essential, recommended, or optional.'
+    : '- 4-8 related titles. Categorize each as essential, recommended, or optional.';
+  const edgeRule = multi
+    ? `- Edges should connect each related title to one or more of ${quoted} (use their exact titles). Also include edges between related titles where relationships exist.`
+    : `- Edges should connect ${quoted} to the related titles. Also include edges between related titles where relationships exist.`;
 
   return `You are ComicPath, an expert comic book guide.
 
-Given the comic title "${title}", suggest 4-8 related titles a reader should know about. Include direct prequels, sequels, crossovers, and thematically connected stories.
+${intro}
 ${contextBlock}${excludeList}${refinementBlock}
 Return ONLY a JSON object — no markdown, no preamble, no trailing text.
 
@@ -321,9 +440,9 @@ Structure:
 }
 
 Rules:
-- 4-8 related titles. Categorize each as essential, recommended, or optional.
+${countRule}
 - weight: 1-5 (5 = most important).
-- Edges should connect "${title}" to the related titles. Also include edges between related titles where relationships exist.
+${edgeRule}
 - Use real titles with accurate issue numbers from actual publications.
 - tier: essential = must-read context, recommended = enriches the experience, optional = for completists.
 - Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in).
@@ -365,45 +484,88 @@ function parseRelatedTitlesResponse(text) {
   return { relatedNodes: nodes, edges };
 }
 
-export async function fetchRelatedTitles(title, existingTitles = [], refinementPrompt = '') {
-  let cvContext = null;
+async function lookupTitleContext(title) {
   try {
     const [volumes, arcs] = await Promise.all([
       searchVolumes(title).catch(() => []),
       searchStoryArcs(title).catch(() => []),
     ]);
     const match = volumes[0] || arcs[0] || null;
-    if (match) {
-      cvContext = {
-        name: match.name,
-        publisher: match.publisher?.name || match.publisher || '',
-        startYear: match.start_year || match.startYear || '',
-        issueCount: match.count_of_issues || match.issueCount || '',
-        deck: match.deck || '',
-      };
-    }
+    if (!match) return null;
+    return {
+      name: match.name,
+      publisher: match.publisher?.name || match.publisher || '',
+      startYear: match.start_year || match.startYear || '',
+      issueCount: match.count_of_issues || match.issueCount || '',
+      deck: match.deck || '',
+    };
   } catch (err) {
     console.warn('ComicVine lookup failed for related titles:', err.message);
+    return null;
   }
+}
 
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'openai/gpt-oss-120b',
-      max_tokens: 4000,
-      messages: [{ role: 'user', content: buildRelatedTitlesPrompt(title, cvContext, existingTitles, refinementPrompt) }],
-    }),
-  });
+const REQUEST_FILLER = new Set([
+  'a', 'an', 'the', 'and', 'or', 'of', 'to', 'for', 'in', 'on', 'with', 'from', 'about', 'some', 'any', 'all',
+  'now', 'also', 'please', 'just', 'only', 'more', 'me', 'i', 'want', 'need', 'like',
+  'include', 'including', 'add', 'show', 'give', 'find', 'focus', 'expand', 'explore',
+  'story', 'stories', 'arc', 'arcs', 'title', 'titles', 'comic', 'comics', 'series', 'related',
+]);
 
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    const msg = body.error?.message || response.statusText;
-    throw new Error(`API error ${response.status}: ${msg}`);
+// Volumes with more issues than this are long-running series; their first
+// issues say little about what the reader asked for, so skip the issue list.
+const MAX_ISSUES_FOR_LISTING = 60;
+
+// Looks up what the reader's free-text request refers to, so the model can
+// use real (and possibly post-training-cutoff) series and arcs.
+async function lookupRequestContext(refinementPrompt) {
+  const term = refinementPrompt
+    .split(/[^\p{L}\p{N}'&:#.-]+/u)
+    .filter((w) => w && !REQUEST_FILLER.has(w.toLowerCase()))
+    .join(' ');
+  if (!term) return null;
+
+  try {
+    const [volumes, arcs] = await Promise.all([
+      searchVolumes(term).catch(() => []),
+      searchStoryArcs(term).catch(() => []),
+    ]);
+
+    // Same-named results are reprints/translations of one series; keep the fullest run.
+    const byName = new Map();
+    for (const v of volumes) {
+      const key = v.name.toLowerCase();
+      const kept = byName.get(key);
+      if (!kept || (v.issueCount || 0) > (kept.issueCount || 0)) byName.set(key, v);
+    }
+    const unique = [...byName.values()];
+
+    const listable = unique
+      .filter((v) => v.issueCount > 1 && v.issueCount <= MAX_ISSUES_FOR_LISTING)
+      .sort((a, b) => b.issueCount - a.issueCount)
+      .slice(0, 2);
+    await Promise.all(listable.map(async (v) => {
+      v.issues = await getVolumeIssues(v.id, MAX_ISSUES_FOR_LISTING).catch(() => []);
+    }));
+
+    return { volumes: unique, arcs };
+  } catch (err) {
+    console.warn('ComicVine lookup failed for expansion request:', err.message);
+    return null;
   }
+}
 
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content ?? '';
+export async function fetchRelatedTitles(titleOrTitles, existingTitles = [], refinementPrompt = '') {
+  const titles = Array.isArray(titleOrTitles) ? titleOrTitles : [titleOrTitles];
+  const [cvContexts, requestContext] = await Promise.all([
+    Promise.all(titles.slice(0, 3).map(lookupTitleContext)),
+    refinementPrompt ? lookupRequestContext(refinementPrompt) : null,
+  ]);
+
+  const text = await callLLM(
+    buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt, requestContext),
+    4000,
+  );
   return parseRelatedTitlesResponse(text);
 }
 
@@ -415,23 +577,6 @@ export async function fetchComicGuide(query, mode = 'full') {
     console.warn('ComicVine lookup failed, falling back to LLM-only:', err.message);
   }
 
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'openai/gpt-oss-120b',
-      max_tokens: 5500,
-      messages: [{ role: 'user', content: buildPrompt(query, cvData, mode) }],
-    }),
-  });
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    const msg = body.error?.message || response.statusText;
-    throw new Error(`API error ${response.status}: ${msg}`);
-  }
-
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content ?? '';
+  const text = await callLLM(buildPrompt(query, cvData, mode), 5500);
   return parseResponse(text);
 }

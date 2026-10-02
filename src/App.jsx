@@ -3,6 +3,7 @@ import { fetchComicGuide } from './lib/api';
 import { useReadingList } from './hooks/useReadingList';
 import { useAlreadyRead } from './hooks/useAlreadyRead';
 import { usePathBuilder } from './hooks/usePathBuilder';
+import { usePromptHistory } from './hooks/usePromptHistory';
 import { SearchBar } from './components/SearchBar';
 import { ResultsView } from './components/ResultsView';
 import { ReadingListPanel } from './components/ReadingListPanel';
@@ -19,6 +20,7 @@ export default function App() {
   const readingList = useReadingList();
   const alreadyRead = useAlreadyRead();
   const pathBuilder = usePathBuilder();
+  const promptHistory = usePromptHistory();
 
   async function handleSearch(query, mode) {
     setView(VIEW.LOADING);
@@ -121,6 +123,7 @@ export default function App() {
           alreadyRead={alreadyRead}
           onReset={handleReset}
           initialQuery={builderQuery}
+          history={promptHistory}
         />
       )}
 
