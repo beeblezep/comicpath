@@ -22,8 +22,20 @@ const linkButtonStyle = {
   color: '#7c7c8a', cursor: 'pointer',
 };
 
+const tagStyle = {
+  border: '1px solid #2a2b38', padding: '1px 5px', marginRight: 6,
+  textTransform: 'uppercase', letterSpacing: '0.06em',
+};
+
+const FORMATS = [
+  { id: 'issues', label: 'Issues', answer: 'Single issues' },
+  { id: 'collected', label: 'Collected', answer: 'Collected editions' },
+];
+
 function HistoryEntry({ entry, onReuse }) {
-  const status = entry.status === 'pending'
+  const status = entry.status === 'asking'
+    ? <span style={{ color: '#e8a33d' }}>Choose a format…</span>
+    : entry.status === 'pending'
     ? <span style={{ color: '#e8a33d' }}>Expanding…</span>
     : entry.status === 'error'
       ? <span style={{ color: '#e06666' }}>{entry.error}</span>
@@ -45,12 +57,14 @@ function HistoryEntry({ entry, onReuse }) {
       <div style={{ fontSize: 12, lineHeight: 1.6, color: entry.prompt ? '#c9c7bd' : '#7c7c8a', marginBottom: 6, whiteSpace: 'pre-wrap' }}>
         {entry.prompt || '(no prompt)'}
       </div>
+      {entry.note && (
+        <div style={{ fontSize: 11, lineHeight: 1.6, color: '#8f8d9c', marginBottom: 8, paddingLeft: 8, borderLeft: '2px solid #7c5cfc' }}>
+          {entry.note}
+        </div>
+      )}
       <div style={{ fontSize: 10, lineHeight: 1.6, color: '#7c7c8a', marginBottom: 4 }}>
-        {entry.source === 'drawer' && (
-          <span style={{ border: '1px solid #2a2b38', padding: '1px 5px', marginRight: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            drawer
-          </span>
-        )}
+        {entry.source === 'drawer' && <span style={tagStyle}>drawer</span>}
+        {entry.format && <span style={tagStyle}>{entry.format}</span>}
         → {entry.nodeTitles.join(', ')}
       </div>
       <div style={{ fontSize: 10, letterSpacing: '0.04em' }}>{status}</div>
@@ -61,13 +75,14 @@ function HistoryEntry({ entry, onReuse }) {
 export function ConstellationChat({
   open, onToggle, nodes, selectedIds, onToggleSelect, onSetSelection, onClearSelection,
   seedNodeId, focusedNode, history, busy, onSend,
+  format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat,
 }) {
   const [prompt, setPrompt] = useState('');
   const listRef = useRef(null);
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [history]);
+  }, [history, formatQuestion]);
 
   const nodeById = new Map(nodes.map((n) => [n.id, n]));
   const selectedNodes = [...selectedIds].map((id) => nodeById.get(id)).filter(Boolean);
@@ -77,7 +92,7 @@ export function ConstellationChat({
     : seedNode ? [seedNode.id] : [];
 
   const trimmed = prompt.trim();
-  const canSend = !busy && targetIds.length > 0 && (trimmed.length > 0 || selectedNodes.length > 0);
+  const canSend = !busy && !formatQuestion && targetIds.length > 0 && (trimmed.length > 0 || selectedNodes.length > 0);
 
   function send() {
     if (!canSend) return;
@@ -145,6 +160,35 @@ export function ConstellationChat({
           ) : (
             history.map((entry) => <HistoryEntry key={entry.id} entry={entry} onReuse={reuse} />)
           )}
+          {formatQuestion && (
+            <div style={{ padding: '10px 12px', background: '#14141d', border: '1px solid #7c5cfc' }}>
+              <div style={{ fontSize: 12, lineHeight: 1.6, color: '#c9c7bd', marginBottom: 8 }}>
+                Single issues or collected editions?
+              </div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                {FORMATS.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => onAnswerFormat(f.id)}
+                    style={{
+                      flex: 1, fontFamily: MONO, fontSize: 11,
+                      padding: '8px 6px',
+                      border: '1px solid #7c5cfc',
+                      background: 'rgba(124,92,252,0.13)',
+                      color: '#7c5cfc',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {f.answer}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#7c7c8a' }}>
+                <span>You can change this any time below</span>
+                <button onClick={onCancelFormat} style={linkButtonStyle}>Cancel</button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Targets */}
@@ -193,6 +237,35 @@ export function ConstellationChat({
           {selectedNodes.length > 0 && (
             <button onClick={onClearSelection} style={linkButtonStyle}>Clear</button>
           )}
+        </div>
+
+        {/* Format */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <span style={{ fontSize: 10, color: '#555' }}>build from</span>
+          <div style={{ display: 'flex', flex: 1 }}>
+            {FORMATS.map((f, i) => {
+              const active = format === f.id;
+              return (
+                <button
+                  key={f.id}
+                  aria-pressed={active}
+                  onClick={() => (formatQuestion ? onAnswerFormat(f.id) : onSetFormat(f.id))}
+                  style={{
+                    flex: 1, fontFamily: MONO, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase',
+                    padding: '5px 8px',
+                    border: `1px solid ${active ? '#7c5cfc' : '#2a2b38'}`,
+                    marginLeft: i === 0 ? 0 : -1,
+                    position: 'relative', zIndex: active ? 1 : 0,
+                    background: active ? 'rgba(124,92,252,0.13)' : 'transparent',
+                    color: active ? '#7c5cfc' : '#7c7c8a',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Input */}

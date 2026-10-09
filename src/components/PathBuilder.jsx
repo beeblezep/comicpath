@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { usePathBuilder } from '../hooks/usePathBuilder';
 import { fetchRelatedTitles } from '../lib/api';
 import { mergeExpansion } from '../lib/graphMerge';
+import { detectFormat } from '../lib/formatIntent';
 import { TitleSearchPanel } from './TitleSearchPanel';
 import { ConstellationMap } from './ConstellationMap';
 
@@ -14,6 +15,8 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, h
   const [phase, setPhase] = useState(pb.hasSavedPath ? PHASE.BUILDING : PHASE.SEARCH);
   const [expandingIds, setExpandingIds] = useState(new Set());
   const [toast, setToast] = useState(null);
+  // The expansion waiting on the reader's issues-or-collected answer, if any.
+  const [formatQuestion, setFormatQuestion] = useState(null);
 
   // Latest graph, so an expansion that finishes after another merges into
   // the up-to-date graph instead of the one captured when it started.
@@ -48,31 +51,18 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, h
     setPhase(PHASE.BUILDING);
   }, [pb]);
 
-  const handleExpandMany = useCallback(async (nodeIds, refinementPrompt, source = 'chat') => {
-    const nodes = nodeIds
-      .map((id) => graphRef.current.nodes.find((n) => n.id === id))
-      .filter(Boolean);
-    if (nodes.length === 0) return;
-
+  const runExpansion = useCallback(async (nodes, refinementPrompt, format, entryId) => {
     const ids = nodes.map((n) => n.id);
-    const entryId = history.add({
-      prompt: refinementPrompt || '',
-      nodeIds: ids,
-      nodeTitles: nodes.map((n) => n.title),
-      source,
-      status: 'pending',
-    });
-
     setExpandingIds((prev) => new Set([...prev, ...ids]));
     try {
       const existingTitles = graphRef.current.nodes.map((n) => n.title);
-      const { relatedNodes, edges } = await fetchRelatedTitles(nodes.map((n) => n.title), existingTitles, refinementPrompt);
+      const { relatedNodes, edges, note } = await fetchRelatedTitles(nodes.map((n) => n.title), existingTitles, refinementPrompt, format);
 
       const { graph: merged, newNodeIds } = mergeExpansion(graphRef.current, ids[0], relatedNodes, edges);
       graphRef.current = merged;
       pb.setGraph(merged);
       ids.forEach((id) => pb.markExpanded(id));
-      history.update(entryId, { status: 'done', added: newNodeIds.length });
+      history.update(entryId, { status: 'done', added: newNodeIds.length, note });
     } catch (err) {
       const msg = err.message || 'Failed to expand. Try again.';
       history.update(entryId, { status: 'error', error: msg });
@@ -86,6 +76,60 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, h
     }
   }, [pb, history]);
 
+  const findNodes = (nodeIds) => nodeIds
+    .map((id) => graphRef.current.nodes.find((n) => n.id === id))
+    .filter(Boolean);
+
+  const handleExpandMany = useCallback((nodeIds, refinementPrompt, source = 'chat') => {
+    const nodes = findNodes(nodeIds);
+    if (nodes.length === 0) return;
+
+    // A format named in the prompt wins for this request; otherwise use the
+    // path's saved preference, and ask in the chat if there isn't one yet.
+    const named = detectFormat(refinementPrompt);
+    const format = named || pb.format;
+
+    // A new request replaces one still waiting on the format question.
+    if (formatQuestion) history.remove(formatQuestion.entryId);
+
+    const ids = nodes.map((n) => n.id);
+    const entryId = history.add({
+      prompt: refinementPrompt || '',
+      nodeIds: ids,
+      nodeTitles: nodes.map((n) => n.title),
+      source,
+      format,
+      status: format ? 'pending' : 'asking',
+    });
+
+    if (!format) {
+      setFormatQuestion({ entryId, nodeIds: ids, prompt: refinementPrompt || '' });
+      return;
+    }
+    setFormatQuestion(null);
+    if (!pb.format) pb.setFormat(format);
+    return runExpansion(nodes, refinementPrompt, format, entryId);
+  }, [pb, history, formatQuestion, runExpansion]);
+
+  const handleAnswerFormat = useCallback((format) => {
+    if (!formatQuestion) return;
+    setFormatQuestion(null);
+    pb.setFormat(format);
+    const nodes = findNodes(formatQuestion.nodeIds);
+    if (nodes.length === 0) {
+      history.remove(formatQuestion.entryId);
+      return;
+    }
+    history.update(formatQuestion.entryId, { status: 'pending', format });
+    runExpansion(nodes, formatQuestion.prompt, format, formatQuestion.entryId);
+  }, [pb, history, formatQuestion, runExpansion]);
+
+  const handleCancelFormat = useCallback(() => {
+    if (!formatQuestion) return;
+    history.remove(formatQuestion.entryId);
+    setFormatQuestion(null);
+  }, [history, formatQuestion]);
+
   const handleExpand = useCallback((nodeId, refinementPrompt) => {
     return handleExpandMany([nodeId], refinementPrompt, 'drawer');
   }, [handleExpandMany]);
@@ -97,6 +141,7 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, h
   const handleStartNew = useCallback(() => {
     pb.reset();
     history.clear();
+    setFormatQuestion(null);
     setPhase(PHASE.SEARCH);
   }, [pb, history]);
 
@@ -141,6 +186,11 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, h
         expandedIds={pb.expandedIds}
         expandingIds={expandingIds}
         history={history.entries}
+        format={pb.format}
+        onSetFormat={pb.setFormat}
+        formatQuestion={formatQuestion}
+        onAnswerFormat={handleAnswerFormat}
+        onCancelFormat={handleCancelFormat}
         seedNodeId={seedNodeId}
         onNewPath={handleStartNew}
         title={pb.seedTitle || 'Reading Path'}

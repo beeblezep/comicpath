@@ -3,6 +3,7 @@
    ============================================================ */
 
 import { searchComicVineSmartly, searchVolumes, searchStoryArcs, getVolumeIssues } from './comicvine.js';
+import { FORMAT_WORDS } from './formatIntent.js';
 
 const CLAUDE_URL = '/api/claude';
 const GROQ_URL = '/api/groq/openai/v1/chat/completions';
@@ -364,7 +365,8 @@ ComicVine title-search results for the reader's request. These are real publicat
 ${volLines.length ? `Series:\n${volLines.join('\n')}\n` : ''}${arcLines.length ? `Story arcs:\n${arcLines.join('\n')}\n` : ''}`;
 }
 
-function buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt = '', requestContext = null) {
+function buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt = '', requestContext = null, format = 'issues') {
+  const collected = format === 'collected';
   const contextBlock = cvContexts
     .map((ctx, i) => {
       if (!ctx) return '';
@@ -390,25 +392,51 @@ function buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinement
     ? `${buildRequestContextBlock(requestContext)}
 HOW TO FULFIL THE REQUEST:
 - Every title you return must directly satisfy the request "${refinementPrompt}". Do NOT fall back on the generic best-known stories for ${quoted}.
-- If the request names a specific series, imprint, line, character, creator, or event, return story arcs from it or stories directly tied to it.
+- If the request names a specific series, imprint, line, character, creator, or event, return ${collected ? 'collected editions of it or of stories directly tied to it' : 'story arcs from it or stories directly tied to it'}.
 - Start from your own knowledge of what the reader means. Use the ComicVine results only where an entry is clearly the thing they asked for, or to get accurate issue numbers and years.
-- When the results include a series the reader asked for by name along with its story arcs, return those arcs: one node per arc, titled "Series Name: Arc Name" with issues like "Series Name #1-6", using the listed issue ranges and years exactly. Cover the arcs in order rather than stopping partway.
-- Return stories, not editions: never return collected, reprint, deluxe/"Absolute Edition" hardcover, or foreign-language editions as separate titles.
+${collected
+    ? '- When the results include a series the reader asked for by name along with its story arcs, return the collected editions of that series in order, using the listed issue ranges and arc names to fill "collects" accurately.'
+    : '- When the results include a series the reader asked for by name along with its story arcs, return those arcs: one node per arc, titled "Series Name: Arc Name" with issues like "Series Name #1-6", using the listed issue ranges and years exactly. Cover the arcs in order rather than stopping partway.'}
 - If only a few titles genuinely match, return fewer rather than padding with unrelated ones.
 `
     : '';
 
-  const intro = refinementPrompt
+  const baseIntro = refinementPrompt
     ? `A reader is building a reading path around ${multi ? 'these comic titles' : 'the comic title'}: ${quoted}. They asked:\n"${refinementPrompt}"\nSuggest up to 8 titles that fulfil this request.`
     : multi
       ? `Given these comic titles: ${quoted}, suggest 4-8 related titles a reader should know about that are relevant to them. Include direct prequels, sequels, crossovers, and thematically connected stories.`
       : `Given the comic title ${quoted}, suggest 4-8 related titles a reader should know about. Include direct prequels, sequels, crossovers, and thematically connected stories.`;
+  const intro = collected
+    ? `${baseIntro}\nThe reader reads collected editions, so every title you suggest must be a collected edition.`
+    : baseIntro;
+  // Applies with or without a request, so it lives in the shared rules.
+  const formatRule = collected
+    ? `- Return collected editions, not individual stories: each title is ONE real published trade paperback, hardcover, omnibus, or compendium. "title" is the edition's published title, "issues" is the full range it collects, "edition" is its format, and "collects" lists each run of issues inside it with the story it belongs to.
+- One edition per story: pick the most widely available English-language edition, and never return two editions that collect the same issues.
+`
+    : `- Return stories, not editions: never return collected, reprint, deluxe/"Absolute Edition" hardcover, or foreign-language editions as separate titles.
+`;
+  const editionFields = collected
+    ? `,
+      "edition": "Trade Paperback | Hardcover | Omnibus | Compendium",
+      "collects": [{ "issues": "Batman #404-407", "story": "Year One" }]`
+    : '';
   const countRule = refinementPrompt
     ? '- Up to 8 titles, all matching the reader\'s request. Categorize each as essential, recommended, or optional.'
     : '- 4-8 related titles. Categorize each as essential, recommended, or optional.';
   const edgeRule = multi
     ? `- Edges should connect each related title to one or more of ${quoted} (use their exact titles). Also include edges between related titles where relationships exist.`
     : `- Edges should connect ${quoted} to the related titles. Also include edges between related titles where relationships exist.`;
+  // How the request was read belongs to the chat reply, not to any one node:
+  // without a field of its own the model writes it into a node's "why".
+  const noteField = refinementPrompt
+    ? '  "note": "One or two sentences to the reader on how you read their request.",\n'
+    : '';
+  const noteRule = refinementPrompt
+    ? `- "note": address the reader as "you" and say how you interpreted their request and what you added — especially if you guessed at or corrected a title they named.
+- "why" describes the story itself. Never mention the reader's request or your interpretation of it in "why"; that goes in "note".
+`
+    : '';
 
   return `You are ComicPath, an expert comic book guide.
 
@@ -418,15 +446,15 @@ Return ONLY a JSON object — no markdown, no preamble, no trailing text.
 
 Structure:
 {
-  "relatedNodes": [
+${noteField}  "relatedNodes": [
     {
-      "title": "Story or arc title",
+      "title": "${collected ? 'Published title of the collected edition' : 'Story or arc title'}",
       "year": "YYYY or YYYY-YYYY",
       "issues": "e.g. Batman #404-407",
       "why": "One sentence on why this matters.",
       "tier": "essential | recommended | optional",
       "weight": 3,
-      "tags": ["origin", "crossover", "sequel"]
+      "tags": ["origin", "crossover", "sequel"]${editionFields}
     }
   ],
   "edges": [
@@ -443,13 +471,21 @@ Rules:
 ${countRule}
 - weight: 1-5 (5 = most important).
 ${edgeRule}
-- Use real titles with accurate issue numbers from actual publications.
+${formatRule}${noteRule}- Use real titles with accurate issue numbers from actual publications.
 - tier: essential = must-read context, recommended = enriches the experience, optional = for completists.
 - Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in).
 - Never use "Unknown" — always provide real values.`;
 }
 
-function parseRelatedTitlesResponse(text) {
+function parseEdition(n) {
+  const collects = (Array.isArray(n.collects) ? n.collects : []).slice(0, 20)
+    .map((c) => ({ issues: String(c?.issues || ''), story: String(c?.story || '') }))
+    .filter((c) => c.issues || c.story);
+  const edition = typeof n.edition === 'string' && n.edition.trim() ? n.edition.trim() : 'Collected edition';
+  return { edition, collects };
+}
+
+function parseRelatedTitlesResponse(text, format = 'issues') {
   const clean = text.replace(/```json|```/gi, '').trim();
   let parsed;
   try {
@@ -468,6 +504,7 @@ function parseRelatedTitlesResponse(text) {
     tier: VALID_TIERS.has(n.tier) ? n.tier : 'recommended',
     weight: Math.min(5, Math.max(1, Number(n.weight) || 3)),
     tags: Array.isArray(n.tags) ? n.tags : [],
+    ...(format === 'collected' ? parseEdition(n) : {}),
   }));
 
   const edges = (parsed.edges || []).slice(0, 20).map((e) => ({
@@ -481,7 +518,9 @@ function parseRelatedTitlesResponse(text) {
     throw new Error('No related titles returned');
   }
 
-  return { relatedNodes: nodes, edges };
+  const note = typeof parsed.note === 'string' ? parsed.note.trim() : '';
+
+  return { relatedNodes: nodes, edges, note };
 }
 
 async function lookupTitleContext(title) {
@@ -510,6 +549,7 @@ const REQUEST_FILLER = new Set([
   'now', 'also', 'please', 'just', 'only', 'more', 'me', 'i', 'want', 'need', 'like',
   'include', 'including', 'add', 'show', 'give', 'find', 'focus', 'expand', 'explore',
   'story', 'stories', 'arc', 'arcs', 'title', 'titles', 'comic', 'comics', 'series', 'related',
+  ...FORMAT_WORDS,
 ]);
 
 // Volumes with more issues than this are long-running series; their first
@@ -555,7 +595,7 @@ async function lookupRequestContext(refinementPrompt) {
   }
 }
 
-export async function fetchRelatedTitles(titleOrTitles, existingTitles = [], refinementPrompt = '') {
+export async function fetchRelatedTitles(titleOrTitles, existingTitles = [], refinementPrompt = '', format = 'issues') {
   const titles = Array.isArray(titleOrTitles) ? titleOrTitles : [titleOrTitles];
   const [cvContexts, requestContext] = await Promise.all([
     Promise.all(titles.slice(0, 3).map(lookupTitleContext)),
@@ -563,10 +603,10 @@ export async function fetchRelatedTitles(titleOrTitles, existingTitles = [], ref
   ]);
 
   const text = await callLLM(
-    buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt, requestContext),
+    buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt, requestContext, format),
     4000,
   );
-  return parseRelatedTitlesResponse(text);
+  return parseRelatedTitlesResponse(text, format);
 }
 
 export async function fetchComicGuide(query, mode = 'full') {

@@ -17,7 +17,7 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-export function ConstellationMap({ graph, readingList, alreadyRead, character, onClose, onExpand, onExpandMany, expandedIds, expandingIds, history, seedNodeId, onNewPath, title }) {
+export function ConstellationMap({ graph, readingList, alreadyRead, character, onClose, onExpand, onExpandMany, expandedIds, expandingIds, history, format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat, seedNodeId, onNewPath, title }) {
   const [focusedId, setFocusedId] = useState(null);
   const [hiddenIds, setHiddenIds] = useState(new Set());
   const [tierFilter, setTierFilter] = useState(new Set(['essential', 'recommended', 'optional']));
@@ -84,6 +84,12 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
+
+  // The format question is answered in the chat, so an expand from the detail
+  // panel has to bring the chat into view.
+  useEffect(() => {
+    if (formatQuestion) setChatOpen(true);
+  }, [formatQuestion]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -431,6 +437,11 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
           seedNodeId={seedNodeId}
           focusedNode={focusedNode}
           history={history || []}
+          format={format}
+          onSetFormat={onSetFormat}
+          formatQuestion={formatQuestion}
+          onAnswerFormat={onAnswerFormat}
+          onCancelFormat={onCancelFormat}
           busy={!!expandingIds && expandingIds.size > 0}
           onSend={(ids, prompt) => onExpandMany(ids, prompt, 'chat')}
         />

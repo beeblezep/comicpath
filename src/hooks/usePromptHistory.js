@@ -15,9 +15,13 @@ export function usePromptHistory() {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
   }, []);
 
+  const remove = useCallback((id) => {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+  }, []);
+
   const clear = useCallback(() => {
     setEntries([]);
   }, []);
 
-  return { entries, add, update, clear };
+  return { entries, add, update, remove, clear };
 }

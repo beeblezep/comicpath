@@ -2,6 +2,9 @@ import { useState, useCallback } from 'react';
 
 const STORAGE_KEY = 'comicpath_path_builder';
 
+// format is null until the reader has said which they want.
+const FORMATS = new Set(['issues', 'collected']);
+
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -12,6 +15,7 @@ function load() {
       graph: parsed.graph,
       expandedIds: new Set(parsed.expandedIds || []),
       seedTitle: parsed.seedTitle || '',
+      format: FORMATS.has(parsed.format) ? parsed.format : null,
     };
   } catch {
     return null;
@@ -23,6 +27,7 @@ function save(state) {
     graph: state.graph,
     expandedIds: [...state.expandedIds],
     seedTitle: state.seedTitle,
+    format: state.format,
   }));
 }
 
@@ -32,6 +37,7 @@ export function usePathBuilder() {
       graph: { nodes: [], edges: [], targetTitle: null, pathNote: '' },
       expandedIds: new Set(),
       seedTitle: '',
+      format: null,
     };
   });
 
@@ -64,12 +70,21 @@ export function usePathBuilder() {
     });
   }, []);
 
+  const setFormat = useCallback((format) => {
+    setState((prev) => {
+      const next = { ...prev, format };
+      save(next);
+      return next;
+    });
+  }, []);
+
   const reset = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setState({
       graph: { nodes: [], edges: [], targetTitle: null, pathNote: '' },
       expandedIds: new Set(),
       seedTitle: '',
+      format: null,
     });
   }, []);
 
@@ -77,10 +92,12 @@ export function usePathBuilder() {
     graph: state.graph,
     expandedIds: state.expandedIds,
     seedTitle: state.seedTitle,
+    format: state.format,
     hasSavedPath,
     setGraph,
     markExpanded,
     setSeedTitle,
+    setFormat,
     reset,
   };
 }

@@ -71,7 +71,7 @@ export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hi
         fontSize={11}
         style={{ pointerEvents: 'none', letterSpacing: '0.04em' }}
       >
-        {node.tier} · {node.year || ''}
+        {node.tier} · {node.year || ''}{node.edition ? ` · ${node.edition.toLowerCase()}` : ''}
       </text>
     </g>
   );

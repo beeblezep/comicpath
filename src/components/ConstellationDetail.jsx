@@ -59,12 +59,23 @@ export function ConstellationDetail({ node, open, readingList, alreadyRead, char
           </h2>
 
           <p style={{ fontFamily: MONO, fontSize: 13, color: '#7c7c8a', margin: '0 0 22px' }}>
-            {TIER_LABELS[node.tier] || 'Recommended'} · {node.year || ''}
+            {TIER_LABELS[node.tier] || 'Recommended'} · {node.year || ''}{node.edition ? ` · ${node.edition}` : ''}
           </p>
 
           <div style={{ width: '100%', height: 3, background: color, marginBottom: 22 }} />
 
-          {node.issues && (
+          {node.edition && node.collects?.length > 0 ? (
+            <div style={{ fontFamily: MONO, fontSize: 12, color: '#7c7c8a', margin: '0 0 16px' }}>
+              <div style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+                Collects
+              </div>
+              {node.collects.map((c, i) => (
+                <div key={i} style={{ lineHeight: 1.7 }}>
+                  {c.issues}{c.issues && c.story ? ' · ' : ''}<span style={{ color: '#c9c7bd' }}>{c.story}</span>
+                </div>
+              ))}
+            </div>
+          ) : node.issues && (
             <p style={{ fontFamily: MONO, fontSize: 12, color: '#7c7c8a', margin: '0 0 16px' }}>
               {node.issues}
             </p>

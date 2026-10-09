@@ -44,6 +44,7 @@ export function mergeExpansion(existingGraph, sourceNodeId, relatedNodes, relate
       tier: VALID_TIERS.has(rn.tier) ? rn.tier : 'recommended',
       weight: Math.min(5, Math.max(1, Number(rn.weight) || 3)),
       tags: Array.isArray(rn.tags) ? rn.tags : [],
+      ...(rn.edition ? { edition: rn.edition, collects: rn.collects || [] } : {}),
     });
     newNodeIds.push(id);
   }
