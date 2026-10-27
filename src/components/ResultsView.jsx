@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { StorySection } from './StorySection';
-import { MetroMap } from './MetroMap';
+import { ConstellationMap } from './ConstellationMap';
 
-export function ResultsView({ data, readingList, onReset }) {
-  const { character, canonStories, secondaryStories, elseworldsStories, skipStories, aiNote, readingPath } = data;
+export function ResultsView({ data, readingList, alreadyRead, onReset }) {
+  const { character, canonStories, secondaryStories, elseworldsStories, skipStories, aiNote, constellationGraph } = data;
   const [tab, setTab] = useState('guide');
-  const hasPath = readingPath && readingPath.mainLine?.length > 0;
+  const [constellationOpen, setConstellationOpen] = useState(false);
+  const hasPath = constellationGraph && constellationGraph.nodes?.length > 0;
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 20px 60px' }}>
@@ -109,7 +110,14 @@ export function ResultsView({ data, readingList, onReset }) {
         ].map((t) => (
           <button
             key={t.key}
-            onClick={() => !t.disabled && setTab(t.key)}
+            onClick={() => {
+              if (t.disabled) return;
+              if (t.key === 'path' && hasPath) {
+                setConstellationOpen(true);
+                return;
+              }
+              setTab(t.key);
+            }}
             disabled={t.disabled}
             style={{
               flex: 1, padding: '9px 4px', border: 'none',
@@ -134,14 +142,14 @@ export function ResultsView({ data, readingList, onReset }) {
         </>
       )}
 
-      {tab === 'path' && hasPath && (
-        <MetroMap readingPath={readingPath} readingList={readingList} character={character.name} />
-      )}
-
-      {tab === 'path' && !hasPath && (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-muted)', fontSize: 13 }}>
-          No reading path available for this search. Try a different mode or character.
-        </div>
+      {constellationOpen && hasPath && (
+        <ConstellationMap
+          graph={constellationGraph}
+          readingList={readingList}
+          alreadyRead={alreadyRead}
+          character={character.name}
+          onClose={() => setConstellationOpen(false)}
+        />
       )}
     </div>
   );

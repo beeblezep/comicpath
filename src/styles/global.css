@@ -23,6 +23,9 @@
   --color-tier-recommended: var(--color-secondary);
   --color-tier-optional:    var(--color-muted);
 
+  /* Constellation edge colors */
+  --color-edge-crossover:   var(--color-elseworld);
+
   /* Spacing scale */
   --space-xs: 4px;
   --space-sm: 8px;

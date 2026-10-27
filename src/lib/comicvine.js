@@ -2,7 +2,10 @@ const BASE = '/api/comicvine';
 
 async function cvFetch(path) {
   const res = await fetch(`${BASE}${path}`);
-  if (!res.ok) throw new Error(`ComicVine ${res.status}: ${res.statusText}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(`ComicVine ${res.status}: ${body.error || res.statusText}`);
+  }
   const json = await res.json();
   if (json.error !== 'OK' && json.status_code !== 1) {
     throw new Error(`ComicVine error: ${json.error}`);
@@ -153,4 +156,126 @@ export async function searchComicVine(query) {
     volumes,
     storyArcs: arcs,
   };
+}
+
+export async function searchVolumes(query) {
+  const params = new URLSearchParams({
+    query,
+    resources: 'volume',
+    limit: '5',
+    field_list: 'id,name,deck,start_year,count_of_issues,publisher',
+  });
+  const json = await cvFetch(`/search/?${params}`);
+  return (json.results || []).map((v) => ({
+    id: v.id,
+    name: v.name,
+    deck: v.deck,
+    startYear: v.start_year,
+    issueCount: v.count_of_issues,
+    publisher: v.publisher?.name ?? null,
+  }));
+}
+
+export async function searchStoryArcs(query) {
+  const params = new URLSearchParams({
+    query,
+    resources: 'story_arc',
+    limit: '5',
+    field_list: 'id,name,deck,publisher',
+  });
+  const json = await cvFetch(`/search/?${params}`);
+  return (json.results || []).map((a) => ({
+    id: a.id,
+    name: a.name,
+    deck: a.deck,
+    publisher: a.publisher?.name ?? null,
+  }));
+}
+
+export async function getVolumeIssues(volumeId, limit = 60) {
+  const params = new URLSearchParams({
+    filter: `volume:${volumeId}`,
+    field_list: 'issue_number,name,cover_date',
+    sort: 'cover_date:asc',
+    limit: String(limit),
+  });
+  const json = await cvFetch(`/issues/?${params}`);
+  return (json.results || []).map((i) => ({
+    number: i.issue_number,
+    name: i.name,
+    coverDate: i.cover_date,
+  }));
+}
+
+const TITLE_SIGNALS = [
+  'vol', 'vol.', 'volume', '#', 'issue', 'omnibus',
+  'trade', 'tpb', 'hardcover', 'deluxe', 'compendium',
+];
+
+function looksLikeTitle(query) {
+  const q = query.toLowerCase();
+  if (TITLE_SIGNALS.some((s) => q.includes(s))) return true;
+  if (/\d{4}/.test(q)) return true;
+  if (q.includes(':')) return true;
+  return false;
+}
+
+export async function searchComicVineSmartly(query) {
+  const titleHint = looksLikeTitle(query);
+
+  if (titleHint) {
+    const [volumes, arcs, characters] = await Promise.all([
+      searchVolumes(query).catch(() => []),
+      searchStoryArcs(query).catch(() => []),
+      searchCharacter(query).catch(() => []),
+    ]);
+
+    const qLower = query.toLowerCase();
+
+    const bestVolume = volumes.find((v) => v.name.toLowerCase().includes(qLower)
+      || qLower.includes(v.name.toLowerCase()));
+    if (bestVolume) {
+      return {
+        queryType: 'volume',
+        target: bestVolume,
+        character: null,
+        volumes: [],
+        storyArcs: [],
+      };
+    }
+
+    const bestArc = arcs.find((a) => a.name.toLowerCase().includes(qLower)
+      || qLower.includes(a.name.toLowerCase()));
+    if (bestArc) {
+      return {
+        queryType: 'storyArc',
+        target: bestArc,
+        character: null,
+        volumes: [],
+        storyArcs: [],
+      };
+    }
+
+    if (volumes.length > 0) {
+      return {
+        queryType: 'volume',
+        target: volumes[0],
+        character: null,
+        volumes: [],
+        storyArcs: [],
+      };
+    }
+
+    if (arcs.length > 0) {
+      return {
+        queryType: 'storyArc',
+        target: arcs[0],
+        character: null,
+        volumes: [],
+        storyArcs: [],
+      };
+    }
+  }
+
+  return searchComicVine(query);
 }
