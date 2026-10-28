@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Focus card with grouped links</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=IBM+Plex+Mono:wght@500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#2747C9}a:hover{color:#1B3496}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; box-sizing: border-box; padding: 56px 64px; background: #EEF0EC; font-family: 'IBM Plex Sans', sans-serif; color: #15171A; display: flex; gap: 56px; align-items: flex-start">
+
+<div style="width: 440px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #4E545C">Now viewing</div>
+<article style="background: #FFFFFF; border: 2px solid #15171A; border-radius: 16px; display: flex; flex-direction: column">
+<div style="padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 12px">
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: #4E545C">Miller · Mazzucchelli · 1987</div>
+<h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 36px; line-height: 1.08">Batman: Year One</h2>
+<p style="margin: 0; font-size: 17px; line-height: 1.5; color: #3D434A">Bruce Wayne's first year as Batman, told alongside Jim Gordon's first year in Gotham.</p>
+</div>
+<div style="border-top: 1px solid #E4E7E1; padding: 8px 10px; display: flex; align-items: center; gap: 4px">
+<button type="button" aria-label="Save" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 8px; color: #3D434A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4z"></path></svg></button>
+<button type="button" aria-label="Share" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 8px; color: #3D434A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"></path><path d="M8 8l4-4 4 4"></path><path d="M5 13v6h14v-6"></path></svg></button>
+<div style="flex-grow: 1"></div>
+<a href="#" style="height: 44px; padding: 0 20px; display: flex; align-items: center; border-radius: 8px; background: #15171A; color: #FFFFFF; font-size: 15px; font-weight: 500; text-decoration: none">Start reading</a>
+</div>
+</article>
+</div>
+
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 24px">Linked to this</h2>
+<div style="font-size: 14px; color: #4E545C">3 links</div>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #2747C9"><span style="width: 8px; height: 8px; border-radius: 4px; background: #2747C9"></span>Continues the story</div>
+<article style="background: #FFFFFF; border: 1px solid #DDE0DA; border-radius: 12px; padding: 16px 12px 16px 20px; display: flex; align-items: center; gap: 16px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; align-items: baseline; gap: 12px"><h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px">The Long Halloween</h3><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E545C">Loeb · Sale · 1996–97</span></div>
+<p style="margin: 0; font-size: 15px; line-height: 1.45; color: #3D434A">Set after Year One — Batman, Gordon and Harvey Dent hunt a killer who strikes on holidays.</p>
+</div>
+<button type="button" aria-label="Save The Long Halloween" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 8px; color: #3D434A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4z"></path></svg></button>
+<a href="#" style="height: 44px; flex-shrink: 0; padding: 0 16px; display: flex; align-items: center; gap: 6px; border-radius: 8px; border: 1px solid #C9CEC6; color: #15171A; font-size: 14px; font-weight: 500; text-decoration: none">Open<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
+</article>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #9A3F0E"><span style="width: 8px; height: 8px; border-radius: 4px; background: #C2541A"></span>Same creative team</div>
+<article style="background: #FFFFFF; border: 1px solid #DDE0DA; border-radius: 12px; padding: 16px 12px 16px 20px; display: flex; align-items: center; gap: 16px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; align-items: baseline; gap: 12px"><h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px">Daredevil: Born Again</h3><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E545C">Miller · Mazzucchelli · 1986</span></div>
+<p style="margin: 0; font-size: 15px; line-height: 1.45; color: #3D434A">Miller and Mazzucchelli's Daredevil story, published the year before Year One.</p>
+</div>
+<button type="button" aria-label="Save Daredevil: Born Again" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 8px; color: #3D434A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4z"></path></svg></button>
+<a href="#" style="height: 44px; flex-shrink: 0; padding: 0 16px; display: flex; align-items: center; gap: 6px; border-radius: 8px; border: 1px solid #C9CEC6; color: #15171A; font-size: 14px; font-weight: 500; text-decoration: none">Open<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
+</article>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #9A3F0E"><span style="width: 8px; height: 8px; border-radius: 4px; background: #C2541A"></span>Same writer</div>
+<article style="background: #FFFFFF; border: 1px solid #DDE0DA; border-radius: 12px; padding: 16px 12px 16px 20px; display: flex; align-items: center; gap: 16px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px">
+<div style="display: flex; align-items: baseline; gap: 12px"><h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px">The Dark Knight Returns</h3><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E545C">Miller · 1986</span></div>
+<p style="margin: 0; font-size: 15px; line-height: 1.45; color: #3D434A">Miller's earlier Batman book, set at the end of Bruce Wayne's career.</p>
+</div>
+<button type="button" aria-label="Save The Dark Knight Returns" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 8px; color: #3D434A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4z"></path></svg></button>
+<a href="#" style="height: 44px; flex-shrink: 0; padding: 0 16px; display: flex; align-items: center; gap: 6px; border-radius: 8px; border: 1px solid #C9CEC6; color: #15171A; font-size: 14px; font-weight: 500; text-decoration: none">Open<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
+</article>
+</section>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

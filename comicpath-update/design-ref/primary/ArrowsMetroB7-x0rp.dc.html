@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Metro-line connectors</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=IBM+Plex+Mono:wght@500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#2747C9}a:hover{color:#1B3496}
+@keyframes dc-trace{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes dc-trace-a2{from{stroke-dashoffset:1260}to{stroke-dashoffset:0}}
+@keyframes dc-trace-b{from{stroke-dashoffset:870}to{stroke-dashoffset:0}}
+@keyframes dc-drawer{from{transform:translateX(32px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion: reduce){.dc-trace{animation:none !important;stroke-dasharray:none !important}.dc-drawer{animation:none !important}}
+</style>
+</helmet>
+<div onClick="{{bgClear}}" style="position: relative; width: 1600px; height: 1220px; background: #EEF0EC; font-family: 'IBM Plex Sans', sans-serif; color: #15171A">
+
+<svg width="928" height="600" viewBox="0 0 928 600" preserveAspectRatio="none" style="position: absolute; left: 168px; top: 184px; width: 928px; height: 600px; overflow: visible; pointer-events: none; opacity: {{o.deco}}; transition: opacity 150ms"><path d="M 18 0 L 590 0 Q 608 0 608 18 L 608 446 Q 608 464 626 464 L 910 464 Q 928 464 928 482 L 928 582 Q 928 600 910 600 L 426 600 Q 408 600 408 582 L 408 442 Q 408 424 390 424 L 18 424 Q 0 424 0 406 L 0 18 Q 0 0 18 0 Z" fill="#E4E7E0" stroke="#A9AFA7" stroke-width="1" stroke-dasharray="4 4"></path></svg>
+<div style="position: absolute; left: 176px; top: 648px; width: 232px; height: 160px; box-sizing: border-box; background: #E2E6EC; border: 1px dashed #A3ABB8; border-radius: 18px; opacity: {{o.deco}}; transition: opacity 150ms"></div>
+<div style="position: absolute; left: 856px; top: 840px; width: 492px; height: 136px; box-sizing: border-box; background: #DDD9CE; border-radius: 18px; opacity: {{o.deco}}; transition: opacity 150ms"></div>
+
+<svg width="1600" height="1220" viewBox="0 0 1600 1220" style="position: absolute; left: 0; top: 0; width: 1600px; height: 1220px; overflow: visible; fill: none; pointer-events: none; opacity: {{ghostOp}}; transition: opacity 150ms"><path d="M 292 540 L 292 716" style="stroke: #F2B2AA; stroke-width: 10"></path></svg>
+<sc-for list="{{bands}}" as="bd" hint-placeholder-count="7">
+<svg width="1600" height="1220" viewBox="0 0 1600 1220" onMouseEnter="{{bd.enter}}" onMouseLeave="{{hOff}}" onClick="{{bd.click}}" style="position: absolute; left: 0; top: 0; width: 1600px; height: 1220px; overflow: visible; fill: none; stroke: #F2B2AA; stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; opacity: {{bd.op}}; transition: opacity 150ms"><path d="{{bd.d}}" style="stroke: transparent; stroke-width: 28; pointer-events: stroke; cursor: pointer"></path><path d="{{bd.d}}" style="pointer-events: stroke; cursor: pointer"></path></svg>
+</sc-for>
+
+<sc-for list="{{traces}}" as="tr" hint-placeholder-count="0">
+<svg width="1600" height="1220" viewBox="0 0 1600 1220" style="position: absolute; left: 0; top: 0; width: 1600px; height: 1220px; overflow: visible; fill: none; stroke: #D3301F; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; pointer-events: none"><path class="dc-trace" d="{{tr.d}}" pathLength="1" style="stroke-dasharray: 1; stroke-dashoffset: 0; animation: dc-trace 1000ms ease-out {{tr.delay}} both"></path></svg>
+</sc-for>
+
+<svg width="12" height="10" viewBox="0 0 12 10" style="position: absolute; left: 286px; top: 340px; width: 12px; height: 10px; overflow: visible; pointer-events: none; opacity: {{tri.c2}}; transition: opacity 150ms"><path d="M 0 0 L 12 0 L 6 10 Z" fill="#D3301F"></path></svg>
+<svg width="12" height="10" viewBox="0 0 12 10" style="position: absolute; left: 286px; top: 492px; width: 12px; height: 10px; overflow: visible; pointer-events: none; opacity: {{tri.c3}}; transition: opacity 150ms"><path d="M 0 0 L 12 0 L 6 10 Z" fill="#D3301F"></path></svg>
+<svg width="12" height="10" viewBox="0 0 12 10" style="position: absolute; left: 286px; top: 668px; width: 12px; height: 10px; overflow: visible; pointer-events: none; opacity: {{tri.c4}}; transition: opacity 150ms"><path d="M 0 0 L 12 0 L 6 10 Z" fill="#D3301F"></path></svg>
+<svg width="10" height="12" viewBox="0 0 10 12" style="position: absolute; left: 588px; top: 710px; width: 10px; height: 12px; overflow: visible; pointer-events: none; opacity: {{tri.b1}}; transition: opacity 150ms"><path d="M 0 0 L 10 6 L 0 12 Z" fill="#D3301F"></path></svg>
+<svg width="10" height="12" viewBox="0 0 10 12" style="position: absolute; left: 548px; top: 550px; width: 10px; height: 12px; overflow: visible; pointer-events: none; opacity: {{tri.w2}}; transition: opacity 150ms"><path d="M 0 0 L 10 6 L 0 12 Z" fill="#D3301F"></path></svg>
+
+<svg width="135" height="8" viewBox="0 0 135 8" preserveAspectRatio="none" style="position: absolute; left: 384px; top: 384px; width: 135px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: {{o.r1}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-1" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 131 4" marker-end="url(#dc-arrow-head-filled-1)"></path></svg>
+<svg width="95" height="8" viewBox="0 0 95 8" preserveAspectRatio="none" style="position: absolute; left: 784px; top: 712px; width: 95px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; opacity: {{o.r2}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-2" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 91 4" marker-end="url(#dc-arrow-head-filled-2)"></path></svg>
+<svg width="75" height="8" viewBox="0 0 75 8" preserveAspectRatio="none" style="position: absolute; left: 1064px; top: 912px; width: 75px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; opacity: {{o.r3}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-3" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 71 4" marker-end="url(#dc-arrow-head-filled-3)"></path></svg>
+<svg width="175" height="8" viewBox="0 0 175 8" preserveAspectRatio="none" style="display: {{dspB}}; position: absolute; left: 704px; top: 912px; width: 175px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 6; opacity: {{o.n1}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-4" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; stroke-dasharray: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 171 4" marker-end="url(#dc-arrow-head-filled-4)"></path></svg>
+<svg width="8" height="127" viewBox="0 0 8 127" preserveAspectRatio="none" style="position: absolute; left: 968px; top: 752px; width: 8px; height: 127px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 6; opacity: {{o.n2}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-5" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; stroke-dasharray: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 4 0 L 4 123" marker-end="url(#dc-arrow-head-filled-5)"></path></svg>
+<svg width="96" height="96" viewBox="0 0 96 96" preserveAspectRatio="none" style="display: {{dspB}}; position: absolute; left: 848px; top: 952px; width: 96px; height: 96px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 6; opacity: {{o.n3}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-6" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; stroke-dasharray: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 92 0 C 92 48, 4 48, 4 92" marker-end="url(#dc-arrow-head-filled-6)"></path></svg>
+<svg width="95" height="8" viewBox="0 0 95 8" preserveAspectRatio="none" style="display: {{dspB}}; position: absolute; left: 944px; top: 1080px; width: 95px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: {{o.r4}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-7" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 91 4" marker-end="url(#dc-arrow-head-filled-7)"></path></svg>
+
+<svg width="48" height="10" viewBox="0 0 48 10" preserveAspectRatio="none" style="position: absolute; left: 1180px; top: 101px; width: 48px; height: 10px; overflow: visible; fill: none; stroke: #F2B2AA; stroke-width: 10; stroke-linecap: butt"><path d="M 0 5 L 48 5"></path></svg>
+<svg width="48" height="8" viewBox="0 0 48 8" preserveAspectRatio="none" style="position: absolute; left: 1180px; top: 154px; width: 48px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-8" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 44 4" marker-end="url(#dc-arrow-head-filled-8)"></path></svg>
+<svg width="48" height="8" viewBox="0 0 48 8" preserveAspectRatio="none" style="position: absolute; left: 1180px; top: 192px; width: 48px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 6"><defs><marker id="dc-arrow-head-filled-9" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; stroke-dasharray: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 44 4" marker-end="url(#dc-arrow-head-filled-9)"></path></svg>
+<div style="position: absolute; left: 1180px; top: 226px; width: 48px; height: 24px; box-sizing: border-box; background: #E4E7E0; border: 1px dashed #A9AFA7; border-radius: 6px"></div>
+
+<button type="button" onClick="{{k.c1}}" aria-pressed="{{p.c1}}" style="position: absolute; left: 200px; top: 200px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.c1}}; border-radius: 10px; opacity: {{o.c1}}; box-shadow: {{r.c1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 1</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.c2}}" aria-pressed="{{p.c2}}" style="position: absolute; left: 200px; top: 352px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.c2}}; border-radius: 10px; opacity: {{o.c2}}; box-shadow: {{r.c2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 2</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.w1}}" aria-pressed="{{p.w1}}" style="position: absolute; left: 520px; top: 352px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{ob.w1}}; border-radius: 10px; opacity: {{o.w1}}; box-shadow: {{r.w1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 3</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">&nbsp;</span></span></button>
+<button type="button" onClick="{{k.c3}}" aria-pressed="{{p.c3}}" style="position: absolute; left: 200px; top: 504px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.c3}}; border-radius: 10px; opacity: {{o.c3}}; box-shadow: {{r.c3}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 4</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.w2}}" aria-pressed="{{p.w2}}" style="position: absolute; left: 560px; top: 520px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{w2Border}}; border-radius: 10px; opacity: {{o.w2}}; box-shadow: {{r.w2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 5</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">&nbsp;</span></span></button>
+<button type="button" onClick="{{k.c4}}" aria-pressed="{{p.c4}}" style="position: absolute; left: 200px; top: 680px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.c4}}; border-radius: 10px; opacity: {{o.c4}}; box-shadow: {{r.c4}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 6</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.b1}}" aria-pressed="{{p.b1}}" style="position: absolute; left: 600px; top: 680px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.b1}}; border-radius: 10px; opacity: {{o.b1}}; box-shadow: {{r.b1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 7</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.b2}}" aria-pressed="{{p.b2}}" style="position: absolute; left: 880px; top: 680px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.b2}}; border-radius: 10px; opacity: {{o.b2}}; box-shadow: {{r.b2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 8</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.s1}}" aria-pressed="{{p.s1}}" style="position: absolute; left: 520px; top: 880px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: {{dspF}}; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{ob.s1}}; border-radius: 10px; opacity: {{o.s1}}; box-shadow: {{r.s1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 9</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.m1}}" aria-pressed="{{p.m1}}" style="position: absolute; left: 880px; top: 880px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.m1}}; border-radius: 10px; opacity: {{o.m1}}; box-shadow: {{r.m1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 10</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">&nbsp;</span></span></button>
+<button type="button" onClick="{{k.m2}}" aria-pressed="{{p.m2}}" style="position: absolute; left: 1140px; top: 880px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.m2}}; border-radius: 10px; opacity: {{o.m2}}; box-shadow: {{r.m2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 11</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.w3}}" aria-pressed="{{p.w3}}" style="position: absolute; left: 1352px; top: 1048px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{ob.w3}}; border-radius: 10px; opacity: {{o.w3}}; box-shadow: {{r.w3}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 12</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">&nbsp;</span></span></button>
+<button type="button" onClick="{{k.d1}}" aria-pressed="{{p.d1}}" style="position: absolute; left: 760px; top: 1048px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: {{dspF}}; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{ob.d1}}; border-radius: 10px; opacity: {{o.d1}}; box-shadow: {{r.d1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 13</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.d2}}" aria-pressed="{{p.d2}}" style="position: absolute; left: 1040px; top: 1048px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: {{dspF}}; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{ob.d2}}; border-radius: 10px; opacity: {{o.d2}}; box-shadow: {{r.d2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 14</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+
+<button type="button" onClick="{{inf.c1}}" aria-expanded="{{infx.c1}}" aria-label="Details for Title 1" style="position: absolute; left: 340px; top: 228px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.c1}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.c1}}; color: {{inffg.c1}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.c2}}" aria-expanded="{{infx.c2}}" aria-label="Details for Title 2" style="position: absolute; left: 340px; top: 380px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.c2}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.c2}}; color: {{inffg.c2}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.w1}}" aria-expanded="{{infx.w1}}" aria-label="Details for Title 3" style="position: absolute; left: 660px; top: 380px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.w1}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.w1}}; color: {{inffg.w1}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.c3}}" aria-expanded="{{infx.c3}}" aria-label="Details for Title 4" style="position: absolute; left: 340px; top: 532px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.c3}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.c3}}; color: {{inffg.c3}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.w2}}" aria-expanded="{{infx.w2}}" aria-label="Details for Title 5" style="position: absolute; left: 700px; top: 548px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.w2}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.w2}}; color: {{inffg.w2}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.c4}}" aria-expanded="{{infx.c4}}" aria-label="Details for Title 6" style="position: absolute; left: 340px; top: 708px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.c4}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.c4}}; color: {{inffg.c4}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.b1}}" aria-expanded="{{infx.b1}}" aria-label="Details for Title 7" style="position: absolute; left: 740px; top: 708px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.b1}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.b1}}; color: {{inffg.b1}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.b2}}" aria-expanded="{{infx.b2}}" aria-label="Details for Title 8" style="position: absolute; left: 1020px; top: 708px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.b2}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.b2}}; color: {{inffg.b2}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.s1}}" aria-expanded="{{infx.s1}}" aria-label="Details for Title 9" style="position: absolute; left: 660px; top: 908px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: {{dspF}}; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.s1}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.s1}}; color: {{inffg.s1}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.m1}}" aria-expanded="{{infx.m1}}" aria-label="Details for Title 10" style="position: absolute; left: 1020px; top: 908px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.m1}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.m1}}; color: {{inffg.m1}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.m2}}" aria-expanded="{{infx.m2}}" aria-label="Details for Title 11" style="position: absolute; left: 1280px; top: 908px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.m2}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.m2}}; color: {{inffg.m2}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.w3}}" aria-expanded="{{infx.w3}}" aria-label="Details for Title 12" style="position: absolute; left: 1492px; top: 1076px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.w3}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.w3}}; color: {{inffg.w3}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.d1}}" aria-expanded="{{infx.d1}}" aria-label="Details for Title 13" style="position: absolute; left: 900px; top: 1076px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: {{dspF}}; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.d1}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.d1}}; color: {{inffg.d1}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{inf.d2}}" aria-expanded="{{infx.d2}}" aria-label="Details for Title 14" style="position: absolute; left: 1180px; top: 1076px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: {{dspF}}; align-items: center; justify-content: center; color: #4E545C; opacity: {{o.d2}}; transition: opacity 150ms"><span style="width: 28px; height: 28px; border-radius: 14px; background: {{infbg.d2}}; color: {{inffg.d2}}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></span></button>
+<button type="button" onClick="{{toggleExp}}" aria-expanded="{{expAria}}" style="position: absolute; left: 884px; top: 906px; height: 44px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; display: flex; align-items: center; gap: 6px; color: #2747C9; font-size: 12px; font-weight: 600; opacity: {{o.m1}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{expIcon}}"></path></svg>{{expLabel}}</button>
+<sc-if value="{{s.c1}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 188px; top: 188px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.c1}}</div></sc-if>
+<sc-if value="{{s.c2}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 188px; top: 340px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.c2}}</div></sc-if>
+<sc-if value="{{s.c3}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 188px; top: 492px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.c3}}</div></sc-if>
+<sc-if value="{{s.w2}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 548px; top: 508px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.w2}}</div></sc-if>
+<sc-if value="{{s.c4}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 188px; top: 668px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.c4}}</div></sc-if>
+<sc-if value="{{s.b1}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 588px; top: 668px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.b1}}</div></sc-if>
+<sc-if value="{{s.b2}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 868px; top: 668px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.b2}}</div></sc-if>
+<sc-if value="{{s.m1}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 868px; top: 868px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.m1}}</div></sc-if>
+<sc-if value="{{s.m2}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 1128px; top: 868px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.m2}}</div></sc-if>
+<sc-if value="{{s.w1}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 508px; top: 340px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.w1}}</div></sc-if>
+<sc-if value="{{s.s1}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 508px; top: 868px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.s1}}</div></sc-if>
+<sc-if value="{{s.d1}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 748px; top: 1036px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.d1}}</div></sc-if>
+<sc-if value="{{s.d2}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 1028px; top: 1036px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.d2}}</div></sc-if>
+<sc-if value="{{s.w3}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 1340px; top: 1036px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.w3}}</div></sc-if>
+
+<div style="position: absolute; left: 394px; top: 376px; width: 116px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.r1}}; transition: opacity 150ms">Directly follows</div>
+<div style="position: absolute; left: 774px; top: 760px; width: 116px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.r2}}; transition: opacity 150ms">Directly follows</div>
+<div style="position: absolute; left: 1044px; top: 960px; width: 116px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.r3}}; transition: opacity 150ms">Directly follows</div>
+<div style="position: absolute; left: 748px; top: 904px; width: 88px; height: 24px; box-sizing: border-box; display: {{dspF}}; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.n1}}; transition: opacity 150ms">Leads up to</div>
+<div style="position: absolute; left: 984px; top: 804px; width: 88px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.n2}}; transition: opacity 150ms">Leads up to</div>
+<div style="position: absolute; left: 940px; top: 992px; width: 88px; height: 24px; box-sizing: border-box; display: {{dspF}}; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.n3}}; transition: opacity 150ms">Leads up to</div>
+<div style="position: absolute; left: 934px; top: 1128px; width: 116px; height: 24px; box-sizing: border-box; display: {{dspF}}; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.r4}}; transition: opacity 150ms">Directly follows</div>
+<button type="button" onMouseEnter="{{hA}}" onMouseLeave="{{hOff}}" onFocus="{{hA}}" onBlur="{{hOff}}" onClick="{{pinA}}" aria-pressed="{{pressA}}" style="position: absolute; left: {{pill.A.x}}px; top: {{pill.A.y}}px; transition: left 200ms ease, top 200ms ease; width: 88px; height: 44px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; padding: 0"><span style="width: 88px; height: 28px; display: flex; align-items: center; justify-content: center; background: #D3301F; color: #FFFFFF; border-radius: 14px; font-size: 13px; font-weight: 600; box-shadow: {{ringA}}">Path A</span></button>
+<button type="button" onMouseEnter="{{hB}}" onMouseLeave="{{hOff}}" onFocus="{{hB}}" onBlur="{{hOff}}" onClick="{{pinB}}" aria-pressed="{{pressB}}" style="position: absolute; left: {{pill.B.x}}px; top: {{pill.B.y}}px; transition: left 200ms ease, top 200ms ease; width: 80px; height: 44px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; padding: 0"><span style="width: 80px; height: 28px; display: flex; align-items: center; justify-content: center; background: #D3301F; color: #FFFFFF; border-radius: 14px; font-size: 13px; font-weight: 600; box-shadow: {{ringB}}">Path B</span></button>
+<button type="button" onClick="{{rs.A.go}}" aria-label="Reset Path A to the suggested route" style="position: absolute; left: {{rs.A.x}}px; top: {{rs.A.y}}px; width: 88px; height: 44px; padding: 0; border: 0; background: transparent; display: {{rs.A.show}}; align-items: center; justify-content: center; transition: left 200ms ease, top 200ms ease"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"></path><path d="M4 4v4h4"></path></svg>Reset</span></button>
+<button type="button" onClick="{{rs.B.go}}" aria-label="Reset Path B to the suggested route" style="position: absolute; left: {{rs.B.x}}px; top: {{rs.B.y}}px; width: 88px; height: 44px; padding: 0; border: 0; background: transparent; display: {{rs.B.show}}; align-items: center; justify-content: center; transition: left 200ms ease, top 200ms ease"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"></path><path d="M4 4v4h4"></path></svg>Reset</span></button>
+
+<button type="button" onClick="{{pm.c1.go}}" aria-label="{{pm.c1.label}}" style="position: absolute; left: 362px; top: 178px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.c1}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.c1.bg}}; border: 1px solid {{pm.c1.bd}}; color: {{pm.c1.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.c1.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.c2.go}}" aria-label="{{pm.c2.label}}" style="position: absolute; left: 362px; top: 330px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.c2}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.c2.bg}}; border: 1px solid {{pm.c2.bd}}; color: {{pm.c2.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.c2.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.c3.go}}" aria-label="{{pm.c3.label}}" style="position: absolute; left: 362px; top: 482px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.c3}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.c3.bg}}; border: 1px solid {{pm.c3.bd}}; color: {{pm.c3.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.c3.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.w2.go}}" aria-label="{{pm.w2.label}}" style="position: absolute; left: 722px; top: 498px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.w2}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.w2.bg}}; border: 1px solid {{pm.w2.bd}}; color: {{pm.w2.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.w2.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.c4.go}}" aria-label="{{pm.c4.label}}" style="position: absolute; left: 362px; top: 658px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.c4}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.c4.bg}}; border: 1px solid {{pm.c4.bd}}; color: {{pm.c4.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.c4.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.b1.go}}" aria-label="{{pm.b1.label}}" style="position: absolute; left: 762px; top: 658px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.b1}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.b1.bg}}; border: 1px solid {{pm.b1.bd}}; color: {{pm.b1.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.b1.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.b2.go}}" aria-label="{{pm.b2.label}}" style="position: absolute; left: 1042px; top: 658px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.b2}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.b2.bg}}; border: 1px solid {{pm.b2.bd}}; color: {{pm.b2.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.b2.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.m1.go}}" aria-label="{{pm.m1.label}}" style="position: absolute; left: 1042px; top: 858px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.m1}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.m1.bg}}; border: 1px solid {{pm.m1.bd}}; color: {{pm.m1.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.m1.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.m2.go}}" aria-label="{{pm.m2.label}}" style="position: absolute; left: 1302px; top: 858px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.m2}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.m2.bg}}; border: 1px solid {{pm.m2.bd}}; color: {{pm.m2.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.m2.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.w1.go}}" aria-label="{{pm.w1.label}}" style="position: absolute; left: 682px; top: 330px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.w1}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.w1.bg}}; border: 1px solid {{pm.w1.bd}}; color: {{pm.w1.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.w1.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.s1.go}}" aria-label="{{pm.s1.label}}" style="position: absolute; left: 682px; top: 858px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: {{dspF}}; align-items: center; justify-content: center; opacity: {{o.s1}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.s1.bg}}; border: 1px solid {{pm.s1.bd}}; color: {{pm.s1.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.s1.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.d1.go}}" aria-label="{{pm.d1.label}}" style="position: absolute; left: 922px; top: 1026px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: {{dspF}}; align-items: center; justify-content: center; opacity: {{o.d1}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.d1.bg}}; border: 1px solid {{pm.d1.bd}}; color: {{pm.d1.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.d1.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.d2.go}}" aria-label="{{pm.d2.label}}" style="position: absolute; left: 1202px; top: 1026px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: {{dspF}}; align-items: center; justify-content: center; opacity: {{o.d2}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.d2.bg}}; border: 1px solid {{pm.d2.bd}}; color: {{pm.d2.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.d2.icon}}"></path></svg></span></button>
+<button type="button" onClick="{{pm.w3.go}}" aria-label="{{pm.w3.label}}" style="position: absolute; left: 1514px; top: 1026px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; opacity: {{o.w3}}; transition: opacity 150ms"><span style="width: 26px; height: 26px; border-radius: 13px; background: {{pm.w3.bg}}; border: 1px solid {{pm.w3.bd}}; color: {{pm.w3.fg}}; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="{{pm.w3.icon}}"></path></svg></span></button>
+
+<sc-if value="{{showContinue}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{goB}}" onMouseEnter="{{keepA}}" onMouseLeave="{{hOff}}" style="position: absolute; left: 192px; top: 756px; height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 6px; border: 0; background: transparent; border-radius: 8px; color: #B3261A; font-size: 14px; font-weight: 600; white-space: nowrap">Continue with Path B<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></button>
+</sc-if>
+
+<div style="position: absolute; left: 64px; top: 48px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 28px">Metro lines · Path B starts at Title 7</div>
+<button type="button" onClick="{{rvOpen}}" style="position: absolute; left: 960px; top: 36px; height: 44px; padding: 0 16px; border: 1px solid #15171A; background: #15171A; color: #FFFFFF; border-radius: 22px; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12"></path><path d="M8 12h12"></path><path d="M8 18h12"></path><circle cx="4" cy="6" r="1"></circle><circle cx="4" cy="12" r="1"></circle><circle cx="4" cy="18" r="1"></circle></svg>Reading view</button>
+<div style="position: absolute; left: 64px; top: 92px; width: 1080px; font-size: 15px; color: #3D434A">{{summary}}</div>
+<sc-if value="{{hasSel}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{clear}}" style="position: absolute; left: 56px; top: 116px; height: 44px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; color: #2747C9; font-size: 14px; font-weight: 500">Show all connections</button>
+</sc-if>
+<div style="position: absolute; left: 664px; top: 196px; font-size: 14px; font-weight: 600; color: #3D434A; opacity: {{o.deco}}">Character 1</div>
+<div style="position: absolute; left: 188px; top: 655px; font-size: 14px; font-weight: 600; color: #3D434A; opacity: {{o.deco}}">Character 2</div>
+<div style="position: absolute; left: 1120px; top: 848px; font-size: 14px; font-style: italic; font-weight: 600; color: #3D434A; opacity: {{o.deco}}">Major event / Story arc</div>
+<a href="#" style="position: absolute; left: 1352px; top: 1144px; font-size: 14px">Show skipped titles</a>
+
+<div style="position: absolute; left: 1180px; top: 64px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #4E545C">How to read the lines</div>
+<div style="position: absolute; left: 1244px; top: 96px; width: 292px; font-size: 13px; line-height: 18px; color: #3D434A">Reading path: hover to trace it; click the line or its label to keep it on. Select A and B to read both in order.</div>
+<div style="position: absolute; left: 1244px; top: 149px; width: 292px; font-size: 13px; line-height: 18px; color: #3D434A">Solid: read first (highly recommended).</div>
+<div style="position: absolute; left: 1244px; top: 187px; width: 292px; font-size: 13px; line-height: 18px; color: #3D434A">Dashed: enhances, optional.</div>
+<div style="position: absolute; left: 1244px; top: 220px; width: 292px; font-size: 13px; line-height: 18px; color: #3D434A">Tinted area: titles grouped by character or story arc.</div>
+<div style="position: absolute; left: 1180px; top: 272px; width: 356px; font-size: 13px; line-height: 18px; color: #3D434A">No line: a standalone story.</div>
+<div style="position: absolute; left: 1180px; top: 320px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #4E545C">Title categories</div>
+<div style="position: absolute; left: 1180px; top: 346px; width: 356px; display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 18px; color: #3D434A"><span style="display: inline-block; margin-left: 0px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><span>Must read — canon for this path</span></div>
+<div style="position: absolute; left: 1180px; top: 374px; width: 356px; display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 18px; color: #3D434A"><span style="display: inline-block; margin-left: 0px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><span>Might read — worth reading, alternate or Elseworlds</span></div>
+<div style="position: absolute; left: 1180px; top: 402px; width: 356px; display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 18px; color: #3D434A"><span style="display: inline-block; margin-left: 0px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #FFFFFF; color: #5C626A; border: 1px dashed #A9AFA7">Skip</span><span>Not needed — safe to pass on</span></div>
+
+<sc-if value="{{rv.on}}" hint-placeholder-val="{{ false }}">
+<aside aria-label="Reading view" style="position: absolute; left: 0; top: 0; width: 1600px; height: 1220px; box-sizing: border-box; background: #EEF0EC; display: flex; flex-direction: column; animation: dc-drawer 200ms ease-out both" class="dc-drawer">
+<div style="padding: 40px 64px 24px; display: flex; align-items: flex-end; gap: 24px; border-bottom: 1px solid #DDE0DA">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #4E545C">Reading view</span>
+<h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 32px; line-height: 1.1">{{rv.heading}}</h2>
+<span style="font-size: 14px; color: #3D434A">{{rv.sub}}</span>
+</div>
+<div style="flex-grow: 1"></div>
+<div role="group" aria-label="Paths to show" style="display: flex; gap: 8px">
+<button type="button" onClick="{{pinA}}" aria-pressed="{{rv.pressA}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #D3301F; background: {{rv.bgA}}; color: {{rv.fgA}}; font-size: 14px; font-weight: 600">Path A</button>
+<button type="button" onClick="{{pinB}}" aria-pressed="{{rv.pressB}}" style="height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #D3301F; background: {{rv.bgB}}; color: {{rv.fgB}}; font-size: 14px; font-weight: 600">Path B</button>
+</div>
+<button type="button" onClick="{{rvClose}}" style="height: 44px; padding: 0 16px; border: 1px solid #C9CEC6; background: #FFFFFF; border-radius: 22px; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #15171A"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="M11 6l-6 6 6 6"></path></svg>Back to map</button>
+</div>
+<div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 32px 64px 64px">
+<div style="max-width: 760px; margin: 0 auto; display: flex; flex-direction: column">
+<sc-for list="{{rv.rows}}" as="row" hint-placeholder-count="5">
+<sc-if value="{{row.isHeader}}" hint-placeholder-val="{{ false }}">
+<div style="margin: 8px 0 16px 60px; display: flex; align-items: center; gap: 10px"><span style="padding: 4px 12px; border-radius: 999px; background: #D3301F; color: #FFFFFF; font-size: 13px; font-weight: 600">{{row.label}}</span><span style="font-size: 13px; color: #4E545C">{{row.count}}</span></div>
+</sc-if>
+<sc-if value="{{row.isEmpty}}" hint-placeholder-val="{{ false }}">
+<div style="margin: 0 0 24px 60px; padding: 20px; border: 1px dashed #A9AFA7; border-radius: 12px; font-size: 14px; color: #3D434A">No titles left in this path. Use + on the map to add some back.</div>
+</sc-if>
+<sc-if value="{{row.isItem}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; gap: 20px; align-items: stretch">
+<div style="width: 40px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center">
+<span style="width: 32px; height: 32px; flex-shrink: 0; border-radius: 16px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 13px; margin-top: {{row.dotTop}}">{{row.n}}</span>
+<span style="flex-grow: 1; width: 4px; background: {{row.line}}"></span>
+</div>
+<div style="flex-grow: 1; min-width: 0; padding-bottom: 20px; display: flex; flex-direction: column; gap: 6px">
+<sc-if value="{{row.hasRel}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; color: #4E545C">{{row.rel}}</div></sc-if>
+<div style="background: #FFFFFF; border: 2px solid #D3301F; border-radius: 12px; padding: 14px 10px 14px 18px; display: flex; align-items: center; gap: 8px">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px">{{row.title}}</span><span style="font-size: 13px; color: #4E545C">{{row.meta}}</span></div>
+<button type="button" onClick="{{row.info}}" aria-label="Details for {{row.title}}" style="width: 44px; height: 44px; padding: 0; border: 0; background: transparent; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #3D434A"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M15 4v16"></path><path d="M6.5 9h5"></path><path d="M6.5 13h5"></path></svg></button>
+<button type="button" onClick="{{row.remove}}" aria-label="Remove {{row.title}} from your reading path" style="width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; border-radius: 13px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"></path></svg></span></button>
+</div>
+</div>
+</div>
+</sc-if>
+</sc-for>
+</div>
+</div>
+</aside>
+</sc-if>
+<sc-if value="{{hasInfo}}" hint-placeholder-val="{{ false }}">
+<aside aria-label="Title details" style="position: absolute; right: 0; top: 0; width: 400px; height: 1220px; box-sizing: border-box; background: #FFFFFF; border-left: 1px solid #DDE0DA; box-shadow: -16px 0 40px rgba(21, 23, 26, 0.12); display: flex; flex-direction: column; animation: dc-drawer 220ms ease-out both" class="dc-drawer">
+<div style="padding: 28px 24px 20px 32px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #E4E7E1">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #4E545C">Title details</span>
+<button type="button" onClick="{{closeInfo}}" aria-label="Close details" style="width: 44px; height: 44px; padding: 0; border: 0; background: transparent; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #3D434A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></button>
+</div>
+<h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 32px; line-height: 1.1">{{info.title}}</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{info.chips}}" as="ch" hint-placeholder-count="2">
+<span style="padding: 4px 10px; border-radius: 999px; background: {{ch.bg}}; color: {{ch.fg}}; font-size: 12px; font-weight: 600">{{ch.text}}</span>
+</sc-for>
+</div>
+</div>
+<div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 24px 32px; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="width: 100%; height: 168px; border-radius: 10px; background: #E4E7E0; border: 1px dashed #A9AFA7; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #4E545C">[Cover image]</div>
+<p style="margin: 8px 0 0; font-size: 15px; line-height: 1.55; color: #3D434A">[Synopsis: two or three sentences about what happens in this title and why it matters on the map.]</p>
+</div>
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px">
+<sc-for list="{{info.facts}}" as="fc" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 2px"><dt style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: #4E545C">{{fc.label}}</dt><dd style="margin: 0; font-size: 14px; color: #15171A">{{fc.value}}</dd></div>
+</sc-for>
+</dl>
+<section style="display: flex; flex-direction: column; gap: 6px">
+<h3 style="margin: 0 0 4px; font-size: 14px; font-weight: 600">Read before</h3>
+<sc-for list="{{info.before}}" as="it" hint-placeholder-count="2">
+<button type="button" onClick="{{it.open}}" style="min-height: 48px; padding: 6px 10px; border: 1px solid #E4E7E1; background: #FFFFFF; border-radius: 10px; display: flex; align-items: center; gap: 10px; text-align: left; color: #15171A"><span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 14px; font-weight: 600">{{it.title}}</span><span style="font-size: 12px; color: #4E545C">{{it.label}}</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</sc-for>
+<sc-if value="{{info.noBefore}}" hint-placeholder-val="{{ false }}"><div style="font-size: 13px; color: #4E545C">Nothing needs to come first.</div></sc-if>
+</section>
+<section style="display: flex; flex-direction: column; gap: 6px">
+<h3 style="margin: 0 0 4px; font-size: 14px; font-weight: 600">Read after</h3>
+<sc-for list="{{info.after}}" as="it" hint-placeholder-count="2">
+<button type="button" onClick="{{it.open}}" style="min-height: 48px; padding: 6px 10px; border: 1px solid #E4E7E1; background: #FFFFFF; border-radius: 10px; display: flex; align-items: center; gap: 10px; text-align: left; color: #15171A"><span style="flex-grow: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 14px; font-weight: 600">{{it.title}}</span><span style="font-size: 12px; color: #4E545C">{{it.label}}</span></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</sc-for>
+<sc-if value="{{info.noAfter}}" hint-placeholder-val="{{ false }}"><div style="font-size: 13px; color: #4E545C">Nothing follows on from this title.</div></sc-if>
+</section>
+</div>
+<div style="padding: 16px 32px 24px; border-top: 1px solid #E4E7E1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+<a href="#" style="height: 44px; padding: 0 18px; display: flex; align-items: center; border-radius: 8px; background: #15171A; color: #FFFFFF; font-size: 14px; font-weight: 500; text-decoration: none">Open title</a>
+<button type="button" style="height: 44px; padding: 0 14px; border: 1px solid #C9CEC6; background: #FFFFFF; border-radius: 8px; font-size: 14px; font-weight: 500; color: #15171A">Save</button>
+<sc-if value="{{info.hasAction}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{info.action}}" style="height: 44px; padding: 0 14px; border: 0; background: transparent; border-radius: 8px; font-size: 14px; font-weight: 600; color: #B3261A">{{info.actionLabel}}</button>
+</sc-if>
+</div>
+</aside>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1220}}'>
+var CARDS = { c1: 'Title 1', c2: 'Title 2', w1: 'Title 3', c3: 'Title 4', w2: 'Title 5', c4: 'Title 6', b1: 'Title 7', b2: 'Title 8',
+  s1: 'Title 9', m1: 'Title 10', m2: 'Title 11', w3: 'Title 12', d1: 'Title 13', d2: 'Title 14' };
+var EDGES = [
+  ['pa1', 'c1', 'c2', 'path'], ['pa2', 'c2', 'c3', 'path'], ['pa3', 'c3', 'c4', 'path'],
+  ['pb2', 'b1', 'b2', 'path'], ['pb3', 'b2', 'm1', 'path'], ['pb4', 'm1', 'm2', 'path'],
+  ['r1', 'c2', 'w1', 'rec'], ['r2', 'b1', 'b2', 'rec'], ['r3', 'm1', 'm2', 'rec'], ['r4', 'd1', 'd2', 'rec'],
+  ['n1', 's1', 'm1', 'enh'], ['n2', 'b2', 'm1', 'enh'], ['n3', 'm1', 'd1', 'enh']
+];
+var PATHS = {
+  A: { name: 'Reading path A', cards: ['c1', 'c2', 'c3', 'c4'] },
+  B: { name: 'Reading path B', cards: ['b1', 'b2', 'm1', 'm2'] }
+};
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var st = this.state || {};
+    var sel = ('sel' in st) ? st.sel : 'm1';
+    var hover = st.hover || null;
+    var pins = st.pins || {};
+    var act = ['A', 'B'].filter(function (key) { return pins[key] || hover === key; });
+    var path = act.length ? act : null;
+    var hasA = act.indexOf('A') !== -1, hasB = act.indexOf('B') !== -1;
+    var adds = Object.assign({}, st.adds || {});
+    if (st.addW2) adds.w2 = true;
+    var added = !!adds.w2;
+    var collapsed = !!st.collapsed;
+    var HID = collapsed ? { s1: 1, d1: 1, d2: 1 } : {};
+    if (HID[sel]) sel = null;
+    var OPT = { w1: 1, w2: 1, s1: 1, d1: 1, d2: 1, w3: 1 };
+    var FULL = { A: ['c1', 'c2', 'w1', 'c3', 'w2', 'c4'], B: ['b1', 'b2', 's1', 'm1', 'm2', 'd1', 'd2', 'w3'] };
+    var PCARDS = {};
+    ['A', 'B'].forEach(function (key) { PCARDS[key] = FULL[key].filter(function (id) { return (!OPT[id] || adds[id]) && !HID[id]; }); });
+    var E = EDGES.filter(function (e) { return e[3] !== 'path' && !HID[e[1]] && !HID[e[2]]; });
+    ['A', 'B'].forEach(function (key) { var L = PCARDS[key]; for (var i = 0; i + 1 < L.length; i++) E.push(['p' + key + i, L[i], L[i + 1], 'path']); });
+    var nameOf = function (id) { return CARDS[id] + (adds[id] ? ' (your addition)' : ''); };
+    var pathOf = function (id) { return FULL.A.indexOf(id) !== -1 ? 'A' : 'B'; };
+    var toggleIn = function (id) {
+      if (id === 'w2') { self.setState({ addW2: !added }); return; }
+      if (OPT[id]) { var a = Object.assign({}, st.adds || {}); a[id] = !a[id]; self.setState({ adds: a }); return; }
+      var sk = Object.assign({}, st.skip || {}); sk[id] = !sk[id]; self.setState({ skip: sk });
+    };
+    var o = {}, k = {}, r = {}, p = {}, s = {}, n = {}, x = {}, u = {}, rm = {};
+    var skip = st.skip || {};
+    var summary;
+
+    if (path) {
+      var inP = {};
+      var seq = [];
+      act.forEach(function (key) { PCARDS[key].forEach(function (id) { if (seq.indexOf(id) === -1) seq.push(id); }); });
+      seq.forEach(function (id) { inP[id] = true; });
+      var kept = seq.filter(function (id) { return !skip[id]; });
+      var skipped = seq.filter(function (id) { return skip[id]; });
+      kept.forEach(function (id, i) { s[id] = true; n[id] = String(i + 1); });
+      E.forEach(function (e) { o[e[0]] = (inP[e[1]] && inP[e[2]]) ? ((skip[e[1]] || skip[e[2]]) ? '0.45' : '1') : '0.12'; });
+      Object.keys(CARDS).forEach(function (id) { o[id] = inP[id] ? (skip[id] ? '0.55' : '1') : '0.35'; r[id] = 'none'; });
+      var pinnedHere = function (id) { return (pins.A && PCARDS.A.indexOf(id) !== -1) || (pins.B && PCARDS.B.indexOf(id) !== -1); };
+      seq.forEach(function (id) { x[id] = !skip[id] && pinnedHere(id); u[id] = !!skip[id]; });
+      summary = (act.length === 2 ? 'Reading paths A + B' : PATHS[act[0]].name) + ' · ' + kept.map(nameOf).join(' → ')
+        + (skipped.length ? ' · Skipping ' + skipped.map(nameOf).join(', ') : '')
+        + ((pins.A || pins.B) ? ' · Use − or + on a title to change your path' : '');
+    } else {
+      var linked = {}, before = {}, after = {};
+      var note = function (map, id, type) {
+        if (type === 'enh') { if (!map[id]) map[id] = 'enh'; } else map[id] = 'strong';
+      };
+      E.forEach(function (e) {
+        o[e[0]] = (!sel || e[1] === sel || e[2] === sel) ? '1' : '0.12';
+        if (sel && e[2] === sel) { linked[e[1]] = true; note(before, e[1], e[3]); }
+        if (sel && e[1] === sel) { linked[e[2]] = true; note(after, e[2], e[3]); }
+      });
+      Object.keys(CARDS).forEach(function (id) {
+        o[id] = (!sel || id === sel || linked[id]) ? '1' : '0.35';
+        r[id] = id === sel ? '0 0 0 4px rgba(39, 71, 201, 0.35)' : 'none';
+      });
+      var list = function (map) {
+        var ids = Object.keys(map);
+        if (!ids.length) return 'nothing';
+        return ids.map(function (id) { return nameOf(id) + (map[id] === 'enh' ? ' (optional)' : ''); }).join(', ');
+      };
+      if (!sel) summary = 'Select a card to see what to read before and after it, or hover a reading path to trace it.';
+      else if (!Object.keys(linked).length) summary = CARDS[sel] + ' is a standalone story, with no reading order around it.';
+      else summary = CARDS[sel] + ' · Read before: ' + list(before) + ' · Read after: ' + list(after);
+    }
+
+    Object.keys(CARDS).forEach(function (id) {
+      s[id] = !!s[id];
+      x[id] = !!x[id];
+      u[id] = !!u[id];
+      rm[id] = function () { toggleIn(id); };
+      n[id] = n[id] || '';
+      p[id] = (!path && id === sel) ? 'true' : 'false';
+      k[id] = function () { self.setState({ sel: id === sel ? null : id, pins: {} }); };
+    });
+    o.deco = (sel || path) ? '0.35' : '1';
+
+    var infoId = (st.info && !HID[st.info]) ? st.info : null;
+    var inf = {}, infx = {}, infbg = {}, inffg = {};
+    Object.keys(CARDS).forEach(function (id) {
+      var on = id === infoId;
+      inf[id] = function () { self.setState({ info: on ? null : id }); };
+      infx[id] = on ? 'true' : 'false';
+      infbg[id] = on ? '#15171A' : '#EEF0EC';
+      inffg[id] = on ? '#FFFFFF' : '#3D434A';
+    });
+    if (infoId) r[infoId] = '0 0 0 4px rgba(39, 71, 201, 0.35)';
+    var info = null;
+    if (infoId) {
+      var TIER = { c1: 'Essential', c2: 'Essential', c3: 'Essential', c4: 'Essential', b1: 'Essential', b2: 'Essential', m1: 'Essential', m2: 'Essential', w1: 'Optional', w2: 'Optional', w3: 'Optional', s1: 'Optional', d1: 'Optional', d2: 'Optional' };
+      var GROUP = { c1: 'Character 1', c2: 'Character 1', w1: 'Character 1', c3: 'Character 1', w2: 'Character 1', b1: 'Character 1', b2: 'Character 1', c4: 'Character 2' };
+      var LBL = { path: 'Reading path', rec: 'Directly follows', enh: 'Leads up to' };
+      var chips = [];
+      if (TIER[infoId]) chips.push({ text: TIER[infoId], bg: '#15171A', fg: '#FFFFFF' });
+      ['A', 'B'].forEach(function (key) {
+        var list = PCARDS[key];
+        if (list.indexOf(infoId) === -1) return;
+        if (skip[infoId]) { chips.push({ text: 'Skipped in Path ' + key, bg: '#E6E8E3', fg: '#3D434A' }); return; }
+        var kept = list.filter(function (id) { return !skip[id]; });
+        chips.push({ text: 'Path ' + key + ' · step ' + (kept.indexOf(infoId) + 1), bg: '#FBE3E0', fg: '#9E2418' });
+      });
+      if (GROUP[infoId]) chips.push({ text: GROUP[infoId], bg: '#E4E7E0', fg: '#3D434A' });
+      if (infoId === 'm1' || infoId === 'm2') chips.push({ text: 'Major event / Story arc', bg: '#DDD9CE', fg: '#3D434A' });
+      var gather = function (dir) {
+        var m = {}, order = [];
+        E.forEach(function (e) {
+          var other = dir === 'before' ? (e[2] === infoId ? e[1] : null) : (e[1] === infoId ? e[2] : null);
+          if (!other) return;
+          if (!m[other]) { m[other] = []; order.push(other); }
+          if (m[other].indexOf(LBL[e[3]]) === -1) m[other].push(LBL[e[3]]);
+        });
+        return order.map(function (oid) {
+          return { title: nameOf(oid), label: m[oid].join(' · '), open: function () { self.setState({ info: oid }); } };
+        });
+      };
+      var bef = gather('before'), aft = gather('after');
+      var inPath = PCARDS.A.indexOf(infoId) !== -1 || PCARDS.B.indexOf(infoId) !== -1;
+      var action = null, actionLabel = '';
+      if (OPT[infoId] && !HID[infoId]) {
+        actionLabel = adds[infoId] ? 'Remove from Path ' + pathOf(infoId) : 'Add to Path ' + pathOf(infoId);
+        action = function () { toggleIn(infoId); };
+      } else if (inPath) {
+        actionLabel = skip[infoId] ? 'Put back in reading path' : 'Skip in reading path';
+        action = function () { var sk = Object.assign({}, skip); sk[infoId] = !sk[infoId]; self.setState({ skip: sk }); };
+      }
+      info = {
+        title: nameOf(infoId), chips: chips,
+        facts: [{ label: 'Creators', value: '[Writer · Artist]' }, { label: 'Published', value: '[Year]' },
+          { label: 'Issues', value: '[#1–#4]' }, { label: 'Collected in', value: '[Edition]' }],
+        before: bef, after: aft, noBefore: !bef.length, noAfter: !aft.length,
+        hasAction: !!action, action: action, actionLabel: actionLabel
+      };
+    }
+
+    var hA = function () { clearTimeout(self._leave); if (self.state && self.state.hover === 'A') return; self.setState({ hover: 'A' }); };
+    var hB = function () { clearTimeout(self._leave); if (self.state && self.state.hover === 'B') return; self.setState({ hover: 'B' }); };
+    var pinA = function () { self.setState({ pins: Object.assign({}, pins, { A: !pins.A }), sel: null }); };
+    var pinB = function () { self.setState({ pins: Object.assign({}, pins, { B: !pins.B }), sel: null }); };
+    var C = { SA: [292, 188], SB: [552, 716], c1: [292, 236], c2: [292, 388], c3: [292, 540], w2: [652, 556], c4: [292, 716],
+      b1: [692, 716], b2: [972, 716], m1: [972, 916], m2: [1232, 916],
+      w1: [612, 388], s1: [612, 916], d1: [852, 1084], d2: [1132, 1084], w3: [1444, 1084] };
+    var TOP = { c1: 200, c2: 352, c3: 504, c4: 680 };
+    var COL = { SA: 1, c1: 1, c2: 1, c3: 1, c4: 1 };
+    var RT = {
+      'c3>w2': ' L 292 556 L 652 556', 'w2>c4': ' L 652 592 C 652 650, 292 626, 292 684 L 292 716',
+      'c2>w1': ' L 612 388', 'w1>c3': ' L 612 424 C 612 480, 292 460, 292 516 L 292 540',
+      'w1>c4': ' L 612 424 C 612 560, 292 600, 292 716', 'w1>w2': ' L 612 424 C 612 480, 652 480, 652 556',
+      'c1>w1': ' C 292 330, 612 300, 612 388', 'SA>w1': ' C 292 300, 612 300, 612 388',
+      'SB>b2': ' C 600 806, 900 806, 972 716', 'SB>m1': ' C 600 830, 972 760, 972 916', 'SB>m2': ' C 600 830, 1232 790, 1232 916',
+      'b1>m1': ' C 692 820, 972 800, 972 916', 'b1>m2': ' C 692 840, 1232 790, 1232 916', 'b2>m2': ' C 972 820, 1232 780, 1232 916',
+      'b2>s1': ' L 972 760 C 972 830, 612 800, 612 880 L 612 916', 'b1>s1': ' L 692 760 C 692 830, 612 820, 612 880 L 612 916',
+      'SB>s1': ' C 600 806, 612 820, 612 916', 's1>m1': ' L 972 916', 's1>m2': ' L 760 916 C 840 1000, 1100 1000, 1180 916 L 1232 916',
+      'm2>d1': ' L 1232 952 C 1232 1010, 852 990, 852 1048 L 852 1084', 'm1>d1': ' L 940 952 C 940 1000, 852 1000, 852 1048 L 852 1084',
+      'd1>d2': ' L 1132 1084', 'd2>w3': ' L 1444 1084', 'm2>d2': ' L 1232 952 C 1232 1000, 1132 1000, 1132 1048 L 1132 1084',
+      'm1>d2': ' L 1064 952 C 1100 1000, 1132 1000, 1132 1048 L 1132 1084',
+      'd1>w3': ' L 852 1120 C 852 1170, 1444 1170, 1444 1120 L 1444 1084', 'm2>w3': ' L 1232 952 C 1232 1010, 1444 1000, 1444 1048 L 1444 1084'
+    };
+    var seg = function (u, v) { return RT[u + '>' + v] || (' L ' + C[v][0] + ' ' + C[v][1]); };
+    var bypass = function (u, v, between) {
+      if (COL[u] && COL[v] && !RT[u + '>' + v]) {
+        var y1 = C[u][1], y2 = C[v][1], X = 292, Xo = 460;
+        var ys0 = Math.min.apply(null, between.map(function (id) { return TOP[id]; }));
+        var ys1 = Math.max.apply(null, between.map(function (id) { return TOP[id] + 72; }));
+        var a = Math.max(y1, ys0 - 80), b = Math.min(y2, ys1 + 80), m = Math.round((a + b) / 2), h = Math.round((m - a) * 0.55);
+        return ' L ' + X + ' ' + a + ' C ' + X + ' ' + (a + h) + ', ' + Xo + ' ' + (m - h) + ', ' + Xo + ' ' + m
+          + ' C ' + Xo + ' ' + (m + h) + ', ' + X + ' ' + (b - h) + ', ' + X + ' ' + b + ' L ' + X + ' ' + y2;
+      }
+      if (RT[u + '>' + v]) return RT[u + '>' + v];
+      if (v === 'w2') return ' C 292 ' + Math.min(C[u][1] + 160, 470) + ', 652 440, 652 556';
+      return seg(u, v);
+    };
+    var CT = { c1: [200, 200], c2: [200, 352], w1: [520, 352], c3: [200, 504], w2: [560, 520], c4: [200, 680], b1: [600, 680], b2: [880, 680],
+      s1: [520, 880], m1: [880, 880], m2: [1140, 880], d1: [760, 1048], d2: [1040, 1048], w3: [1352, 1048] };
+    var pill = { A: { x: 248, y: 152 }, B: { x: 472, y: 694 } };
+    ['A', 'B'].forEach(function (key) {
+      var first = PCARDS[key].filter(function (id) { return !skip[id]; })[0];
+      var sid = key === 'A' ? 'SA' : 'SB';
+      if (!first || (key === 'B' && first === 'b1')) return;
+      var w = key === 'A' ? 88 : 80, cx = CT[first][0] + 92, top = CT[first][1];
+      pill[key] = { x: cx - w / 2, y: top - 48 };
+      C[sid] = [cx, top - 12];
+    });
+    var route = function (key) {
+      var full = [key === 'A' ? 'SA' : 'SB'].concat(PCARDS[key]);
+      var kept = full.filter(function (id) { return !skip[id]; });
+      var out = [];
+      if (kept.length > 1) {
+        out.push({ u: kept[0], v: kept[1], direct: true, d: 'M ' + C[kept[0]][0] + ' ' + C[kept[0]][1] + ' L ' + C[kept[1]][0] + ' ' + C[kept[1]][1] });
+      }
+      for (var i = 1; i + 1 < kept.length; i++) {
+        var u0 = kept[i], v0 = kept[i + 1];
+        var between = full.slice(full.indexOf(u0) + 1, full.indexOf(v0));
+        out.push({ u: u0, v: v0, direct: !between.length,
+          d: 'M ' + C[u0][0] + ' ' + C[u0][1] + (between.length ? bypass(u0, v0, between) : seg(u0, v0)) });
+      }
+      return out;
+    };
+    var bands = [], tri = { c2: '0', c3: '0', c4: '0', b1: '0', m1: '0', w2: '0' }, traces = [];
+    ['A', 'B'].forEach(function (key) {
+      var startId = key === 'A' ? 'SA' : 'SB';
+      var conns = route(key);
+      conns.forEach(function (cn) {
+        var op;
+        if (path) {
+          var inU = cn.u === startId ? act.indexOf(key) !== -1 : !!inP[cn.u];
+          op = (inU && inP[cn.v]) ? '1' : '0.12';
+        } else {
+          op = (!sel || cn.u === sel || cn.v === sel) ? '1' : '0.12';
+        }
+        bands.push({ d: cn.d, op: op, enter: key === 'A' ? hA : hB, click: key === 'A' ? pinA : pinB });
+        if (cn.direct && tri[cn.v] !== undefined) tri[cn.v] = op;
+      });
+      if (act.indexOf(key) !== -1 && conns.length) {
+        traces.push({
+          d: conns.map(function (cn, i) { return i === 0 ? cn.d : cn.d.replace(/^M [0-9.]+ [0-9.]+/, ''); }).join(''),
+          delay: (key === 'B' && hasA) ? '900ms' : '0ms'
+        });
+      }
+    });
+    var ghostOp = (added && !skip.c3 && !skip.c4) ? (path ? '0.12' : '0.2') : '0';
+    o.det1 = o.det1 || '1';
+    o.det2 = o.det2 || '1';
+    o.triC4 = added ? o.det2 : o.pa3;
+    if (added) o.pa3 = '0.2';
+
+    return {
+      inf: inf, infx: infx, infbg: infbg, inffg: inffg, info: info || {}, hasInfo: !!info,
+      closeInfo: function () { self.setState({ info: null }); },
+      pm: (function () {
+        var m = {};
+        ['c1', 'c2', 'w1', 'c3', 'w2', 'c4', 'b1', 'b2', 's1', 'm1', 'm2', 'd1', 'd2', 'w3'].forEach(function (id) {
+          var inPath = OPT[id] ? !!adds[id] : !skip[id];
+          m[id] = {
+            icon: inPath ? 'M6 12h12' : 'M12 6v12M6 12h12',
+            label: (inPath ? 'Remove ' : 'Add ') + CARDS[id] + (inPath ? ' from' : ' to') + ' your reading path',
+            bg: inPath ? '#FFFFFF' : '#D3301F', fg: inPath ? '#3D434A' : '#FFFFFF', bd: inPath ? '#C9CEC6' : '#D3301F',
+            go: function () { toggleIn(id); }
+          };
+        });
+        return m;
+      })(),
+      ob: { w1: adds.w1 ? '2px solid #D3301F' : '1px solid #6B7179', w3: adds.w3 ? '2px solid #D3301F' : '1px solid #6B7179',
+        s1: adds.s1 ? '2px solid #D3301F' : '1px solid #15171A', d1: adds.d1 ? '2px solid #D3301F' : '1px solid #15171A',
+        d2: adds.d2 ? '2px solid #D3301F' : '1px solid #15171A' },
+      cb: (function () { var m = {}; ['c1', 'c2', 'c3', 'c4', 'b1', 'b2', 'm1', 'm2'].forEach(function (id) { m[id] = skip[id] ? '1px dashed #A9AFA7' : '2px solid #D3301F'; }); return m; })(),
+      dspF: collapsed ? 'none' : 'flex', dspB: collapsed ? 'none' : 'block',
+      expLabel: collapsed ? 'Show expanded' : 'Hide expanded', expAria: collapsed ? 'false' : 'true',
+      expIcon: collapsed ? 'M6 9l6 6 6-6' : 'M6 15l6-6 6 6',
+      toggleExp: function () { self.setState({ collapsed: !collapsed }); },
+      o: o, k: k, r: r, p: p, s: s, n: n, x: x, u: u, rm: rm, bands: bands, tri: tri, traces: traces, ghostOp: ghostOp, summary: summary,
+      hasSel: !!sel || !!pins.A || !!pins.B,
+      traceA1: hasA && !added, traceA2: hasA && added, traceB: hasB,
+      bDelay: hasA ? (added ? '1000ms' : '700ms') : '0ms',
+      added: added,
+      w2Border: added ? '2px solid #D3301F' : '1px solid #6B7179',
+      addLabel: added ? 'In your Path A · Remove' : '+ Add to Path A',
+      addColor: added ? '#3D434A' : '#B3261A',
+      addPressed: added ? 'true' : 'false',
+      toggleAdd: function () { self.setState({ addW2: !added, pins: added ? pins : Object.assign({}, pins, { A: true }), sel: null }); },
+      pressA: pins.A ? 'true' : 'false', pressB: pins.B ? 'true' : 'false',
+      ringA: pins.A ? '0 0 0 3px rgba(211, 48, 31, 0.3)' : 'none',
+      ringB: pins.B ? '0 0 0 3px rgba(211, 48, 31, 0.3)' : 'none',
+      hA: hA, hB: hB, pill: pill,
+      rvOpen: function () { self.setState({ rv: true, hover: null }); },
+      rvClose: function () { self.setState({ rv: false }); },
+      rv: (function () {
+        var keys = (pins.A || pins.B) ? ['A', 'B'].filter(function (kk) { return pins[kk]; }) : ['A', 'B'];
+        var TIER2 = { c1: 'Essential', c2: 'Essential', c3: 'Essential', c4: 'Essential', b1: 'Essential', b2: 'Essential', m1: 'Essential', m2: 'Essential', w1: 'Optional', w2: 'Optional', w3: 'Optional', s1: 'Optional', d1: 'Optional', d2: 'Optional' };
+        var GROUP2 = { c1: 'Character 1', c2: 'Character 1', w1: 'Character 1', c3: 'Character 1', w2: 'Character 1', b1: 'Character 1', b2: 'Character 1', c4: 'Character 2', m1: 'Major event', m2: 'Major event' };
+        var REL = { rec: 'Directly follows', enh: 'Leads up to' };
+        var rows = [], step = 0, total = 0;
+        keys.forEach(function (key) {
+          var list = PCARDS[key];
+          var keptL = list.filter(function (id) { return !skip[id]; });
+          total += keptL.length;
+          rows.push({ isHeader: true, label: PATHS[key].name, count: keptL.length + (keptL.length === 1 ? ' title' : ' titles') });
+          if (!keptL.length) { rows.push({ isEmpty: true }); return; }
+          keptL.forEach(function (id, i) {
+            step += 1;
+            var prev = i > 0 ? keptL[i - 1] : null, rel = '';
+            if (prev) {
+              var labels = [];
+              E.forEach(function (e) { if (e[1] === prev && e[2] === id && REL[e[3]] && labels.indexOf(REL[e[3]]) === -1) labels.push(REL[e[3]]); });
+              var gap = list.slice(list.indexOf(prev) + 1, list.indexOf(id));
+              var phr = labels.map(function (lb) { return lb === 'Directly follows' ? 'Directly follows ' + CARDS[prev] : CARDS[prev] + ' leads up to this'; });
+              rel = (phr.length ? phr.join(' · ') : 'Next after ' + CARDS[prev])
+                + (gap.length ? ' · skipping ' + gap.map(function (g) { return CARDS[g]; }).join(', ') : '');
+            }
+            var meta = [TIER2[id], GROUP2[id], adds[id] ? 'Your addition' : null].filter(Boolean).join(' · ') || 'Expand';
+            rows.push({
+              isItem: true, n: String(step), title: CARDS[id], meta: meta, rel: rel, hasRel: !!rel,
+              dotTop: rel ? '22px' : '0px',
+              line: i < keptL.length - 1 ? '#F2B2AA' : 'transparent',
+              info: inf[id], remove: function () { toggleIn(id); }
+            });
+          });
+        });
+        return {
+          on: !!st.rv, rows: rows,
+          heading: keys.length === 2 ? 'Reading paths A + B' : PATHS[keys[0]].name,
+          sub: total + (total === 1 ? ' title' : ' titles') + ' in reading order. Removed titles are left out; use Reset on the map to restore a path.',
+          pressA: pins.A ? 'true' : 'false', pressB: pins.B ? 'true' : 'false',
+          bgA: pins.A ? '#D3301F' : '#FFFFFF', fgA: pins.A ? '#FFFFFF' : '#B3261A',
+          bgB: pins.B ? '#D3301F' : '#FFFFFF', fgB: pins.B ? '#FFFFFF' : '#B3261A'
+        };
+      })(),
+      rs: (function () {
+        var m = {};
+        ['A', 'B'].forEach(function (key) {
+          var changed = FULL[key].some(function (id) { return OPT[id] ? !!adds[id] : !!skip[id]; });
+          var atDefault = key === 'B' && pill.B.x === 472 && pill.B.y === 694;
+          m[key] = {
+            show: changed ? 'flex' : 'none',
+            x: atDefault ? pill.B.x : pill[key].x - 92,
+            y: atDefault ? pill.B.y + 40 : pill[key].y,
+            go: function () {
+              var sk = Object.assign({}, skip), ad = Object.assign({}, st.adds || {}), patch = {};
+              FULL[key].forEach(function (id) { delete sk[id]; delete ad[id]; });
+              patch.skip = sk; patch.adds = ad;
+              if (key === 'A') patch.addW2 = false;
+              self.setState(patch);
+            }
+          };
+        });
+        return m;
+      })(),
+      hOff: function () { clearTimeout(self._leave); self._leave = setTimeout(function () { self.setState({ hover: null }); }, 120); },
+      pinA: pinA, pinB: pinB,
+      bgClear: function (e) { var t = e && e.target; if (t && t.closest && t.closest('button, a, aside, svg[style*="cursor: pointer"], path[style*="cursor: pointer"]')) return; clearTimeout(self._leave); self.setState({ sel: null, pins: {}, hover: null, info: null }); },
+      clear: function () { self.setState({ sel: null, pins: {} }); },
+      showContinue: (hasA && !hasB) || (!path && sel === 'c4'),
+      keepA: function () { clearTimeout(self._leave); if (!pins.A && self.state && self.state.hover !== 'A' && sel !== 'c4') self.setState({ hover: 'A' }); },
+      goB: function () { clearTimeout(self._leave); self.setState({ pins: { A: true, B: true }, hover: null, sel: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

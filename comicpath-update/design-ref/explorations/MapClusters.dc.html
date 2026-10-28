@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Clustered link map</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=IBM+Plex+Mono:wght@500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+input{font:inherit}
+a{color:#2747C9}a:hover{color:#1B3496}
+</style>
+</helmet>
+<div style="width: 1520px; min-height: 1100px; box-sizing: border-box; padding: 56px; background: #EEF0EC; font-family: 'IBM Plex Sans', sans-serif; color: #15171A; display: flex; flex-direction: column; gap: 28px">
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 24px">
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{f.pressed}}" onClick="{{f.pick}}" style="height: 44px; padding: 0 16px; display: flex; align-items: center; gap: 8px; border-radius: 999px; border: 1px solid {{f.border}}; background: {{f.bg}}; color: {{f.fg}}; font-size: 14px; font-weight: 500">{{f.label}}<span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; opacity: 0.8">{{f.count}}</span></button>
+</sc-for>
+</div>
+<label style="width: 320px; height: 44px; box-sizing: border-box; padding: 0 14px; display: flex; align-items: center; gap: 10px; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 10px; color: #4E545C">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg>
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap">Filter linked titles</span>
+<input type="text" value="{{query}}" onChange="{{onQuery}}" placeholder="Filter linked titles" style="flex-grow: 1; min-width: 0; border: 0; outline: none; background: transparent; font-size: 15px; color: #15171A">
+</label>
+</div>
+
+<div style="display: flex; gap: 80px; align-items: flex-start">
+
+<div style="width: 360px; flex-shrink: 0; position: relative">
+<div style="position: absolute; left: 100%; top: 27px; width: 40px; height: 2px; background: #A9AFA7"></div>
+<article style="background: #FFFFFF; border: 2px solid #15171A; border-radius: 14px; box-shadow: 0 8px 24px rgba(21, 23, 26, 0.10); display: flex; flex-direction: column">
+<div style="padding: 20px 20px 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: #4E545C">Miller · Mazzucchelli · 1987</div>
+<h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 26px; line-height: 1.12">Batman: Year One</h3>
+<p style="margin: 0; font-size: 15px; line-height: 1.45; color: #3D434A">Bruce Wayne's first year as Batman, told alongside Jim Gordon's first year in Gotham.</p>
+</div>
+<div style="border-top: 1px solid #E4E7E1; padding: 6px 8px; display: flex; align-items: center; gap: 4px">
+<button type="button" aria-pressed="true" style="height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border: 0; background: #E8ECFB; border-radius: 8px; color: #2747C9; font-size: 14px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"></path><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"></path></svg>{{total}} links</button>
+<div style="flex-grow: 1"></div>
+<button type="button" aria-label="Save" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; border-radius: 8px; color: #3D434A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4z"></path></svg></button>
+<a href="#" style="height: 44px; padding: 0 18px; display: flex; align-items: center; border-radius: 8px; background: #15171A; color: #FFFFFF; font-size: 14px; font-weight: 500; text-decoration: none">Open</a>
+</div>
+</article>
+</div>
+
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 32px">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+<section style="position: relative; display: flex; flex-direction: column; gap: 12px">
+<div style="position: absolute; left: -40px; top: {{g.trunkTop}}; width: 2px; height: {{g.trunkH}}; background: #A9AFA7"></div>
+<div style="position: absolute; left: -40px; top: 27px; width: 40px; height: 2px; background: {{g.color}}"></div>
+<div style="height: 56px; display: flex; align-items: center; gap: 12px">
+<span style="min-width: 32px; height: 32px; padding: 0 8px; box-sizing: border-box; border-radius: 16px; background: {{g.badge}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 13px">{{g.count}}</span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div style="font-size: 17px; font-weight: 600">{{g.label}}</div>
+<div style="font-size: 13px; color: #4E545C">{{g.sub}}</div>
+</div>
+<div style="flex-grow: 1"></div>
+<sc-if value="{{g.canCollapse}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{g.collapse}}" style="height: 44px; padding: 0 14px; border: 0; background: transparent; border-radius: 8px; color: #2747C9; font-size: 14px; font-weight: 500">Show less</button>
+</sc-if>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{g.visible}}" as="it" hint-placeholder-count="3">
+<a href="#" style="min-height: 76px; box-sizing: border-box; padding: 12px 14px; background: #FFFFFF; border: 1px solid #DDE0DA; border-radius: 10px; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; text-decoration: none; color: #15171A">
+<span style="font-size: 15px; font-weight: 600; line-height: 1.25">{{it.title}}</span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4E545C">{{it.year}}</span>
+</a>
+</sc-for>
+<sc-if value="{{g.hasMore}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{g.expand}}" style="min-height: 76px; box-sizing: border-box; padding: 12px 14px; background: transparent; border: 1px dashed #A9AFA7; border-radius: 10px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; color: #15171A; text-align: left">
+<span style="font-size: 15px; font-weight: 600">+{{g.more}} more</span>
+<span style="font-size: 13px; color: #4E545C">Show all {{g.count}}</span>
+</button>
+</sc-if>
+</div>
+</section>
+</sc-for>
+<sc-if value="{{noResults}}" hint-placeholder-val="{{ false }}">
+<div style="padding: 24px; border: 1px dashed #A9AFA7; border-radius: 12px; font-size: 15px; color: #3D434A">No linked titles match “{{query}}”.</div>
+</sc-if>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1520,"height":1100}}'>
+var GROUPS = [
+  { id: 'seq', label: 'Story order', sub: 'Early-career Batman stories', kind: 'seq', items: [
+    ['The Long Halloween', '1996–97'], ['Dark Victory', '1999–2000'], ['Haunted Knight', '1996'],
+    ['Catwoman: When in Rome', '2004–05'], ['Batman: The Man Who Laughs', '2005'],
+    ['Batman and the Monster Men', '2006'], ['Batman and the Mad Monk', '2006–07'] ] },
+  { id: 'writer', label: 'Same writer', sub: 'Frank Miller', kind: 'team', items: [
+    ['The Dark Knight Returns', '1986'], ['Daredevil: Born Again', '1986'], ['Ronin', '1983–84'],
+    ['Elektra: Assassin', '1986–87'], ['Sin City: The Hard Goodbye', '1991–92'],
+    ['Daredevil: The Man Without Fear', '1993'], ['300', '1998'], ['The Dark Knight Strikes Again', '2001–02'] ] },
+  { id: 'artist', label: 'Same artist', sub: 'David Mazzucchelli', kind: 'team', items: [
+    ['Rubber Blanket', '1991–93'], ['City of Glass', '1994'], ['Asterios Polyp', '2009'] ] },
+  { id: 'era', label: 'Same era', sub: 'Published 1985–89', kind: 'era', items: [
+    ['Crisis on Infinite Earths', '1985–86'], ['The Man of Steel', '1986'], ['Maus I', '1986'],
+    ['Watchmen', '1986–87'], ['Batman: The Killing Joke', '1988'], ['Batman: A Death in the Family', '1988–89'] ] }
+];
+var KIND = {
+  seq: { color: '#2747C9', badge: '#2747C9' },
+  team: { color: '#C2541A', badge: '#9A3F0E' },
+  era: { color: '#6B7179', badge: '#4E545C' }
+};
+var CAP = 3;
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var st = this.state || {};
+    var filter = st.filter || 'all';
+    var query = st.query || '';
+    var expanded = st.expanded || {};
+    var q = query.trim().toLowerCase();
+    var total = 0;
+    GROUPS.forEach(function (g) { total += g.items.length; });
+
+    var shown = [];
+    GROUPS.forEach(function (g) {
+      if (filter !== 'all' && filter !== g.id) return;
+      var matched = g.items.filter(function (it) { return !q || it[0].toLowerCase().indexOf(q) !== -1; });
+      if (!matched.length) return;
+      var open = !!expanded[g.id] || !!q || filter === g.id;
+      var visible = open ? matched : matched.slice(0, CAP);
+      var k = KIND[g.kind];
+      shown.push({
+        id: g.id, label: g.label, sub: g.sub, color: k.color, badge: k.badge,
+        count: matched.length,
+        visible: visible.map(function (it) { return { title: it[0], year: it[1] }; }),
+        hasMore: !open && matched.length > CAP,
+        more: matched.length - CAP,
+        canCollapse: !!expanded[g.id] && !q && filter !== g.id && matched.length > CAP,
+        expand: function () { var e = Object.assign({}, expanded); e[g.id] = true; self.setState({ expanded: e }); },
+        collapse: function () { var e = Object.assign({}, expanded); e[g.id] = false; self.setState({ expanded: e }); }
+      });
+    });
+    var n = shown.length;
+    shown.forEach(function (g, i) {
+      var last = i === n - 1;
+      if (i === 0) { g.trunkTop = '28px'; g.trunkH = last ? '0px' : 'calc(100% + 4px)'; }
+      else { g.trunkTop = '0px'; g.trunkH = last ? '28px' : 'calc(100% + 32px)'; }
+    });
+
+    var filters = [{ id: 'all', label: 'All', count: total }].concat(GROUPS.map(function (g) { return { id: g.id, label: g.label, count: g.items.length }; }));
+    filters = filters.map(function (f) {
+      var on = f.id === filter;
+      return {
+        label: f.label, count: f.count,
+        pressed: on ? 'true' : 'false',
+        bg: on ? '#15171A' : '#FFFFFF', fg: on ? '#FFFFFF' : '#15171A', border: on ? '#15171A' : '#C9CEC6',
+        pick: function () { self.setState({ filter: f.id }); }
+      };
+    });
+
+    return {
+      total: total, filters: filters, groups: shown, query: query, noResults: n === 0,
+      onQuery: function (e) { self.setState({ query: e.target.value }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

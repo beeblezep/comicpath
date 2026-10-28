@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Expand linked cards into columns</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=IBM+Plex+Mono:wght@500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#2747C9}a:hover{color:#1B3496}
+</style>
+</helmet>
+<div style="width: 1520px; height: 1000px; box-sizing: border-box; padding: 40px 48px; background: #EEF0EC; font-family: 'IBM Plex Sans', sans-serif; color: #15171A; display: flex; flex-direction: column; gap: 20px">
+
+<nav aria-label="Exploration path" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-height: 44px">
+<sc-for list="{{crumbs}}" as="cr" hint-placeholder-count="2">
+<sc-if value="{{cr.notFirst}}" hint-placeholder-val="{{ false }}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7179" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+</sc-if>
+<sc-if value="{{cr.isLast}}" hint-placeholder-val="{{ false }}">
+<span aria-current="page" style="padding: 0 10px; font-size: 15px; font-weight: 600">{{cr.title}}</span>
+</sc-if>
+<sc-if value="{{cr.notLast}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{cr.go}}" style="height: 44px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; color: #2747C9; font-size: 15px; font-weight: 500">{{cr.title}}</button>
+</sc-if>
+</sc-for>
+</nav>
+
+<div style="flex-grow: 1; min-height: 0; display: flex; gap: 16px">
+<sc-for list="{{cols}}" as="col" hint-placeholder-count="2">
+
+<sc-if value="{{col.slim}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{col.back}}" aria-label="Back to {{col.title}}" style="width: 64px; flex-shrink: 0; height: 100%; box-sizing: border-box; padding: 16px 0; border: 1px solid #DDE0DA; border-radius: 14px; background: #F5F6F3; display: flex; flex-direction: column; align-items: center; gap: 14px; color: #15171A">
+<span style="width: 28px; height: 28px; border-radius: 50%; background: #15171A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px">{{col.num}}</span>
+<span style="writing-mode: vertical-rl; transform: rotate(180deg); font-size: 14px; font-weight: 600; white-space: nowrap">{{col.title}}</span>
+</button>
+</sc-if>
+
+<sc-if value="{{col.full}}" hint-placeholder-val="{{ true }}">
+<section style="width: 360px; flex-shrink: 0; height: 100%; box-sizing: border-box; background: #FFFFFF; border: {{col.border}}; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden">
+<header style="padding: 16px 18px; border-bottom: 1px solid #E4E7E1; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 24px; height: 24px; border-radius: 50%; background: #15171A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 11px">{{col.num}}</span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: #4E545C">{{col.step}}</span>
+</div>
+<h3 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 22px; line-height: 1.15">{{col.title}}</h3>
+<div style="font-size: 13px; color: #4E545C">{{col.meta}} · {{col.count}} links</div>
+</header>
+<div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 4px 8px 16px">
+<sc-for list="{{col.groups}}" as="g" hint-placeholder-count="3">
+<div style="padding: 14px 10px 6px; display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{g.fg}}"><span style="width: 8px; height: 8px; border-radius: 4px; background: {{g.color}}"></span>{{g.label}} · {{g.count}}</div>
+<sc-for list="{{g.items}}" as="it" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 4px; padding-right: 4px; border-radius: 8px; background: {{it.bg}}">
+<a href="#" style="flex-grow: 1; min-width: 0; min-height: 48px; box-sizing: border-box; padding: 6px 10px; display: flex; flex-direction: column; justify-content: center; gap: 1px; text-decoration: none; color: {{it.fg}}">
+<span style="font-size: 14px; font-weight: 500; line-height: 1.25">{{it.title}}</span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{it.sub}}">{{it.year}}</span>
+</a>
+<sc-if value="{{it.hasTag}}" hint-placeholder-val="{{ false }}">
+<span style="flex-shrink: 0; padding: 2px 6px; border-radius: 4px; background: #E6E8E3; color: #3D434A; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase">{{it.tag}}</span>
+</sc-if>
+<sc-if value="{{it.expandable}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{it.expand}}" aria-label="Expand {{it.title}}" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 2px; border: 0; background: transparent; border-radius: 8px; color: #2747C9"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+</sc-if>
+<sc-if value="{{it.isSel}}" hint-placeholder-val="{{ false }}">
+<span style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #FFFFFF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></span>
+</sc-if>
+</div>
+</sc-for>
+</sc-for>
+</div>
+</section>
+</sc-if>
+
+</sc-for>
+
+<sc-if value="{{showHint}}" hint-placeholder-val="{{ true }}">
+<div style="width: 360px; flex-shrink: 0; height: 100%; box-sizing: border-box; border: 1px dashed #A9AFA7; border-radius: 14px; padding: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; color: #3D434A">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+<div style="font-size: 15px; line-height: 1.5; max-width: 240px">Expand any linked card to follow its links into a new column.</div>
+</div>
+</sc-if>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1520,"height":1000}}'>
+var CAT = {
+  y1: ['Batman: Year One', '1987'], lh: ['The Long Halloween', '1996–97'], dv: ['Dark Victory', '1999–2000'],
+  hk: ['Haunted Knight', '1996'], wir: ['Catwoman: When in Rome', '2004–05'], mwl: ['Batman: The Man Who Laughs', '2005'],
+  mm: ['Batman and the Monster Men', '2006'], mad: ['Batman and the Mad Monk', '2006–07'],
+  dkr: ['The Dark Knight Returns', '1986'], ba: ['Daredevil: Born Again', '1986'], ronin: ['Ronin', '1983–84'],
+  ea: ['Elektra: Assassin', '1986–87'], scg: ['Sin City: The Hard Goodbye', '1991–92'], mwf: ['Daredevil: The Man Without Fear', '1993'],
+  t300: ['300', '1998'], dksa: ['The Dark Knight Strikes Again', '2001–02'], dk3: ['Dark Knight III: The Master Race', '2015–17'],
+  rb: ['Rubber Blanket', '1991–93'], cog: ['City of Glass', '1994'], ap: ['Asterios Polyp', '2009'],
+  crisis: ['Crisis on Infinite Earths', '1985–86'], mos: ['The Man of Steel', '1986'], maus: ['Maus I', '1986'],
+  wm: ['Watchmen', '1986–87'], kj: ['Batman: The Killing Joke', '1988'], ditf: ['Batman: A Death in the Family', '1988–89'],
+  sfas: ['Superman for All Seasons', '1998'], ddy: ['Daredevil: Yellow', '2001–02'], smb: ['Spider-Man: Blue', '2002–03'],
+  hg: ['Hulk: Gray', '2003–04'], cotu: ['Challengers of the Unknown', '1991'],
+  c2f: ['Two-Face', 'Character'], cfal: ['Carmine Falcone', 'Character'], ccal: ['Calendar Man', 'Character'],
+  ccat: ['Catwoman', 'Character'], crob: ['Dick Grayson', 'Character'],
+  lh1: ['The Long Halloween, Part One', '2021 film'], lh2: ['The Long Halloween, Part Two', '2021 film']
+};
+var NODES = {
+  y1: { meta: 'Miller · Mazzucchelli · 1987', groups: [
+    ['Story order', 'seq', ['lh', 'dv', 'hk', 'wir', 'mwl', 'mm', 'mad']],
+    ['Same writer', 'team', ['dkr', 'ba', 'ronin', 'ea', 'scg', 'mwf', 't300', 'dksa']],
+    ['Same artist', 'team', ['rb', 'cog', 'ap']],
+    ['Same era', 'era', ['crisis', 'mos', 'maus', 'wm', 'kj', 'ditf']] ] },
+  lh: { meta: 'Loeb · Sale · 1996–97', groups: [
+    ['Story order', 'seq', ['y1', 'dv', 'wir']],
+    ['Same team', 'team', ['hk', 'sfas', 'ddy', 'smb', 'hg', 'cotu']],
+    ['Characters', 'char', ['c2f', 'cfal', 'ccal', 'ccat']],
+    ['Adaptations', 'char', ['lh1', 'lh2']] ] },
+  dv: { meta: 'Loeb · Sale · 1999–2000', groups: [
+    ['Story order', 'seq', ['y1', 'lh']],
+    ['Same team', 'team', ['hk', 'sfas', 'ddy', 'smb', 'hg']],
+    ['Characters', 'char', ['crob', 'c2f']] ] },
+  dkr: { meta: 'Miller · 1986', groups: [
+    ['Story order', 'seq', ['dksa', 'dk3']],
+    ['Same writer', 'team', ['y1', 'ba', 'ronin', 'ea', 'scg', 'mwf', 't300']],
+    ['Same era', 'era', ['wm', 'crisis', 'mos', 'maus']] ] }
+};
+var KIND = {
+  seq: { color: '#2747C9', fg: '#2747C9' },
+  team: { color: '#C2541A', fg: '#9A3F0E' },
+  era: { color: '#6B7179', fg: '#4E545C' },
+  char: { color: '#1F7A6B', fg: '#1F6F63' }
+};
+var MAX_FULL = 3;
+function linkCount(id) { var n = 0; NODES[id].groups.forEach(function (g) { n += g[2].length; }); return n; }
+
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var st = this.state || {};
+    var path = st.path || ['y1', 'lh'];
+    var inPath = {};
+    path.forEach(function (id) { inPath[id] = true; });
+    var n = path.length;
+    var firstFull = Math.max(0, n - MAX_FULL);
+
+    var cols = path.map(function (id, i) {
+      var nd = NODES[id];
+      var next = path[i + 1];
+      var isLast = i === n - 1;
+      return {
+        num: i + 1, title: CAT[id][0], meta: nd.meta, count: linkCount(id),
+        slim: i < firstFull, full: i >= firstFull,
+        border: isLast ? '2px solid #15171A' : '1px solid #DDE0DA',
+        step: i === 0 ? 'Seed' : 'Expanded from ' + CAT[path[i - 1]][0],
+        back: function () { self.setState({ path: path.slice(0, i + 1) }); },
+        groups: nd.groups.map(function (g) {
+          var k = KIND[g[1]];
+          return {
+            label: g[0], color: k.color, fg: k.fg, count: g[2].length,
+            items: g[2].map(function (x) {
+              var sel = x === next;
+              var tag = (!sel && inPath[x]) ? 'In path' : '';
+              return {
+                title: CAT[x][0], year: CAT[x][1], isSel: sel,
+                bg: sel ? '#15171A' : 'transparent', fg: sel ? '#FFFFFF' : '#15171A', sub: sel ? '#C9CEC6' : '#4E545C',
+                expandable: !!NODES[x] && !inPath[x],
+                hasTag: !!tag, tag: tag,
+                expand: function () { self.setState({ path: path.slice(0, i + 1).concat(x) }); }
+              };
+            })
+          };
+        })
+      };
+    });
+
+    var crumbs = path.map(function (id, i) {
+      var isLast = i === n - 1;
+      return {
+        title: CAT[id][0], isLast: isLast, notLast: !isLast, notFirst: i > 0,
+        go: function () { self.setState({ path: path.slice(0, i + 1) }); }
+      };
+    });
+
+    return { cols: cols, crumbs: crumbs, showHint: n < MAX_FULL };
+  }
+}
+</script>
+</body>
+</html>

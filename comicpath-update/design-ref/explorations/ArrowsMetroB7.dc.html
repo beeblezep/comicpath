@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Metro-line connectors</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=IBM+Plex+Mono:wght@500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#2747C9}a:hover{color:#1B3496}
+@keyframes dc-trace{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes dc-trace-a2{from{stroke-dashoffset:1260}to{stroke-dashoffset:0}}
+@keyframes dc-trace-b{from{stroke-dashoffset:870}to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion: reduce){.dc-trace{animation:none !important;stroke-dasharray:none !important}}
+</style>
+</helmet>
+<div onClick="{{bgClear}}" style="position: relative; width: 1600px; height: 1220px; background: #EEF0EC; font-family: 'IBM Plex Sans', sans-serif; color: #15171A">
+
+<svg width="928" height="600" viewBox="0 0 928 600" preserveAspectRatio="none" style="position: absolute; left: 168px; top: 184px; width: 928px; height: 600px; overflow: visible; pointer-events: none; opacity: {{o.deco}}; transition: opacity 150ms"><path d="M 18 0 L 590 0 Q 608 0 608 18 L 608 446 Q 608 464 626 464 L 910 464 Q 928 464 928 482 L 928 582 Q 928 600 910 600 L 426 600 Q 408 600 408 582 L 408 442 Q 408 424 390 424 L 18 424 Q 0 424 0 406 L 0 18 Q 0 0 18 0 Z" fill="#E4E7E0" stroke="#A9AFA7" stroke-width="1" stroke-dasharray="4 4"></path></svg>
+<div style="position: absolute; left: 176px; top: 648px; width: 232px; height: 160px; box-sizing: border-box; background: #E2E6EC; border: 1px dashed #A3ABB8; border-radius: 18px; opacity: {{o.deco}}; transition: opacity 150ms"></div>
+<div style="position: absolute; left: 856px; top: 840px; width: 492px; height: 136px; box-sizing: border-box; background: #DDD9CE; border-radius: 18px; opacity: {{o.deco}}; transition: opacity 150ms"></div>
+
+<svg width="1600" height="1220" viewBox="0 0 1600 1220" style="position: absolute; left: 0; top: 0; width: 1600px; height: 1220px; overflow: visible; fill: none; pointer-events: none; opacity: {{ghostOp}}; transition: opacity 150ms"><path d="M 292 540 L 292 716" style="stroke: #F2B2AA; stroke-width: 10"></path></svg>
+<sc-for list="{{bands}}" as="bd" hint-placeholder-count="7">
+<svg width="1600" height="1220" viewBox="0 0 1600 1220" onMouseEnter="{{bd.enter}}" onMouseLeave="{{hOff}}" onClick="{{bd.click}}" style="position: absolute; left: 0; top: 0; width: 1600px; height: 1220px; overflow: visible; fill: none; stroke: #F2B2AA; stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; opacity: {{bd.op}}; transition: opacity 150ms"><path d="{{bd.d}}" style="stroke: transparent; stroke-width: 28; pointer-events: stroke; cursor: pointer"></path><path d="{{bd.d}}" style="pointer-events: stroke; cursor: pointer"></path></svg>
+</sc-for>
+
+<sc-for list="{{traces}}" as="tr" hint-placeholder-count="0">
+<svg width="1600" height="1220" viewBox="0 0 1600 1220" style="position: absolute; left: 0; top: 0; width: 1600px; height: 1220px; overflow: visible; fill: none; stroke: #D3301F; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; pointer-events: none"><path class="dc-trace" d="{{tr.d}}" pathLength="1" style="stroke-dasharray: 1; stroke-dashoffset: 0; animation: dc-trace 1000ms ease-out {{tr.delay}} both"></path></svg>
+</sc-for>
+
+<svg width="12" height="10" viewBox="0 0 12 10" style="position: absolute; left: 286px; top: 340px; width: 12px; height: 10px; overflow: visible; pointer-events: none; opacity: {{tri.c2}}; transition: opacity 150ms"><path d="M 0 0 L 12 0 L 6 10 Z" fill="#D3301F"></path></svg>
+<svg width="12" height="10" viewBox="0 0 12 10" style="position: absolute; left: 286px; top: 492px; width: 12px; height: 10px; overflow: visible; pointer-events: none; opacity: {{tri.c3}}; transition: opacity 150ms"><path d="M 0 0 L 12 0 L 6 10 Z" fill="#D3301F"></path></svg>
+<svg width="12" height="10" viewBox="0 0 12 10" style="position: absolute; left: 286px; top: 668px; width: 12px; height: 10px; overflow: visible; pointer-events: none; opacity: {{tri.c4}}; transition: opacity 150ms"><path d="M 0 0 L 12 0 L 6 10 Z" fill="#D3301F"></path></svg>
+<svg width="10" height="12" viewBox="0 0 10 12" style="position: absolute; left: 588px; top: 710px; width: 10px; height: 12px; overflow: visible; pointer-events: none; opacity: {{tri.b1}}; transition: opacity 150ms"><path d="M 0 0 L 10 6 L 0 12 Z" fill="#D3301F"></path></svg>
+<svg width="10" height="12" viewBox="0 0 10 12" style="position: absolute; left: 548px; top: 550px; width: 10px; height: 12px; overflow: visible; pointer-events: none; opacity: {{tri.w2}}; transition: opacity 150ms"><path d="M 0 0 L 10 6 L 0 12 Z" fill="#D3301F"></path></svg>
+
+<svg width="135" height="8" viewBox="0 0 135 8" preserveAspectRatio="none" style="position: absolute; left: 384px; top: 384px; width: 135px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: {{o.r1}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-1" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 131 4" marker-end="url(#dc-arrow-head-filled-1)"></path></svg>
+<svg width="95" height="8" viewBox="0 0 95 8" preserveAspectRatio="none" style="position: absolute; left: 784px; top: 712px; width: 95px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; opacity: {{o.r2}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-2" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 91 4" marker-end="url(#dc-arrow-head-filled-2)"></path></svg>
+<svg width="75" height="8" viewBox="0 0 75 8" preserveAspectRatio="none" style="position: absolute; left: 1064px; top: 912px; width: 75px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; opacity: {{o.r3}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-3" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 71 4" marker-end="url(#dc-arrow-head-filled-3)"></path></svg>
+<svg width="175" height="8" viewBox="0 0 175 8" preserveAspectRatio="none" style="display: {{dspB}}; position: absolute; left: 704px; top: 912px; width: 175px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 6; opacity: {{o.n1}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-4" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; stroke-dasharray: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 171 4" marker-end="url(#dc-arrow-head-filled-4)"></path></svg>
+<svg width="8" height="127" viewBox="0 0 8 127" preserveAspectRatio="none" style="position: absolute; left: 968px; top: 752px; width: 8px; height: 127px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 6; opacity: {{o.n2}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-5" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; stroke-dasharray: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 4 0 L 4 123" marker-end="url(#dc-arrow-head-filled-5)"></path></svg>
+<svg width="96" height="96" viewBox="0 0 96 96" preserveAspectRatio="none" style="display: {{dspB}}; position: absolute; left: 848px; top: 952px; width: 96px; height: 96px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 6; opacity: {{o.n3}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-6" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; stroke-dasharray: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 92 0 C 92 48, 4 48, 4 92" marker-end="url(#dc-arrow-head-filled-6)"></path></svg>
+<svg width="95" height="8" viewBox="0 0 95 8" preserveAspectRatio="none" style="display: {{dspB}}; position: absolute; left: 944px; top: 1080px; width: 95px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: {{o.r4}}; transition: opacity 150ms"><defs><marker id="dc-arrow-head-filled-7" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 91 4" marker-end="url(#dc-arrow-head-filled-7)"></path></svg>
+
+<svg width="48" height="10" viewBox="0 0 48 10" preserveAspectRatio="none" style="position: absolute; left: 1180px; top: 101px; width: 48px; height: 10px; overflow: visible; fill: none; stroke: #F2B2AA; stroke-width: 10; stroke-linecap: butt"><path d="M 0 5 L 48 5"></path></svg>
+<svg width="48" height="8" viewBox="0 0 48 8" preserveAspectRatio="none" style="position: absolute; left: 1180px; top: 154px; width: 48px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-8" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 44 4" marker-end="url(#dc-arrow-head-filled-8)"></path></svg>
+<svg width="48" height="8" viewBox="0 0 48 8" preserveAspectRatio="none" style="position: absolute; left: 1180px; top: 192px; width: 48px; height: 8px; overflow: visible; fill: none; stroke: #15171A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 5 6"><defs><marker id="dc-arrow-head-filled-9" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#15171A" stroke="none" style="stroke: none; stroke-dasharray: none; fill: #15171A; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 44 4" marker-end="url(#dc-arrow-head-filled-9)"></path></svg>
+<div style="position: absolute; left: 1180px; top: 226px; width: 48px; height: 24px; box-sizing: border-box; background: #E4E7E0; border: 1px dashed #A9AFA7; border-radius: 6px"></div>
+
+<button type="button" onClick="{{k.c1}}" aria-pressed="{{p.c1}}" style="position: absolute; left: 200px; top: 200px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.c1}}; border-radius: 10px; opacity: {{o.c1}}; box-shadow: {{r.c1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 1</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.c2}}" aria-pressed="{{p.c2}}" style="position: absolute; left: 200px; top: 352px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.c2}}; border-radius: 10px; opacity: {{o.c2}}; box-shadow: {{r.c2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 2</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.w1}}" aria-pressed="{{p.w1}}" style="position: absolute; left: 520px; top: 352px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: 1px solid #6B7179; border-radius: 10px; opacity: {{o.w1}}; box-shadow: {{r.w1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 3</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">&nbsp;</span></span></button>
+<button type="button" onClick="{{k.c3}}" aria-pressed="{{p.c3}}" style="position: absolute; left: 200px; top: 504px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.c3}}; border-radius: 10px; opacity: {{o.c3}}; box-shadow: {{r.c3}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 4</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.w2}}" aria-pressed="{{p.w2}}" style="position: absolute; left: 560px; top: 520px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{w2Border}}; border-radius: 10px; opacity: {{o.w2}}; box-shadow: {{r.w2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 5</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">&nbsp;</span></span></button>
+<button type="button" onClick="{{k.c4}}" aria-pressed="{{p.c4}}" style="position: absolute; left: 200px; top: 680px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.c4}}; border-radius: 10px; opacity: {{o.c4}}; box-shadow: {{r.c4}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 6</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.b1}}" aria-pressed="{{p.b1}}" style="position: absolute; left: 600px; top: 680px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.b1}}; border-radius: 10px; opacity: {{o.b1}}; box-shadow: {{r.b1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 7</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.b2}}" aria-pressed="{{p.b2}}" style="position: absolute; left: 880px; top: 680px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.b2}}; border-radius: 10px; opacity: {{o.b2}}; box-shadow: {{r.b2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 8</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.s1}}" aria-pressed="{{p.s1}}" style="position: absolute; left: 520px; top: 880px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: {{dspF}}; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: 1px solid #15171A; border-radius: 10px; opacity: {{o.s1}}; box-shadow: {{r.s1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 9</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.m1}}" aria-pressed="{{p.m1}}" style="position: absolute; left: 880px; top: 880px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.m1}}; border-radius: 10px; opacity: {{o.m1}}; box-shadow: {{r.m1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 10</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">&nbsp;</span></span></button>
+<button type="button" onClick="{{k.m2}}" aria-pressed="{{p.m2}}" style="position: absolute; left: 1140px; top: 880px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: {{cb.m2}}; border-radius: 10px; opacity: {{o.m2}}; box-shadow: {{r.m2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 11</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.w3}}" aria-pressed="{{p.w3}}" style="position: absolute; left: 1352px; top: 1048px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: flex; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: 1px solid #6B7179; border-radius: 10px; opacity: {{o.w3}}; box-shadow: {{r.w3}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 12</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">&nbsp;</span></span></button>
+<button type="button" onClick="{{k.d1}}" aria-pressed="{{p.d1}}" style="position: absolute; left: 760px; top: 1048px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: {{dspF}}; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: 1px solid #15171A; border-radius: 10px; opacity: {{o.d1}}; box-shadow: {{r.d1}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 13</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+<button type="button" onClick="{{k.d2}}" aria-pressed="{{p.d2}}" style="position: absolute; left: 1040px; top: 1048px; width: 184px; height: 72px; box-sizing: border-box; padding: 10px 14px; display: {{dspF}}; align-items: center; text-align: left; background: #FFFFFF; color: #15171A; border: 1px solid #15171A; border-radius: 10px; opacity: {{o.d2}}; box-shadow: {{r.d2}}; transition: opacity 150ms"><span><b style="font-size: 16px">Title 14</b><span style="display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><br><span style="font-size: 12px; color: #4E545C">Expand</span></span></button>
+
+<button type="button" onClick="{{toggleExp}}" aria-expanded="{{expAria}}" style="position: absolute; left: 884px; top: 906px; height: 44px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; display: flex; align-items: center; gap: 6px; color: #2747C9; font-size: 12px; font-weight: 600; opacity: {{o.m1}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{expIcon}}"></path></svg>{{expLabel}}</button>
+<sc-if value="{{s.c1}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 188px; top: 188px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.c1}}</div></sc-if>
+<sc-if value="{{s.c2}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 188px; top: 340px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.c2}}</div></sc-if>
+<sc-if value="{{s.c3}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 188px; top: 492px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.c3}}</div></sc-if>
+<sc-if value="{{s.w2}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 548px; top: 508px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.w2}}</div></sc-if>
+<button type="button" onClick="{{toggleAdd}}" aria-pressed="{{addPressed}}" style="position: absolute; left: 752px; top: 548px; height: 44px; padding: 0 8px; display: flex; align-items: center; gap: 6px; border: 0; background: transparent; border-radius: 8px; color: {{addColor}}; font-size: 13px; font-weight: 600; white-space: nowrap; opacity: {{o.w2}}">{{addLabel}}</button>
+<sc-if value="{{s.c4}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 188px; top: 668px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.c4}}</div></sc-if>
+<sc-if value="{{s.b1}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 588px; top: 668px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.b1}}</div></sc-if>
+<sc-if value="{{s.b2}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 868px; top: 668px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.b2}}</div></sc-if>
+<sc-if value="{{s.m1}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 868px; top: 868px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.m1}}</div></sc-if>
+<sc-if value="{{s.m2}}" hint-placeholder-val="{{ false }}"><div style="position: absolute; left: 1128px; top: 868px; width: 24px; height: 24px; border-radius: 12px; background: #D3301F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; box-shadow: 0 0 0 2px #EEF0EC; pointer-events: none">{{n.m2}}</div></sc-if>
+
+<div style="position: absolute; left: 394px; top: 376px; width: 116px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.r1}}; transition: opacity 150ms">Directly follows</div>
+<div style="position: absolute; left: 774px; top: 760px; width: 116px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.r2}}; transition: opacity 150ms">Directly follows</div>
+<div style="position: absolute; left: 1044px; top: 960px; width: 116px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.r3}}; transition: opacity 150ms">Directly follows</div>
+<div style="position: absolute; left: 748px; top: 904px; width: 88px; height: 24px; box-sizing: border-box; display: {{dspF}}; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.n1}}; transition: opacity 150ms">Leads up to</div>
+<div style="position: absolute; left: 984px; top: 804px; width: 88px; height: 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.n2}}; transition: opacity 150ms">Leads up to</div>
+<div style="position: absolute; left: 940px; top: 992px; width: 88px; height: 24px; box-sizing: border-box; display: {{dspF}}; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.n3}}; transition: opacity 150ms">Leads up to</div>
+<div style="position: absolute; left: 934px; top: 1128px; width: 116px; height: 24px; box-sizing: border-box; display: {{dspF}}; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #C9CEC6; border-radius: 12px; font-size: 12px; color: #3D434A; opacity: {{o.r4}}; transition: opacity 150ms">Directly follows</div>
+<button type="button" onMouseEnter="{{hA}}" onMouseLeave="{{hOff}}" onFocus="{{hA}}" onBlur="{{hOff}}" onClick="{{pinA}}" aria-pressed="{{pressA}}" style="position: absolute; left: 248px; top: 152px; width: 88px; height: 44px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; padding: 0"><span style="width: 88px; height: 28px; display: flex; align-items: center; justify-content: center; background: #D3301F; color: #FFFFFF; border-radius: 14px; font-size: 13px; font-weight: 600; box-shadow: {{ringA}}">Path A</span></button>
+<button type="button" onMouseEnter="{{hB}}" onMouseLeave="{{hOff}}" onFocus="{{hB}}" onBlur="{{hOff}}" onClick="{{pinB}}" aria-pressed="{{pressB}}" style="position: absolute; left: 472px; top: 694px; width: 80px; height: 44px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; padding: 0"><span style="width: 80px; height: 28px; display: flex; align-items: center; justify-content: center; background: #D3301F; color: #FFFFFF; border-radius: 14px; font-size: 13px; font-weight: 600; box-shadow: {{ringB}}">Path B</span></button>
+
+<sc-if value="{{x.c1}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.c1}}" aria-label="Remove Title 1 from reading path" style="position: absolute; left: 362px; top: 178px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></span></button></sc-if>
+<sc-if value="{{u.c1}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.c1}}" aria-label="Put Title 1 back in reading path" style="position: absolute; left: 264px; top: 178px; width: 128px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: flex-end"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px dashed #A9AFA7; color: #3D434A; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap">Skipped<span style="color: #2747C9">Undo</span></span></button></sc-if>
+<sc-if value="{{x.c2}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.c2}}" aria-label="Remove Title 2 from reading path" style="position: absolute; left: 362px; top: 330px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></span></button></sc-if>
+<sc-if value="{{u.c2}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.c2}}" aria-label="Put Title 2 back in reading path" style="position: absolute; left: 264px; top: 330px; width: 128px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: flex-end"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px dashed #A9AFA7; color: #3D434A; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap">Skipped<span style="color: #2747C9">Undo</span></span></button></sc-if>
+<sc-if value="{{x.c3}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.c3}}" aria-label="Remove Title 4 from reading path" style="position: absolute; left: 362px; top: 482px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></span></button></sc-if>
+<sc-if value="{{u.c3}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.c3}}" aria-label="Put Title 4 back in reading path" style="position: absolute; left: 264px; top: 482px; width: 128px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: flex-end"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px dashed #A9AFA7; color: #3D434A; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap">Skipped<span style="color: #2747C9">Undo</span></span></button></sc-if>
+<sc-if value="{{x.w2}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.w2}}" aria-label="Remove Title 5 from reading path" style="position: absolute; left: 722px; top: 498px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></span></button></sc-if>
+<sc-if value="{{u.w2}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.w2}}" aria-label="Put Title 5 back in reading path" style="position: absolute; left: 624px; top: 498px; width: 128px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: flex-end"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px dashed #A9AFA7; color: #3D434A; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap">Skipped<span style="color: #2747C9">Undo</span></span></button></sc-if>
+<sc-if value="{{x.c4}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.c4}}" aria-label="Remove Title 6 from reading path" style="position: absolute; left: 362px; top: 658px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></span></button></sc-if>
+<sc-if value="{{u.c4}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.c4}}" aria-label="Put Title 6 back in reading path" style="position: absolute; left: 264px; top: 658px; width: 128px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: flex-end"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px dashed #A9AFA7; color: #3D434A; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap">Skipped<span style="color: #2747C9">Undo</span></span></button></sc-if>
+<sc-if value="{{x.b1}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.b1}}" aria-label="Remove Title 7 from reading path" style="position: absolute; left: 762px; top: 658px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></span></button></sc-if>
+<sc-if value="{{u.b1}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.b1}}" aria-label="Put Title 7 back in reading path" style="position: absolute; left: 664px; top: 658px; width: 128px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: flex-end"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px dashed #A9AFA7; color: #3D434A; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap">Skipped<span style="color: #2747C9">Undo</span></span></button></sc-if>
+<sc-if value="{{x.b2}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.b2}}" aria-label="Remove Title 8 from reading path" style="position: absolute; left: 1042px; top: 658px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></span></button></sc-if>
+<sc-if value="{{u.b2}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.b2}}" aria-label="Put Title 8 back in reading path" style="position: absolute; left: 944px; top: 658px; width: 128px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: flex-end"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px dashed #A9AFA7; color: #3D434A; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap">Skipped<span style="color: #2747C9">Undo</span></span></button></sc-if>
+<sc-if value="{{x.m1}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.m1}}" aria-label="Remove Title 10 from reading path" style="position: absolute; left: 1042px; top: 858px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></span></button></sc-if>
+<sc-if value="{{u.m1}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.m1}}" aria-label="Put Title 10 back in reading path" style="position: absolute; left: 944px; top: 858px; width: 128px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: flex-end"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px dashed #A9AFA7; color: #3D434A; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap">Skipped<span style="color: #2747C9">Undo</span></span></button></sc-if>
+<sc-if value="{{x.m2}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.m2}}" aria-label="Remove Title 11 from reading path" style="position: absolute; left: 1302px; top: 858px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #C9CEC6; color: #3D434A; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(21, 23, 26, 0.12)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6L6 18"></path></svg></span></button></sc-if>
+<sc-if value="{{u.m2}}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{rm.m2}}" aria-label="Put Title 11 back in reading path" style="position: absolute; left: 1204px; top: 858px; width: 128px; height: 44px; padding: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: flex-end"><span style="height: 26px; padding: 0 10px; border-radius: 13px; background: #FFFFFF; border: 1px dashed #A9AFA7; color: #3D434A; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap">Skipped<span style="color: #2747C9">Undo</span></span></button></sc-if>
+
+<sc-if value="{{showContinue}}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{goB}}" onMouseEnter="{{keepA}}" onMouseLeave="{{hOff}}" style="position: absolute; left: 192px; top: 756px; height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 6px; border: 0; background: transparent; border-radius: 8px; color: #B3261A; font-size: 14px; font-weight: 600; white-space: nowrap">Continue with Path B<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></button>
+</sc-if>
+
+<div style="position: absolute; left: 64px; top: 48px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 28px">Metro lines · Path B starts at Title 7</div>
+<div style="position: absolute; left: 64px; top: 92px; width: 1080px; font-size: 15px; color: #3D434A">{{summary}}</div>
+<sc-if value="{{hasSel}}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{clear}}" style="position: absolute; left: 56px; top: 116px; height: 44px; padding: 0 10px; border: 0; background: transparent; border-radius: 8px; color: #2747C9; font-size: 14px; font-weight: 500">Show all connections</button>
+</sc-if>
+<div style="position: absolute; left: 664px; top: 196px; font-size: 14px; font-weight: 600; color: #3D434A; opacity: {{o.deco}}">Character 1</div>
+<div style="position: absolute; left: 188px; top: 655px; font-size: 14px; font-weight: 600; color: #3D434A; opacity: {{o.deco}}">Character 2</div>
+<div style="position: absolute; left: 1120px; top: 848px; font-size: 14px; font-style: italic; font-weight: 600; color: #3D434A; opacity: {{o.deco}}">Major event / Story arc</div>
+<a href="#" style="position: absolute; left: 1352px; top: 1144px; font-size: 14px">Show skipped titles</a>
+
+<div style="position: absolute; left: 1180px; top: 64px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #4E545C">How to read the lines</div>
+<div style="position: absolute; left: 1244px; top: 96px; width: 292px; font-size: 13px; line-height: 18px; color: #3D434A">Reading path: hover to trace it; click the line or its label to keep it on. Select A and B to read both in order.</div>
+<div style="position: absolute; left: 1244px; top: 149px; width: 292px; font-size: 13px; line-height: 18px; color: #3D434A">Solid: read first (highly recommended).</div>
+<div style="position: absolute; left: 1244px; top: 187px; width: 292px; font-size: 13px; line-height: 18px; color: #3D434A">Dashed: enhances, optional.</div>
+<div style="position: absolute; left: 1244px; top: 220px; width: 292px; font-size: 13px; line-height: 18px; color: #3D434A">Tinted area: titles grouped by character or story arc.</div>
+<div style="position: absolute; left: 1180px; top: 272px; width: 356px; font-size: 13px; line-height: 18px; color: #3D434A">No line: a standalone story.</div>
+<div style="position: absolute; left: 1180px; top: 320px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #4E545C">Title categories</div>
+<div style="position: absolute; left: 1180px; top: 346px; width: 356px; display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 18px; color: #3D434A"><span style="display: inline-block; margin-left: 0px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #15171A; color: #FFFFFF; border: 1px solid #15171A">Essential</span><span>Must read — canon for this path</span></div>
+<div style="position: absolute; left: 1180px; top: 374px; width: 356px; display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 18px; color: #3D434A"><span style="display: inline-block; margin-left: 0px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #E6E8E3; color: #3D434A; border: 1px solid #E6E8E3">Optional</span><span>Might read — worth reading, alternate or Elseworlds</span></div>
+<div style="position: absolute; left: 1180px; top: 402px; width: 356px; display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 18px; color: #3D434A"><span style="display: inline-block; margin-left: 0px; padding: 0 5px; border-radius: 999px; font-size: 9.5px; font-weight: 600; line-height: 13px; vertical-align: 2px; letter-spacing: 0.01em; background: #FFFFFF; color: #5C626A; border: 1px dashed #A9AFA7">Skip</span><span>Not needed — safe to pass on</span></div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1220}}'>
+var CARDS = { c1: 'Title 1', c2: 'Title 2', w1: 'Title 3', c3: 'Title 4', w2: 'Title 5', c4: 'Title 6', b1: 'Title 7', b2: 'Title 8',
+  s1: 'Title 9', m1: 'Title 10', m2: 'Title 11', w3: 'Title 12', d1: 'Title 13', d2: 'Title 14' };
+var EDGES = [
+  ['pa1', 'c1', 'c2', 'path'], ['pa2', 'c2', 'c3', 'path'], ['pa3', 'c3', 'c4', 'path'],
+  ['pb2', 'b1', 'b2', 'path'], ['pb3', 'b2', 'm1', 'path'], ['pb4', 'm1', 'm2', 'path'],
+  ['r1', 'c2', 'w1', 'rec'], ['r2', 'b1', 'b2', 'rec'], ['r3', 'm1', 'm2', 'rec'], ['r4', 'd1', 'd2', 'rec'],
+  ['n1', 's1', 'm1', 'enh'], ['n2', 'b2', 'm1', 'enh'], ['n3', 'm1', 'd1', 'enh']
+];
+var PATHS = {
+  A: { name: 'Reading path A', cards: ['c1', 'c2', 'c3', 'c4'] },
+  B: { name: 'Reading path B', cards: ['b1', 'b2', 'm1', 'm2'] }
+};
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var st = this.state || {};
+    var sel = ('sel' in st) ? st.sel : 'm1';
+    var hover = st.hover || null;
+    var pins = st.pins || {};
+    var act = ['A', 'B'].filter(function (key) { return pins[key] || hover === key; });
+    var path = act.length ? act : null;
+    var hasA = act.indexOf('A') !== -1, hasB = act.indexOf('B') !== -1;
+    var added = !!st.addW2;
+    var collapsed = !!st.collapsed;
+    var HID = collapsed ? { s1: 1, d1: 1, d2: 1 } : {};
+    if (HID[sel]) sel = null;
+    var E = EDGES.filter(function (e) { return !(added && e[0] === 'pa3') && !HID[e[1]] && !HID[e[2]]; });
+    if (added) E = E.concat([['det1', 'c3', 'w2', 'path'], ['det2', 'w2', 'c4', 'path']]);
+    var PCARDS = { A: added ? ['c1', 'c2', 'c3', 'w2', 'c4'] : PATHS.A.cards, B: PATHS.B.cards };
+    var nameOf = function (id) { return CARDS[id] + (added && id === 'w2' ? ' (your addition)' : ''); };
+    var o = {}, k = {}, r = {}, p = {}, s = {}, n = {}, x = {}, u = {}, rm = {};
+    var skip = st.skip || {};
+    var summary;
+
+    if (path) {
+      var inP = {};
+      var seq = [];
+      act.forEach(function (key) { PCARDS[key].forEach(function (id) { if (seq.indexOf(id) === -1) seq.push(id); }); });
+      seq.forEach(function (id) { inP[id] = true; });
+      var kept = seq.filter(function (id) { return !skip[id]; });
+      var skipped = seq.filter(function (id) { return skip[id]; });
+      kept.forEach(function (id, i) { s[id] = true; n[id] = String(i + 1); });
+      E.forEach(function (e) { o[e[0]] = (inP[e[1]] && inP[e[2]]) ? ((skip[e[1]] || skip[e[2]]) ? '0.45' : '1') : '0.12'; });
+      Object.keys(CARDS).forEach(function (id) { o[id] = inP[id] ? (skip[id] ? '0.55' : '1') : '0.35'; r[id] = 'none'; });
+      var pinnedHere = function (id) { return (pins.A && PCARDS.A.indexOf(id) !== -1) || (pins.B && PCARDS.B.indexOf(id) !== -1); };
+      seq.forEach(function (id) { x[id] = !skip[id] && pinnedHere(id); u[id] = !!skip[id]; });
+      summary = (act.length === 2 ? 'Reading paths A + B' : PATHS[act[0]].name) + ' · ' + kept.map(nameOf).join(' → ')
+        + (skipped.length ? ' · Skipping ' + skipped.map(nameOf).join(', ') : '')
+        + ((pins.A || pins.B) ? ' · Use × on a title to skip it' : '');
+    } else {
+      var linked = {}, before = {}, after = {};
+      var note = function (map, id, type) {
+        if (type === 'enh') { if (!map[id]) map[id] = 'enh'; } else map[id] = 'strong';
+      };
+      E.forEach(function (e) {
+        o[e[0]] = (!sel || e[1] === sel || e[2] === sel) ? '1' : '0.12';
+        if (sel && e[2] === sel) { linked[e[1]] = true; note(before, e[1], e[3]); }
+        if (sel && e[1] === sel) { linked[e[2]] = true; note(after, e[2], e[3]); }
+      });
+      Object.keys(CARDS).forEach(function (id) {
+        o[id] = (!sel || id === sel || linked[id]) ? '1' : '0.35';
+        r[id] = id === sel ? '0 0 0 4px rgba(39, 71, 201, 0.35)' : 'none';
+      });
+      var list = function (map) {
+        var ids = Object.keys(map);
+        if (!ids.length) return 'nothing';
+        return ids.map(function (id) { return nameOf(id) + (map[id] === 'enh' ? ' (optional)' : ''); }).join(', ');
+      };
+      if (!sel) summary = 'Select a card to see what to read before and after it, or hover a reading path to trace it.';
+      else if (!Object.keys(linked).length) summary = CARDS[sel] + ' is a standalone story, with no reading order around it.';
+      else summary = CARDS[sel] + ' · Read before: ' + list(before) + ' · Read after: ' + list(after);
+    }
+
+    Object.keys(CARDS).forEach(function (id) {
+      s[id] = !!s[id];
+      x[id] = !!x[id];
+      u[id] = !!u[id];
+      rm[id] = function () {
+        if (id === 'w2' && !skip.w2) { self.setState({ addW2: false }); return; }
+        var sk = Object.assign({}, skip); sk[id] = !sk[id]; self.setState({ skip: sk });
+      };
+      n[id] = n[id] || '';
+      p[id] = (!path && id === sel) ? 'true' : 'false';
+      k[id] = function () { self.setState({ sel: id === sel ? null : id, pins: {} }); };
+    });
+    o.deco = (sel || path) ? '0.35' : '1';
+
+    var hA = function () { clearTimeout(self._leave); if (self.state && self.state.hover === 'A') return; self.setState({ hover: 'A' }); };
+    var hB = function () { clearTimeout(self._leave); if (self.state && self.state.hover === 'B') return; self.setState({ hover: 'B' }); };
+    var pinA = function () { self.setState({ pins: Object.assign({}, pins, { A: !pins.A }), sel: null }); };
+    var pinB = function () { self.setState({ pins: Object.assign({}, pins, { B: !pins.B }), sel: null }); };
+    var C = { SA: [292, 188], SB: [552, 716], c1: [292, 236], c2: [292, 388], c3: [292, 540], w2: [652, 556], c4: [292, 716],
+      b1: [692, 716], b2: [972, 716], m1: [972, 916], m2: [1232, 916] };
+    var TOP = { c1: 200, c2: 352, c3: 504, c4: 680 };
+    var COL = { SA: 1, c1: 1, c2: 1, c3: 1, c4: 1 };
+    var seg = function (u, v) {
+      if (u === 'c3' && v === 'w2') return ' L 292 556 L 652 556';
+      if (u === 'w2' && v === 'c4') return ' L 652 592 C 652 650, 292 626, 292 684 L 292 716';
+      return ' L ' + C[v][0] + ' ' + C[v][1];
+    };
+    var bypass = function (u, v, between) {
+      if (COL[u] && COL[v]) {
+        var y1 = C[u][1], y2 = C[v][1], X = 292, Xo = 460;
+        var ys0 = Math.min.apply(null, between.map(function (id) { return TOP[id]; }));
+        var ys1 = Math.max.apply(null, between.map(function (id) { return TOP[id] + 72; }));
+        var a = Math.max(y1, ys0 - 80), b = Math.min(y2, ys1 + 80), m = Math.round((a + b) / 2), h = Math.round((m - a) * 0.55);
+        return ' L ' + X + ' ' + a + ' C ' + X + ' ' + (a + h) + ', ' + Xo + ' ' + (m - h) + ', ' + Xo + ' ' + m
+          + ' C ' + Xo + ' ' + (m + h) + ', ' + X + ' ' + (b - h) + ', ' + X + ' ' + b + ' L ' + X + ' ' + y2;
+      }
+      if (v === 'w2') return ' C 292 ' + Math.min(C[u][1] + 160, 470) + ', 652 440, 652 556';
+      var T = { 'SB>b2': ' C 600 806, 900 806, 972 716', 'SB>m1': ' C 600 830, 972 760, 972 916', 'SB>m2': ' C 600 830, 1232 790, 1232 916',
+        'b1>m1': ' C 692 820, 972 800, 972 916', 'b1>m2': ' C 692 840, 1232 790, 1232 916', 'b2>m2': ' C 972 820, 1232 780, 1232 916' };
+      return T[u + '>' + v] || seg(u, v);
+    };
+    var route = function (key) {
+      var full = [key === 'A' ? 'SA' : 'SB'].concat(PCARDS[key]);
+      var kept = full.filter(function (id) { return !skip[id]; });
+      var out = [];
+      for (var i = 0; i + 1 < kept.length; i++) {
+        var u0 = kept[i], v0 = kept[i + 1];
+        var between = full.slice(full.indexOf(u0) + 1, full.indexOf(v0));
+        out.push({ u: u0, v: v0, direct: !between.length,
+          d: 'M ' + C[u0][0] + ' ' + C[u0][1] + (between.length ? bypass(u0, v0, between) : seg(u0, v0)) });
+      }
+      return out;
+    };
+    var bands = [], tri = { c2: '0', c3: '0', c4: '0', b1: '0', m1: '0', w2: '0' }, traces = [];
+    ['A', 'B'].forEach(function (key) {
+      var startId = key === 'A' ? 'SA' : 'SB';
+      var conns = route(key);
+      conns.forEach(function (cn) {
+        var op;
+        if (path) {
+          var inU = cn.u === startId ? act.indexOf(key) !== -1 : !!inP[cn.u];
+          op = (inU && inP[cn.v]) ? '1' : '0.12';
+        } else {
+          op = (!sel || cn.u === sel || cn.v === sel) ? '1' : '0.12';
+        }
+        bands.push({ d: cn.d, op: op, enter: key === 'A' ? hA : hB, click: key === 'A' ? pinA : pinB });
+        if (cn.direct && tri[cn.v] !== undefined) tri[cn.v] = op;
+      });
+      if (act.indexOf(key) !== -1 && conns.length) {
+        traces.push({
+          d: conns.map(function (cn, i) { return i === 0 ? cn.d : cn.d.replace(/^M [0-9.]+ [0-9.]+/, ''); }).join(''),
+          delay: (key === 'B' && hasA) ? '900ms' : '0ms'
+        });
+      }
+    });
+    var ghostOp = (added && !skip.c3 && !skip.c4) ? (path ? '0.12' : '0.2') : '0';
+    o.det1 = o.det1 || '1';
+    o.det2 = o.det2 || '1';
+    o.triC4 = added ? o.det2 : o.pa3;
+    if (added) o.pa3 = '0.2';
+
+    return {
+      cb: (function () { var m = {}; ['c1', 'c2', 'c3', 'c4', 'b1', 'b2', 'm1', 'm2'].forEach(function (id) { m[id] = skip[id] ? '1px dashed #A9AFA7' : '2px solid #D3301F'; }); return m; })(),
+      dspF: collapsed ? 'none' : 'flex', dspB: collapsed ? 'none' : 'block',
+      expLabel: collapsed ? 'Show expanded' : 'Hide expanded', expAria: collapsed ? 'false' : 'true',
+      expIcon: collapsed ? 'M6 9l6 6 6-6' : 'M6 15l6-6 6 6',
+      toggleExp: function () { self.setState({ collapsed: !collapsed }); },
+      o: o, k: k, r: r, p: p, s: s, n: n, x: x, u: u, rm: rm, bands: bands, tri: tri, traces: traces, ghostOp: ghostOp, summary: summary,
+      hasSel: !!sel || !!pins.A || !!pins.B,
+      traceA1: hasA && !added, traceA2: hasA && added, traceB: hasB,
+      bDelay: hasA ? (added ? '1000ms' : '700ms') : '0ms',
+      added: added,
+      w2Border: added ? '2px solid #D3301F' : '1px solid #6B7179',
+      addLabel: added ? 'In your Path A · Remove' : '+ Add to Path A',
+      addColor: added ? '#3D434A' : '#B3261A',
+      addPressed: added ? 'true' : 'false',
+      toggleAdd: function () { self.setState({ addW2: !added, pins: added ? pins : Object.assign({}, pins, { A: true }), sel: null }); },
+      pressA: pins.A ? 'true' : 'false', pressB: pins.B ? 'true' : 'false',
+      ringA: pins.A ? '0 0 0 3px rgba(211, 48, 31, 0.3)' : 'none',
+      ringB: pins.B ? '0 0 0 3px rgba(211, 48, 31, 0.3)' : 'none',
+      hA: hA, hB: hB,
+      hOff: function () { clearTimeout(self._leave); self._leave = setTimeout(function () { self.setState({ hover: null }); }, 120); },
+      pinA: pinA, pinB: pinB,
+      bgClear: function (e) { var t = e && e.target; if (t && t.closest && t.closest('button, a, svg[style*="cursor: pointer"], path[style*="cursor: pointer"]')) return; clearTimeout(self._leave); self.setState({ sel: null, pins: {}, hover: null }); },
+      clear: function () { self.setState({ sel: null, pins: {} }); },
+      showContinue: (hasA && !hasB) || (!path && sel === 'c4'),
+      keepA: function () { clearTimeout(self._leave); if (!pins.A && self.state && self.state.hover !== 'A' && sel !== 'c4') self.setState({ hover: 'A' }); },
+      goB: function () { clearTimeout(self._leave); self.setState({ pins: { A: true, B: true }, hover: null, sel: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
