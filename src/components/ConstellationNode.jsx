@@ -1,12 +1,19 @@
 import { nodeRadius } from '../lib/constellationLayout';
 import { categoryMeta } from '../lib/model';
 
-export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hidden, expandable, selected, onClick }) {
+export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hidden, expandable, selected, seedType, crossover, onClick }) {
   if (hidden) return null;
 
   const r = nodeRadius(node.weight);
   const { color, label } = categoryMeta(node.category);
   const opacity = dimmed ? 0.15 : alreadyRead ? 0.5 : 1;
+  // Category always leads, then what the node is to the path, then the year.
+  const tagline = [
+    label.toLowerCase(),
+    node.isSeed ? `${seedType || 'character'} seed` : crossover ? 'crossover' : null,
+    node.year,
+    node.edition?.toLowerCase(),
+  ].filter(Boolean).join(' · ');
 
   return (
     <g
@@ -23,6 +30,14 @@ export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hi
           strokeWidth={1.5}
           strokeDasharray="4 3"
           opacity={0.4}
+        />
+      )}
+      {node.isSeed && (
+        <circle
+          cx={x} cy={y} r={r + 5}
+          fill="none"
+          stroke="#eae7de"
+          strokeWidth={2.5}
         />
       )}
       {selected && (
@@ -66,7 +81,7 @@ export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hi
         fontSize={11}
         style={{ pointerEvents: 'none', letterSpacing: '0.04em' }}
       >
-        {node.isSeed ? 'seed' : label.toLowerCase()} · {node.year || ''}{node.edition ? ` · ${node.edition.toLowerCase()}` : ''}
+        {tagline}
       </text>
     </g>
   );

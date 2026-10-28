@@ -5,7 +5,7 @@
 import { searchComicVineSmartly, searchVolumes, searchStoryArcs, getVolumeIssues } from './comicvine.js';
 import { FORMAT_WORDS } from './formatIntent.js';
 import {
-  GRAPH_VERSION, EDGE_TYPES, edgeKind, normalizeCategory, normalizeSeedType, normalizeTitle, resolveSeedIds,
+  GRAPH_VERSION, EDGE_TYPES, edgeKind, linkSeeds, normalizeCategory, normalizeSeedType, normalizeTitle, resolveSeedIds,
 } from './model.js';
 
 const CLAUDE_URL = '/api/claude';
@@ -286,19 +286,20 @@ function validateGraph(data, fallbackName, mode) {
     edges.push({ source, target, type, kind: edgeKind(type), label: e.label || '' });
   }
 
-  const connected = new Set(edges.flatMap((e) => [e.source, e.target]));
+  const linkedEdges = linkSeeds(nodes, edges);
+  const connected = new Set(linkedEdges.flatMap((e) => [e.source, e.target]));
   for (const n of nodes) {
     if (n.isSeed || connected.has(n.id)) continue;
     const seedNode = nodes.find((s) => s.isSeed && s.seedIds[0] === n.seedIds[0]);
     if (!seedNode) continue;
-    edges.push({ source: seedNode.id, target: n.id, type: 'branches-from', kind: 'enh', label: '' });
+    linkedEdges.push({ source: seedNode.id, target: n.id, type: 'branches-from', kind: 'enh', label: '' });
   }
 
   return {
     v: GRAPH_VERSION,
     seeds,
     nodes,
-    edges,
+    edges: linkedEdges,
     pathNote: data.pathNote || '',
     mode: MODE_INSTRUCTIONS[mode] ? mode : 'full',
   };

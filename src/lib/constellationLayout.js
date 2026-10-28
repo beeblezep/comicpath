@@ -1,4 +1,4 @@
-import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } from 'd3-force';
+import { forceSimulation, forceLink, forceManyBody, forceX, forceY, forceCollide } from 'd3-force';
 
 const BASE_RADIUS = 14;
 const WEIGHT_SCALE = 5;
@@ -7,15 +7,31 @@ export function nodeRadius(weight) {
   return BASE_RADIUS + (weight || 3) * WEIGHT_SCALE;
 }
 
-export function computeConstellationLayout(nodes, edges, width, height, previousPositions) {
+// Each seed gets its own column of the canvas; a title is pulled toward the
+// column of its seed, so a crossover settles between the seeds it belongs to.
+function seedColumns(seeds, width) {
+  const cols = new Map();
+  (seeds || []).forEach((s, i) => cols.set(s.id, (width * (i + 0.5)) / seeds.length));
+  return cols;
+}
+
+function targetX(node, cols, width) {
+  const xs = (node.seedIds || []).map((id) => cols.get(id)).filter((x) => x !== undefined);
+  return xs.length > 0 ? xs.reduce((a, b) => a + b, 0) / xs.length : width / 2;
+}
+
+export function computeConstellationLayout(nodes, edges, width, height, previousPositions, seeds) {
   if (!nodes || nodes.length === 0) return { positions: new Map(), edgePaths: [] };
 
+  const cols = seedColumns(seeds, width);
   const simNodes = nodes.map((n) => {
     const prev = previousPositions?.get(n.id);
     return {
       id: n.id,
       weight: n.weight || 3,
       isSeed: !!n.isSeed,
+      crossover: !n.isSeed && (n.seedIds?.length || 0) > 1,
+      tx: targetX(n, cols, width),
       ...(prev ? { x: prev.x, y: prev.y } : {}),
     };
   });
@@ -30,12 +46,12 @@ export function computeConstellationLayout(nodes, edges, width, height, previous
       type: e.type,
     }));
 
-  // Seeds are pinned, spread evenly across the middle of the canvas.
-  const seedNodes = simNodes.filter((n) => n.isSeed);
-  seedNodes.forEach((n, i) => {
-    n.fx = (width * (i + 1)) / (seedNodes.length + 1);
+  // Seed anchors are pinned at the middle of their own column.
+  for (const n of simNodes) {
+    if (!n.isSeed) continue;
+    n.fx = n.tx;
     n.fy = height / 2;
-  });
+  }
 
   const sim = forceSimulation(simNodes)
     .force('link', forceLink(simLinks)
@@ -48,7 +64,8 @@ export function computeConstellationLayout(nodes, edges, width, height, previous
       .strength(0.6))
     .force('charge', forceManyBody()
       .strength((d) => -400 - d.weight * 80))
-    .force('center', forceCenter(width / 2, height / 2))
+    .force('x', forceX((d) => d.tx).strength((d) => (d.crossover ? 0.35 : 0.12)))
+    .force('y', forceY(height / 2).strength(0.05))
     .force('collide', forceCollide()
       .radius((d) => nodeRadius(d.weight) + 90)
       .strength(1))

@@ -9,7 +9,7 @@ const EXAMPLES = [
   'Saga',
 ];
 
-export function SearchBar({ onSearch, onResume, loading, savedTitle }) {
+export function SearchBar({ onSearch, onResume, savedTitle }) {
   const [value, setValue] = useState('');
 
   function submit(q = value.trim()) {
@@ -33,7 +33,6 @@ export function SearchBar({ onSearch, onResume, loading, savedTitle }) {
           placeholder="e.g. catch me up on Absolute Power"
           onChange={e => setValue(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
-          disabled={loading}
           style={{
             flex: 1,
             padding: '11px 14px',
@@ -47,7 +46,7 @@ export function SearchBar({ onSearch, onResume, loading, savedTitle }) {
         />
         <button
           onClick={() => submit()}
-          disabled={loading || !value.trim()}
+          disabled={!value.trim()}
           style={{
             padding: '11px 20px',
             background: 'var(--color-accent)',
@@ -56,17 +55,16 @@ export function SearchBar({ onSearch, onResume, loading, savedTitle }) {
             borderRadius: 'var(--radius-sm)',
             fontWeight: 600,
             fontSize: 'var(--font-size-sm)',
-            opacity: loading || !value.trim() ? 0.5 : 1,
+            opacity: !value.trim() ? 0.5 : 1,
           }}
         >
-          {loading ? 'Loading...' : 'Explore'}
+          Explore
         </button>
       </div>
 
       {savedTitle !== null && (
         <button
           onClick={onResume}
-          disabled={loading}
           style={{
             display: 'block', width: '100%', marginBottom: 14,
             padding: '10px 16px', textAlign: 'left',
@@ -87,7 +85,6 @@ export function SearchBar({ onSearch, onResume, loading, savedTitle }) {
           <button
             key={label}
             onClick={() => { setValue(label); submit(label); }}
-            disabled={loading}
             style={{
               padding: '5px 12px',
               background: 'transparent',

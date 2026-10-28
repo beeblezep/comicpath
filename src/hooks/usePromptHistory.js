@@ -1,6 +1,9 @@
 import { useState, useCallback, useRef } from 'react';
 
 // In-memory only: history lasts for the page session and is not persisted.
+// Entry kinds:
+//   'clarify' — the search that started the path: { prompt, answers[{question, answer}], status, note?, added?, error? }
+//   'expand'  — a chat or drawer expansion: { prompt, nodeIds, nodeTitles, source, format, status, added?, note?, error? }
 export function usePromptHistory() {
   const [entries, setEntries] = useState([]);
   const counter = useRef(0);

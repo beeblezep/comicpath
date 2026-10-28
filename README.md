@@ -21,7 +21,9 @@ dev server runs the same proxies.
 One free-text prompt ("catch me up on Absolute Power") is resolved into seeds
 and a mode (Full guide / Catch up / Deep dive). If the entity, the seed
 structure, or the mode is unclear, ComicPath asks one multiple-choice question
-at a time. The result opens as a canvas with a chat drawer for expanding it.
+at a time. Searching opens the canvas straight away: the questions are asked in
+its chat drawer, and the path appears on the canvas once they're answered. The
+same drawer is then used for expanding the path.
 
 ## Project structure
 
@@ -62,6 +64,8 @@ Every title gets exactly one category (defined in `src/lib/model.js`):
 
 A reading path holds one or more seeds — a character, a group, or a story arc —
 and each title records which seed(s) it belongs to; crossovers list several.
+On the canvas each seed gets its own column (ringed anchor node), and a crossover
+sits between its seeds with a link to each of them.
 
 ## Roadmap
 

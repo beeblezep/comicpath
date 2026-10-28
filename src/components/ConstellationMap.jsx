@@ -5,7 +5,7 @@ import { ConstellationNode } from './ConstellationNode';
 import { ConstellationDetail } from './ConstellationDetail';
 import { ConstellationToolbar } from './ConstellationToolbar';
 import { ConstellationChat, CHAT_WIDTH } from './ConstellationChat';
-import { CATEGORIES, seedNodeIds, slugify } from '../lib/model';
+import { CATEGORIES, isCrossover, nodeSeeds, seedNodeIds, slugify } from '../lib/model';
 
 const CANVAS_W = 1600;
 const CANVAS_H = 1000;
@@ -18,7 +18,7 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-export function ConstellationMap({ graph, readingList, alreadyRead, onClose, onExpand, onExpandMany, expandedIds, expandingIds, history, format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat, onNewPath, title, intro }) {
+export function ConstellationMap({ graph, readingList, alreadyRead, onClose, onExpand, onExpandMany, expandedIds, expandingIds, history, format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat, onNewPath, title, intro, placeholder, search }) {
   const [focusedId, setFocusedId] = useState(null);
   const [hiddenIds, setHiddenIds] = useState(new Set());
   const [tierFilter, setTierFilter] = useState(new Set(CATEGORIES));
@@ -40,7 +40,9 @@ export function ConstellationMap({ graph, readingList, alreadyRead, onClose, onE
   const prevPositions = useRef(null);
 
   const { positions, edgePaths } = useMemo(() => {
-    const result = computeConstellationLayout(graph.nodes, graph.edges, CANVAS_W, CANVAS_H, prevPositions.current);
+    // An empty canvas means a new path is on its way; don't seed its layout from the old one.
+    if (graph.nodes.length === 0) prevPositions.current = null;
+    const result = computeConstellationLayout(graph.nodes, graph.edges, CANVAS_W, CANVAS_H, prevPositions.current, graph.seeds);
     prevPositions.current = result.positions;
     return result;
   }, [graph]);
@@ -323,11 +325,28 @@ export function ConstellationMap({ graph, readingList, alreadyRead, onClose, onE
               hidden={hiddenIds.has(node.id)}
               expandable={expandedIds ? !expandedIds.has(node.id) : false}
               selected={selectedIds.has(node.id)}
+              seedType={node.isSeed ? nodeSeeds(node, graph.seeds)[0]?.type : null}
+              crossover={isCrossover(node)}
               onClick={handleNodeClick}
             />
           );
         })}
       </svg>
+
+      {/* Canvas placeholder while a new path is being worked out */}
+      {placeholder && graph.nodes.length === 0 && (
+        <div style={{
+          position: 'fixed', top: '50%', left: leftOffset, right: 0,
+          transform: 'translateY(-50%)',
+          textAlign: 'center',
+          fontFamily: MONO, fontSize: 12, letterSpacing: '0.06em',
+          color: '#7c7c8a',
+          pointerEvents: 'none',
+          transition: 'left .35s cubic-bezier(.2,.8,.2,1)',
+        }}>
+          {placeholder}
+        </div>
+      )}
 
       {/* HUD: top-left title */}
       <div style={{
@@ -412,6 +431,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, onClose, onE
       {/* Side panel */}
       <ConstellationDetail
         node={focusedNode}
+        seeds={graph.seeds}
         open={!!focusedId}
         readingList={readingList}
         alreadyRead={alreadyRead}
@@ -439,6 +459,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, onClose, onE
           focusedNode={focusedNode}
           history={history || []}
           intro={intro}
+          search={search}
           format={format}
           onSetFormat={onSetFormat}
           formatQuestion={formatQuestion}

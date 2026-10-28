@@ -38,10 +38,16 @@ export function useIntent(onResolved) {
     step(state.prompt, [...state.answers, { question: state.question.text, answer: text }]);
   }, [state, step]);
 
+  // Re-asks after an error, keeping the answers given so far.
+  const retry = useCallback(() => {
+    if (state.status !== 'error') return;
+    step(state.prompt, state.answers);
+  }, [state, step]);
+
   const cancel = useCallback(() => {
     runRef.current++;
     setState(IDLE);
   }, []);
 
-  return { ...state, start, answer, cancel };
+  return { ...state, start, answer, retry, cancel };
 }

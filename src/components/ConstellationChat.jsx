@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { categoryMeta } from '../lib/model';
+import { ClarifyQuestion } from './ClarifyQuestion';
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
@@ -26,6 +27,47 @@ const FORMATS = [
   { id: 'issues', label: 'Issues', answer: 'Single issues' },
   { id: 'collected', label: 'Collected', answer: 'Collected editions' },
 ];
+
+const SEARCH_STATUS = {
+  resolving: 'Working out what you\'re after…',
+  clarifying: 'One question first ↓',
+  loading: 'Building your reading path…',
+};
+
+// The search that started this path: the prompt, each clarifying question
+// with its answer, then the outcome.
+function SearchEntry({ entry, onRetry }) {
+  return (
+    <div style={{ padding: '10px 12px', background: '#14141d', border: '1px solid #2a2b38' }}>
+      <div style={{ fontSize: 12, lineHeight: 1.6, color: '#c9c7bd', marginBottom: 6, whiteSpace: 'pre-wrap' }}>
+        {entry.prompt}
+      </div>
+      {entry.answers.map((a, i) => (
+        <div key={i} style={{ fontSize: 11, lineHeight: 1.6, marginBottom: 6 }}>
+          <div style={{ color: '#7c7c8a' }}>{a.question}</div>
+          <div style={{ color: '#c9c7bd' }}>→ {a.answer}</div>
+        </div>
+      ))}
+      {entry.note && (
+        <div style={{ fontSize: 11, lineHeight: 1.6, color: '#8f8d9c', marginBottom: 8, paddingLeft: 8, borderLeft: '2px solid #7c5cfc' }}>
+          {entry.note}
+        </div>
+      )}
+      <div style={{ fontSize: 10, letterSpacing: '0.04em' }}>
+        {entry.status === 'done' ? (
+          <span style={{ color: '#7c5cfc' }}>{entry.added} {entry.added === 1 ? 'title' : 'titles'} on the map</span>
+        ) : entry.status === 'error' ? (
+          <span style={{ color: '#e06666' }}>
+            {entry.error}{' '}
+            {onRetry && <button onClick={onRetry} style={{ ...linkButtonStyle, color: '#7c5cfc' }}>Try again</button>}
+          </span>
+        ) : (
+          <span style={{ color: '#e8a33d' }}>{SEARCH_STATUS[entry.status]}</span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function HistoryEntry({ entry, onReuse }) {
   const status = entry.status === 'asking'
@@ -69,7 +111,7 @@ function HistoryEntry({ entry, onReuse }) {
 
 export function ConstellationChat({
   open, onToggle, nodes, selectedIds, onToggleSelect, onSetSelection, onClearSelection,
-  seedNodeIds, focusedNode, history, intro, busy, onSend,
+  seedNodeIds, focusedNode, history, intro, search, busy, onSend,
   format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat,
 }) {
   const [prompt, setPrompt] = useState('');
@@ -77,7 +119,7 @@ export function ConstellationChat({
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [history, formatQuestion]);
+  }, [history, formatQuestion, search?.question]);
 
   const nodeById = new Map(nodes.map((n) => [n.id, n]));
   const selectedNodes = [...selectedIds].map((id) => nodeById.get(id)).filter(Boolean);
@@ -87,7 +129,7 @@ export function ConstellationChat({
     : seedNodes.map((n) => n.id);
 
   const trimmed = prompt.trim();
-  const canSend = !busy && !formatQuestion && targetIds.length > 0 && (trimmed.length > 0 || selectedNodes.length > 0);
+  const canSend = !busy && !search && !formatQuestion && targetIds.length > 0 && (trimmed.length > 0 || selectedNodes.length > 0);
 
   function send() {
     if (!canSend) return;
@@ -147,18 +189,22 @@ export function ConstellationChat({
           ref={listRef}
           style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}
         >
-          {intro && (
+          {intro && !history.some((e) => e.kind === 'clarify') && (
             <p style={{ fontSize: 12, lineHeight: 1.7, color: '#c9c7bd', margin: 0, paddingLeft: 8, borderLeft: '2px solid #7c5cfc' }}>
               {intro}
             </p>
           )}
-          {history.length === 0 ? (
+          {history.map((entry) => (entry.kind === 'clarify'
+            ? <SearchEntry key={entry.id} entry={entry} onRetry={search?.status === 'error' ? search.onRetry : null} />
+            : <HistoryEntry key={entry.id} entry={entry} onReuse={reuse} />))}
+          {!search && !history.some((e) => e.kind !== 'clarify') && (
             <p style={{ fontSize: 12, lineHeight: 1.7, color: '#7c7c8a', margin: 0 }}>
               Ask for more of the path here, e.g. “add the Robin stories” or “focus on crossover events”.
               Shift-click nodes to choose what to expand.
             </p>
-          ) : (
-            history.map((entry) => <HistoryEntry key={entry.id} entry={entry} onReuse={reuse} />)
+          )}
+          {search?.question && (
+            <ClarifyQuestion question={search.question} onAnswer={search.onAnswer} onCancel={search.onCancel} />
           )}
           {formatQuestion && (
             <div style={{ padding: '10px 12px', background: '#14141d', border: '1px solid #7c5cfc' }}>
@@ -195,7 +241,7 @@ export function ConstellationChat({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
           {selectedNodes.length > 0 ? (
             selectedNodes.map((n) => {
-              const { color } = categoryMeta(n.category);
+              const { color, label } = categoryMeta(n.category);
               return (
                 <span key={n.id} style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -204,6 +250,7 @@ export function ConstellationChat({
                   maxWidth: '100%',
                 }}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</span>
+                  <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em', opacity: 0.8 }}>{label}</span>
                   <button
                     onClick={() => onToggleSelect(n.id)}
                     aria-label={`Remove ${n.title}`}

@@ -1,4 +1,4 @@
-import { EDGE_TYPES, edgeKind, normalizeCategory, normalizeTitle, resolveSeedIds } from './model.js';
+import { EDGE_TYPES, edgeKind, linkSeeds, normalizeCategory, normalizeTitle, resolveSeedIds } from './model.js';
 
 function nextId(existingNodes) {
   let max = 0;
@@ -101,11 +101,12 @@ export function mergeExpansion(existingGraph, sourceNodeIds, relatedNodes, relat
     }
   }
 
+  const nodes = [...existingGraph.nodes, ...newNodes];
   return {
     graph: {
       ...existingGraph,
-      nodes: [...existingGraph.nodes, ...newNodes],
-      edges: [...existingGraph.edges, ...newEdges],
+      nodes,
+      edges: linkSeeds(nodes, [...existingGraph.edges, ...newEdges]),
     },
     newNodeIds,
   };

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { fetchPath } from './lib/api';
 import { useReadingList } from './hooks/useReadingList';
 import { useAlreadyRead } from './hooks/useAlreadyRead';
@@ -6,47 +6,87 @@ import { usePathBuilder } from './hooks/usePathBuilder';
 import { usePromptHistory } from './hooks/usePromptHistory';
 import { useIntent } from './hooks/useIntent';
 import { SearchBar } from './components/SearchBar';
-import { ClarifyQuestion } from './components/ClarifyQuestion';
 import { ReadingListPanel } from './components/ReadingListPanel';
 import { PathView } from './components/PathView';
 
-const VIEW = { SEARCH: 'search', LOADING: 'loading', MAP: 'map', ERROR: 'error' };
+const VIEW = { SEARCH: 'search', MAP: 'map' };
 
 export default function App() {
   const [view, setView] = useState(VIEW.SEARCH);
-  const [error, setError] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  // The resolved request whose path is being fetched, and its error if that failed.
+  const [building, setBuilding] = useState(null);
+  const [buildError, setBuildError] = useState(null);
   const readingList = useReadingList();
   const alreadyRead = useAlreadyRead();
   const pathBuilder = usePathBuilder();
   const promptHistory = usePromptHistory();
   const { start: startPath } = pathBuilder;
-  const { clear: clearHistory } = promptHistory;
+  const { add: addHistory, update: updateHistory, clear: clearHistory } = promptHistory;
 
-  const handleResolved = useCallback(async ({ prompt, seeds, mode }) => {
-    setView(VIEW.LOADING);
-    setError(null);
+  // The chat entry tracking the current search, and the request being built
+  // (so a reply to a cancelled or replaced request is ignored).
+  const searchEntry = useRef(null);
+  const buildRef = useRef(null);
+
+  const buildPath = useCallback(async (resolved) => {
+    buildRef.current = resolved;
+    setBuilding(resolved);
+    setBuildError(null);
+    updateHistory(searchEntry.current, { status: 'loading', error: null });
     try {
-      const { graph } = await fetchPath({ query: prompt, seeds, mode });
+      const { graph } = await fetchPath({ query: resolved.prompt, seeds: resolved.seeds, mode: resolved.mode });
+      if (buildRef.current !== resolved) return;
       startPath(graph);
-      clearHistory();
-      setView(VIEW.MAP);
+      updateHistory(searchEntry.current, { status: 'done', note: graph.note, added: graph.nodes.length });
+      setBuilding(null);
     } catch (err) {
-      setError(err.message);
-      setView(VIEW.ERROR);
+      if (buildRef.current !== resolved) return;
+      const msg = err.message || 'Something went wrong.';
+      setBuildError(msg);
+      updateHistory(searchEntry.current, { status: 'error', error: msg });
     }
-  }, [startPath, clearHistory]);
-  const intent = useIntent(handleResolved);
+  }, [startPath, updateHistory]);
+  const intent = useIntent(buildPath);
+
+  // Mirror the clarifying exchange into the search's chat entry.
+  useEffect(() => {
+    if (!searchEntry.current || intent.status === 'idle') return;
+    updateHistory(searchEntry.current, { status: intent.status, answers: intent.answers, error: intent.error });
+  }, [intent.status, intent.answers, intent.error, updateHistory]);
+
+  function stopBuilding() {
+    buildRef.current = null;
+    setBuilding(null);
+    setBuildError(null);
+  }
 
   function handleSearch(query) {
-    setError(null);
+    stopBuilding();
+    clearHistory();
+    searchEntry.current = addHistory({ kind: 'clarify', prompt: query, answers: [], status: 'resolving' });
     intent.start(query);
+    setView(VIEW.MAP);
   }
 
   function handleReset() {
     intent.cancel();
+    stopBuilding();
     setView(VIEW.SEARCH);
   }
+
+  // What the canvas and chat need while a search is still in progress.
+  const searchStatus = intent.status !== 'idle' ? intent.status
+    : building ? (buildError ? 'error' : 'loading')
+    : null;
+  const search = searchStatus && {
+    status: searchStatus,
+    prompt: intent.prompt || building?.prompt || '',
+    question: intent.status === 'clarifying' ? intent.question : null,
+    onAnswer: intent.answer,
+    onCancel: handleReset,
+    onRetry: intent.status === 'error' ? intent.retry : () => buildPath(building),
+  };
 
   return (
     <div style={{ minHeight: '100vh' }}>
@@ -100,40 +140,12 @@ export default function App() {
         </button>
       </header>
 
-      {(view === VIEW.SEARCH || view === VIEW.LOADING) && (
+      {view === VIEW.SEARCH && (
         <SearchBar
           onSearch={handleSearch}
           onResume={() => setView(VIEW.MAP)}
-          loading={view === VIEW.LOADING || intent.status === 'resolving'}
           savedTitle={pathBuilder.hasSavedPath ? pathBuilder.title : null}
         />
-      )}
-
-      {view === VIEW.SEARCH && intent.status !== 'idle' && (
-        <div style={{ maxWidth: 680, margin: '0 auto', padding: '0 20px 20px' }}>
-          {intent.status === 'resolving' && (
-            <p style={{ color: 'var(--color-muted)', fontSize: 13 }}>
-              {intent.answers.length ? 'Got it…' : 'Working out what you\'re after…'}
-            </p>
-          )}
-          {intent.status === 'clarifying' && (
-            <ClarifyQuestion question={intent.question} onAnswer={intent.answer} onCancel={intent.cancel} />
-          )}
-          {intent.status === 'error' && (
-            <p style={{ color: 'var(--color-muted)', fontSize: 13 }}>
-              {intent.error}{' '}
-              <button onClick={intent.cancel} style={{ background: 'none', border: 'none', color: 'var(--color-accent)', fontSize: 13, padding: 0 }}>
-                Dismiss
-              </button>
-            </p>
-          )}
-        </div>
-      )}
-
-      {view === VIEW.LOADING && (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-muted)', fontSize: '13px' }}>
-          Building your reading path...
-        </div>
       )}
 
       {view === VIEW.MAP && (
@@ -143,26 +155,8 @@ export default function App() {
           alreadyRead={alreadyRead}
           onReset={handleReset}
           history={promptHistory}
+          search={search}
         />
-      )}
-
-      {view === VIEW.ERROR && (
-        <div style={{ maxWidth: 480, margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
-          <p style={{ color: 'var(--color-muted)', marginBottom: 16 }}>{error ?? 'Something went wrong.'}</p>
-          <button
-            onClick={handleReset}
-            style={{
-              background: 'none',
-              border: '1px solid var(--color-border)',
-              borderRadius: '6px',
-              color: 'var(--color-text)',
-              padding: '8px 18px',
-              fontSize: '13px',
-            }}
-          >
-            ← Try again
-          </button>
-        </div>
       )}
 
       <ReadingListPanel

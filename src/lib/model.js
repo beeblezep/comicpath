@@ -76,3 +76,40 @@ export function resolveSeedIds(names, seeds) {
     .filter(Boolean))];
   return ids.length > 0 || seeds.length === 0 ? ids : [seeds[0].id];
 }
+
+// A title that belongs to more than one seed.
+export function isCrossover(node) {
+  return !node.isSeed && (node.seedIds?.length || 0) > 1;
+}
+
+export function nodeSeeds(node, seeds) {
+  return (node.seedIds || []).map((id) => (seeds || []).find((s) => s.id === id)).filter(Boolean);
+}
+
+// Every crossover gets an edge from each of its seeds' anchors, and a seed
+// anchor nothing points at is linked to the first title of that seed, so no
+// seed floats free. Returns the edges with any new ones appended.
+export function linkSeeds(nodes, edges) {
+  const anchorOf = new Map(nodes.filter((n) => n.isSeed).map((n) => [n.seedIds[0], n.id]));
+  const keys = new Set(edges.flatMap((e) => [`${e.source}->${e.target}`, `${e.target}->${e.source}`]));
+  const out = [...edges];
+  const add = (source, target) => {
+    if (!source || !target || source === target || keys.has(`${source}->${target}`)) return;
+    keys.add(`${source}->${target}`);
+    keys.add(`${target}->${source}`);
+    out.push({ source, target, type: 'crossover', kind: edgeKind('crossover'), label: '' });
+  };
+
+  for (const n of nodes) {
+    if (!isCrossover(n)) continue;
+    for (const sid of n.seedIds) add(anchorOf.get(sid), n.id);
+  }
+
+  const linked = new Set(out.flatMap((e) => [e.source, e.target]));
+  for (const [sid, anchorId] of anchorOf) {
+    if (linked.has(anchorId)) continue;
+    const first = nodes.find((n) => !n.isSeed && n.seedIds?.includes(sid));
+    if (first) add(anchorId, first.id);
+  }
+  return out;
+}

@@ -1,14 +1,21 @@
 import { useState, useEffect } from 'react';
-import { categoryMeta, slugify } from '../lib/model';
+import { categoryMeta, isCrossover, nodeSeeds, slugify } from '../lib/model';
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
-export function ConstellationDetail({ node, open, readingList, alreadyRead, character, onToggleRead, onHide, onClose, nodeIndex, totalNodes, onExpand, expandable, expanding }) {
+const chipStyle = {
+  fontFamily: MONO,
+  fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase',
+  border: '1px solid #2a2b38', padding: '4px 8px', color: '#7c7c8a',
+};
+
+export function ConstellationDetail({ node, seeds, open, readingList, alreadyRead, character, onToggleRead, onHide, onClose, nodeIndex, totalNodes, onExpand, expandable, expanding }) {
   const { color, label } = node ? categoryMeta(node.category) : { color: '#7c7c8a', label: '' };
   const slug = node ? slugify(node.title) : '';
 
   const isRead = node ? alreadyRead.isRead(slug) : false;
   const isSaved = node ? readingList.has(slug) : false;
+  const ownSeeds = node ? nodeSeeds(node, seeds) : [];
 
   const [refinement, setRefinement] = useState('');
   useEffect(() => { setRefinement(''); }, [node?.id]);
@@ -43,8 +50,23 @@ export function ConstellationDetail({ node, open, readingList, alreadyRead, char
             {node.title}
           </h2>
 
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+            <span style={{ ...chipStyle, borderColor: color, background: `${color}18`, color }}>{label}</span>
+            {node.isSeed && (
+              <span style={{ ...chipStyle, borderColor: '#eae7de', color: '#eae7de' }}>
+                Seed · {ownSeeds[0]?.type || 'character'}
+              </span>
+            )}
+            {isCrossover(node) && <span style={chipStyle}>Crossover</span>}
+          </div>
+
           <p style={{ fontFamily: MONO, fontSize: 13, color: '#7c7c8a', margin: '0 0 22px' }}>
-            {node.isSeed ? 'Seed' : label} · {node.year || ''}{node.edition ? ` · ${node.edition}` : ''}
+            {[node.year, node.edition].filter(Boolean).join(' · ')}
+            {!node.isSeed && ownSeeds.length > 0 && (
+              <span style={{ display: 'block', marginTop: 6 }}>
+                {ownSeeds.length === 1 ? 'Seed' : 'Seeds'}: {ownSeeds.map((s) => s.name).join(', ')}
+              </span>
+            )}
           </p>
 
           <div style={{ width: '100%', height: 3, background: color, marginBottom: 22 }} />

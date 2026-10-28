@@ -2,12 +2,24 @@ import { useState, useCallback, useRef } from 'react';
 import { fetchRelatedTitles } from '../lib/api';
 import { mergeExpansion } from '../lib/graphMerge';
 import { detectFormat } from '../lib/formatIntent';
+import { emptyGraph } from '../lib/model';
 import { ConstellationMap } from './ConstellationMap';
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
-// The canvas + chat drawer for the current reading path, whatever produced it.
-export function PathView({ pathBuilder: pb, readingList, alreadyRead, onReset, history }) {
+const PENDING_GRAPH = emptyGraph();
+
+const PLACEHOLDER = {
+  resolving: 'Working out what you\'re after…',
+  clarifying: 'Answer the question in the chat to start your path',
+  loading: 'Building your reading path…',
+  error: 'Something went wrong — see the chat',
+};
+
+// The canvas + chat drawer for the current reading path. While a new search is
+// still being resolved or built (`search` set), the canvas is empty and the
+// chat carries the clarifying questions.
+export function PathView({ pathBuilder: pb, readingList, alreadyRead, onReset, history, search }) {
   const [expandingIds, setExpandingIds] = useState(new Set());
   const [toast, setToast] = useState(null);
   // The expansion waiting on the reader's issues-or-collected answer, if any.
@@ -68,6 +80,7 @@ export function PathView({ pathBuilder: pb, readingList, alreadyRead, onReset, h
 
     const ids = nodes.map((n) => n.id);
     const entryId = history.add({
+      kind: 'expand',
       prompt: refinementPrompt || '',
       nodeIds: ids,
       nodeTitles: nodes.map((n) => n.title),
@@ -122,7 +135,7 @@ export function PathView({ pathBuilder: pb, readingList, alreadyRead, onReset, h
   return (
     <>
       <ConstellationMap
-        graph={pb.graph}
+        graph={search ? PENDING_GRAPH : pb.graph}
         readingList={readingList}
         alreadyRead={alreadyRead}
         onClose={handleClose}
@@ -137,8 +150,10 @@ export function PathView({ pathBuilder: pb, readingList, alreadyRead, onReset, h
         onAnswerFormat={handleAnswerFormat}
         onCancelFormat={handleCancelFormat}
         onNewPath={handleStartNew}
-        title={pb.title || 'Reading Path'}
-        intro={pb.graph.note}
+        title={search ? search.prompt : pb.title || 'Reading Path'}
+        intro={search ? null : pb.graph.note}
+        placeholder={search ? PLACEHOLDER[search.status] : null}
+        search={search}
       />
 
       {/* Toast overlay */}
