@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { fetchComicGuide } from './lib/api';
+import { useState, useCallback } from 'react';
+import { fetchPath } from './lib/api';
 import { useReadingList } from './hooks/useReadingList';
 import { useAlreadyRead } from './hooks/useAlreadyRead';
 import { usePathBuilder } from './hooks/usePathBuilder';
 import { usePromptHistory } from './hooks/usePromptHistory';
+import { useIntent } from './hooks/useIntent';
 import { SearchBar } from './components/SearchBar';
+import { ClarifyQuestion } from './components/ClarifyQuestion';
 import { ResultsView } from './components/ResultsView';
 import { ReadingListPanel } from './components/ReadingListPanel';
 import { PathBuilder } from './components/PathBuilder';
@@ -22,17 +24,24 @@ export default function App() {
   const pathBuilder = usePathBuilder();
   const promptHistory = usePromptHistory();
 
-  async function handleSearch(query, mode) {
+  const handleResolved = useCallback(async ({ prompt, seeds, mode }) => {
     setView(VIEW.LOADING);
     setError(null);
     try {
-      const result = await fetchComicGuide(query, mode);
+      const result = await fetchPath({ query: prompt, seeds, mode });
       setData(result);
       setView(VIEW.RESULTS);
     } catch (err) {
       setError(err.message);
       setView(VIEW.ERROR);
     }
+  }, []);
+  const intent = useIntent(handleResolved);
+
+  // mode is null unless the reader picked one, in which case it isn't asked about.
+  function handleSearch(query, mode) {
+    setError(null);
+    intent.start(query, mode);
   }
 
   function handleBuildPath(query) {
@@ -41,6 +50,7 @@ export default function App() {
   }
 
   function handleReset() {
+    intent.cancel();
     setView(VIEW.SEARCH);
     setData(null);
     setBuilderQuery('');
@@ -102,9 +112,30 @@ export default function App() {
         <SearchBar
           onSearch={handleSearch}
           onBuildPath={handleBuildPath}
-          loading={view === VIEW.LOADING}
+          loading={view === VIEW.LOADING || intent.status === 'resolving'}
           hasSavedPath={pathBuilder.hasSavedPath}
         />
+      )}
+
+      {view === VIEW.SEARCH && intent.status !== 'idle' && (
+        <div style={{ maxWidth: 680, margin: '0 auto', padding: '0 20px 20px' }}>
+          {intent.status === 'resolving' && (
+            <p style={{ color: 'var(--color-muted)', fontSize: 13 }}>
+              {intent.answers.length ? 'Got it…' : 'Working out what you\'re after…'}
+            </p>
+          )}
+          {intent.status === 'clarifying' && (
+            <ClarifyQuestion question={intent.question} onAnswer={intent.answer} onCancel={intent.cancel} />
+          )}
+          {intent.status === 'error' && (
+            <p style={{ color: 'var(--color-muted)', fontSize: 13 }}>
+              {intent.error}{' '}
+              <button onClick={intent.cancel} style={{ background: 'none', border: 'none', color: 'var(--color-accent)', fontSize: 13, padding: 0 }}>
+                Dismiss
+              </button>
+            </p>
+          )}
+        </div>
       )}
 
       {view === VIEW.LOADING && (

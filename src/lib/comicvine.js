@@ -220,8 +220,9 @@ function looksLikeTitle(query) {
   return false;
 }
 
-export async function searchComicVineSmartly(query) {
-  const titleHint = looksLikeTitle(query);
+// asTitle: the caller already knows the query names a series or story arc.
+export async function searchComicVineSmartly(query, { asTitle = false } = {}) {
+  const titleHint = asTitle || looksLikeTitle(query);
 
   if (titleHint) {
     const [volumes, arcs, characters] = await Promise.all([

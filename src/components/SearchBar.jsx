@@ -18,7 +18,8 @@ const MODES = [
 
 export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
   const [value, setValue] = useState('');
-  const [mode, setMode] = useState('full');
+  // null = let the search work out the mode (asking if unclear).
+  const [mode, setMode] = useState(null);
 
   function submit() {
     const q = value.trim();
@@ -43,7 +44,7 @@ export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
         <input
           type="text"
           value={value}
-          placeholder="Batman, X-Men, Saga..."
+          placeholder="e.g. catch me up on Absolute Power"
           onChange={e => setValue(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
           disabled={loading}
@@ -80,7 +81,7 @@ export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
         {MODES.map(m => (
           <button
             key={m.key}
-            onClick={() => setMode(m.key)}
+            onClick={() => setMode(mode === m.key ? null : m.key)}
             disabled={loading}
             title={m.desc}
             style={{

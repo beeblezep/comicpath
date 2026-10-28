@@ -66,6 +66,7 @@ CONTINUITY RULES:
 const CATEGORY_RULE = '- category: essential = must read, canon for this path; optional = worth reading, alternate or Elseworlds; skip = not needed, safe to pass on.';
 
 const SEED_RULE = `- seeds: what the reader is reading about. Usually exactly one. type is "character" for one character, "group" for a team or for characters read together (list them in "members"), "arc" for a story arc, event or series.
+- A group seed covers titles where its members appear together. Separate seeds cover titles for each one individually, plus crossovers where they appear together.
 - Each node's "seeds" lists the names of the seeds it features (exactly as written in "seeds"). A crossover lists every seed it involves.`;
 
 const MODE_INSTRUCTIONS = {
@@ -74,7 +75,7 @@ const MODE_INSTRUCTIONS = {
   'deep-dive': '8-12 nodes showing the prerequisites and lead-up to the most relevant current or recent arc, favouring the more obscure good stuff. Use "prerequisite" edges for required reading, "crossover" for event tie-ins, "branches-from" for depth stories. Weight the target arc node 5.',
 };
 
-function buildPrompt(query, cvData, mode = 'full') {
+function buildCvBlock(cvData) {
   let contextBlock = '';
   const queryType = cvData?.queryType || 'character';
 
@@ -123,11 +124,19 @@ IMPORTANT: Use your knowledge of this title's continuity to recommend real title
 `;
     }
   }
+  return contextBlock;
+}
+
+function buildPrompt(query, cvDatas, mode = 'full', seeds = []) {
+  const contextBlock = cvDatas.map(buildCvBlock).join('');
+  const seedBlock = seeds.length
+    ? `\nThe request has been resolved to these seeds. Use exactly these in "seeds" (same names, types and members):\n${seeds.map((s) => `- ${s.name} (${s.type}${s.members?.length ? `: ${s.members.join(', ')}` : ''})`).join('\n')}\n`
+    : '';
 
   return `You are ComicPath, an expert comic book guide for new and returning readers.
 
 A reader searched for: "${query}"
-${contextBlock}
+${seedBlock}${contextBlock}
 ${DISAMBIGUATION_RULES}
 Return ONLY a JSON object — no markdown, no preamble, no trailing text.
 
@@ -164,8 +173,11 @@ function parseJson(text) {
   }
 }
 
-function parseResponse(text, mode) {
-  return validateResponse(parseJson(text), mode);
+function parseResponse(text, mode, seeds) {
+  const data = parseJson(text);
+  // Resolved seeds are authoritative; the model only echoes them.
+  if (seeds?.length) data.seeds = seeds;
+  return validateResponse(data, mode);
 }
 
 function validateResponse(data, mode) {
@@ -587,14 +599,109 @@ export async function fetchRelatedTitles(titleOrTitles, existingTitles = [], ref
   return parseRelatedTitlesResponse(text, format);
 }
 
-export async function fetchComicGuide(query, mode = 'full') {
-  let cvData = null;
+async function lookupSeedContext(seed) {
   try {
-    cvData = await searchComicVineSmartly(query);
+    return await searchComicVineSmartly(seed.name, { asTitle: seed.type === 'arc' });
   } catch (err) {
-    console.warn('ComicVine lookup failed, falling back to LLM-only:', err.message);
+    console.warn(`ComicVine lookup failed for ${seed.name}, falling back to LLM-only:`, err.message);
+    return null;
+  }
+}
+
+// Results for a resolved request: seeds and mode come from resolveIntent.
+export async function fetchPath({ query, seeds, mode = 'full' }) {
+  const cvDatas = (await Promise.all(seeds.slice(0, 3).map(lookupSeedContext))).filter(Boolean);
+  const prompt = buildPrompt(query, cvDatas, mode, seeds);
+  try {
+    return parseResponse(await callLLM(prompt, 5500), mode, seeds);
+  } catch (err) {
+    // The model occasionally returns malformed JSON for this long response; one retry.
+    if (!(err instanceof SyntaxError) && err.message !== 'Response was not valid JSON') throw err;
+    console.warn('Unparseable path response, retrying once:', err.message);
+    return parseResponse(await callLLM(prompt, 5500), mode, seeds);
+  }
+}
+
+/* ── Intent resolution ───────────────────────────────────── */
+
+export const MODE_OPTIONS = [
+  { id: 'full', label: 'Full guide', hint: "I'm new" },
+  { id: 'catch-up', label: 'Catch up', hint: "I'm familiar, getting back in" },
+  { id: 'deep-dive', label: 'Deep dive', hint: 'The more obscure good stuff' },
+];
+
+const MAX_QUESTIONS = 3;
+
+function buildIntentPrompt(prompt, answers, modeHint) {
+  const answered = answers.length
+    ? `\nClarifications so far:\n${answers.map((a) => `- Q: ${a.question}\n  A: ${a.answer}`).join('\n')}\n`
+    : '';
+  const modeLine = modeHint ? `\nThe reader already chose the mode "${modeHint}"; use it and never ask about mode.\n` : '';
+  const stop = answers.length >= MAX_QUESTIONS
+    ? '\nYou have asked enough questions. Return "ready" now with your best interpretation.\n'
+    : '';
+
+  return `You are ComicPath's request resolver. A reader typed a free-text request for comic reading recommendations. Work out (a) the seeds — what they want to read about — and (b) the mode. Ask ONE clarifying question only when something is genuinely unclear.
+
+Reader's request: "${prompt}"
+${answered}${modeLine}${stop}
+SEEDS:
+- A seed is a character ("Batman"), a group read together ("Batman & Robin", a team like "X-Men"), or a story arc, event or series ("Absolute Power").
+- Unclear entity — ask (kind "entity"): the name refers to clearly different, well-known entities, e.g. "Sandman" could be Dream of the Endless (Neil Gaiman), Wesley Dodds (Golden Age DC), or Marvel's Spider-Man villain. Give 2-4 options.
+- Do NOT ask about mantles or continuity: default to mainstream continuity (DC: Prime Earth, Marvel: 616) and the most iconic version (e.g. "Flash" → Barry Allen) unless the request names an alternate. "Batman" alone is clear.
+- Unclear seed structure — ask (kind "seedStructure"): the request names two or more characters without saying whether they want them together or each on their own, e.g. "titles about Batman and Robin". Options: only titles where they appear together (one group seed), or each one individually including crossovers (separate seeds). A team or series known by one name (e.g. "X-Men", "Guardians of the Galaxy") is a single group seed, no question.
+${modeHint ? '' : `
+MODE:
+- full = Full guide, the reader is new; catch-up = Catch up, familiar and getting back in; deep-dive = Deep dive, the more obscure good stuff.
+- Infer the mode from wording like "new to", "start", "from the beginning" (full), "catch me up", "getting back into", "latest" (catch-up), "obscure", "deep cuts", "hidden gems" (deep-dive).
+- If nothing in the request or clarifications indicates the mode, ask (kind "mode").
+`}
+Ask about the entity first, then seed structure, then mode. Never ask about something already answered.
+
+Return ONLY a JSON object — no markdown, no preamble. Either:
+{ "status": "clarify", "question": { "kind": "entity | seedStructure | mode", "text": "Which Sandman do you mean?", "options": [{ "id": "dream", "label": "Dream of the Endless", "hint": "Neil Gaiman's Vertigo series" }] } }
+or:
+{ "status": "ready", "mode": "full | catch-up | deep-dive", "seeds": [{ "name": "Batman", "type": "character | group | arc", "members": ["only for group seeds"] }] }`;
+}
+
+function parseIntent(text, modeHint) {
+  const data = parseJson(text);
+  const validMode = (m) => MODE_OPTIONS.some((o) => o.id === m);
+
+  if (data.status === 'ready') {
+    const seeds = (Array.isArray(data.seeds) ? data.seeds : [])
+      .filter((s) => s?.name)
+      .slice(0, 6)
+      .map((s, i) => ({
+        id: `s${i + 1}`,
+        name: String(s.name),
+        type: normalizeSeedType(s.type),
+        ...(Array.isArray(s.members) && s.members.length > 0 ? { members: s.members.map(String) } : {}),
+      }));
+    if (seeds.length === 0) throw new Error('Could not work out what to look up. Try rephrasing.');
+    const mode = modeHint || data.mode;
+    // A missing mode is asked about here rather than guessed.
+    if (!validMode(mode)) {
+      return { status: 'clarify', question: { kind: 'mode', text: 'How do you want to read?', options: MODE_OPTIONS } };
+    }
+    return { status: 'ready', mode, seeds };
   }
 
-  const text = await callLLM(buildPrompt(query, cvData, mode), 5500);
-  return parseResponse(text, mode);
+  const q = data.question || {};
+  const kind = ['entity', 'seedStructure', 'mode'].includes(q.kind) ? q.kind : 'entity';
+  const options = kind === 'mode'
+    ? MODE_OPTIONS
+    : (Array.isArray(q.options) ? q.options : [])
+      .filter((o) => o?.label)
+      .slice(0, 4)
+      .map((o, i) => ({ id: String(o.id || `o${i + 1}`), label: String(o.label), hint: o.hint ? String(o.hint) : '' }));
+  if (!q.text) throw new Error('Could not understand the request. Try rephrasing.');
+  return { status: 'clarify', question: { kind, text: String(q.text), options } };
+}
+
+// One resolution step: either a clarifying question or the resolved seeds + mode.
+// answers: [{ question, answer }] from earlier steps of the same request.
+export async function resolveIntent(prompt, answers = [], modeHint = null) {
+  const text = await callLLM(buildIntentPrompt(prompt, answers, modeHint), 1500);
+  return parseIntent(text, modeHint);
 }
