@@ -3,7 +3,7 @@ import { fetchRelatedTitles } from '../lib/api';
 import { mergeExpansion } from '../lib/graphMerge';
 import { detectFormat } from '../lib/formatIntent';
 import { emptyGraph } from '../lib/model';
-import { ConstellationMap } from './ConstellationMap';
+import { MetroMap } from './map/MetroMap';
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
@@ -134,7 +134,7 @@ export function PathView({ pathBuilder: pb, readingList, alreadyRead, onReset, h
 
   return (
     <>
-      <ConstellationMap
+      <MetroMap
         graph={search ? PENDING_GRAPH : pb.graph}
         readingList={readingList}
         alreadyRead={alreadyRead}

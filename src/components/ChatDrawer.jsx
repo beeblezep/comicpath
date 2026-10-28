@@ -4,22 +4,22 @@ import { ClarifyQuestion } from './ClarifyQuestion';
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
-export const CHAT_WIDTH = 360;
+const CHAT_WIDTH = 360;
 
 const labelStyle = {
   fontFamily: MONO,
   fontSize: 11, letterSpacing: '0.12em',
-  color: '#e8a33d', textTransform: 'uppercase',
+  color: 'var(--chat-pending)', textTransform: 'uppercase',
 };
 
 const linkButtonStyle = {
   fontFamily: MONO, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase',
   background: 'none', border: 'none', padding: 0,
-  color: '#7c7c8a', cursor: 'pointer',
+  color: 'var(--chat-muted)', cursor: 'pointer',
 };
 
 const tagStyle = {
-  border: '1px solid #2a2b38', padding: '1px 5px', marginRight: 6,
+  border: '1px solid var(--chat-border)', padding: '1px 5px', marginRight: 6,
   textTransform: 'uppercase', letterSpacing: '0.06em',
 };
 
@@ -38,31 +38,31 @@ const SEARCH_STATUS = {
 // with its answer, then the outcome.
 function SearchEntry({ entry, onRetry }) {
   return (
-    <div style={{ padding: '10px 12px', background: '#14141d', border: '1px solid #2a2b38' }}>
-      <div style={{ fontSize: 12, lineHeight: 1.6, color: '#c9c7bd', marginBottom: 6, whiteSpace: 'pre-wrap' }}>
+    <div style={{ padding: '10px 12px', background: 'var(--chat-panel)', border: '1px solid var(--chat-border)' }}>
+      <div style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--chat-text)', marginBottom: 6, whiteSpace: 'pre-wrap' }}>
         {entry.prompt}
       </div>
       {entry.answers.map((a, i) => (
         <div key={i} style={{ fontSize: 11, lineHeight: 1.6, marginBottom: 6 }}>
-          <div style={{ color: '#7c7c8a' }}>{a.question}</div>
-          <div style={{ color: '#c9c7bd' }}>→ {a.answer}</div>
+          <div style={{ color: 'var(--chat-muted)' }}>{a.question}</div>
+          <div style={{ color: 'var(--chat-text)' }}>→ {a.answer}</div>
         </div>
       ))}
       {entry.note && (
-        <div style={{ fontSize: 11, lineHeight: 1.6, color: '#8f8d9c', marginBottom: 8, paddingLeft: 8, borderLeft: '2px solid #7c5cfc' }}>
+        <div style={{ fontSize: 11, lineHeight: 1.6, color: 'var(--chat-muted)', marginBottom: 8, paddingLeft: 8, borderLeft: '2px solid var(--chat-accent)' }}>
           {entry.note}
         </div>
       )}
       <div style={{ fontSize: 10, letterSpacing: '0.04em' }}>
         {entry.status === 'done' ? (
-          <span style={{ color: '#7c5cfc' }}>{entry.added} {entry.added === 1 ? 'title' : 'titles'} on the map</span>
+          <span style={{ color: 'var(--chat-accent)' }}>{entry.added} {entry.added === 1 ? 'title' : 'titles'} on the map</span>
         ) : entry.status === 'error' ? (
-          <span style={{ color: '#e06666' }}>
+          <span style={{ color: 'var(--chat-warn)' }}>
             {entry.error}{' '}
-            {onRetry && <button onClick={onRetry} style={{ ...linkButtonStyle, color: '#7c5cfc' }}>Try again</button>}
+            {onRetry && <button onClick={onRetry} style={{ ...linkButtonStyle, color: 'var(--chat-accent)' }}>Try again</button>}
           </span>
         ) : (
-          <span style={{ color: '#e8a33d' }}>{SEARCH_STATUS[entry.status]}</span>
+          <span style={{ color: 'var(--chat-pending)' }}>{SEARCH_STATUS[entry.status]}</span>
         )}
       </div>
     </div>
@@ -71,12 +71,12 @@ function SearchEntry({ entry, onRetry }) {
 
 function HistoryEntry({ entry, onReuse }) {
   const status = entry.status === 'asking'
-    ? <span style={{ color: '#e8a33d' }}>Choose a format…</span>
+    ? <span style={{ color: 'var(--chat-pending)' }}>Choose a format…</span>
     : entry.status === 'pending'
-    ? <span style={{ color: '#e8a33d' }}>Expanding…</span>
+    ? <span style={{ color: 'var(--chat-pending)' }}>Expanding…</span>
     : entry.status === 'error'
-      ? <span style={{ color: '#e06666' }}>{entry.error}</span>
-      : <span style={{ color: '#7c5cfc' }}>+{entry.added} {entry.added === 1 ? 'node' : 'nodes'}</span>;
+      ? <span style={{ color: 'var(--chat-warn)' }}>{entry.error}</span>
+      : <span style={{ color: 'var(--chat-accent)' }}>+{entry.added} {entry.added === 1 ? 'node' : 'nodes'}</span>;
 
   return (
     <button
@@ -86,20 +86,20 @@ function HistoryEntry({ entry, onReuse }) {
         display: 'block', width: '100%', textAlign: 'left',
         fontFamily: MONO,
         padding: '10px 12px',
-        background: '#14141d',
-        border: '1px solid #2a2b38',
+        background: 'var(--chat-panel)',
+        border: '1px solid var(--chat-border)',
         cursor: 'pointer',
       }}
     >
-      <div style={{ fontSize: 12, lineHeight: 1.6, color: entry.prompt ? '#c9c7bd' : '#7c7c8a', marginBottom: 6, whiteSpace: 'pre-wrap' }}>
+      <div style={{ fontSize: 12, lineHeight: 1.6, color: entry.prompt ? 'var(--chat-text)' : 'var(--chat-muted)', marginBottom: 6, whiteSpace: 'pre-wrap' }}>
         {entry.prompt || '(no prompt)'}
       </div>
       {entry.note && (
-        <div style={{ fontSize: 11, lineHeight: 1.6, color: '#8f8d9c', marginBottom: 8, paddingLeft: 8, borderLeft: '2px solid #7c5cfc' }}>
+        <div style={{ fontSize: 11, lineHeight: 1.6, color: 'var(--chat-muted)', marginBottom: 8, paddingLeft: 8, borderLeft: '2px solid var(--chat-accent)' }}>
           {entry.note}
         </div>
       )}
-      <div style={{ fontSize: 10, lineHeight: 1.6, color: '#7c7c8a', marginBottom: 4 }}>
+      <div style={{ fontSize: 10, lineHeight: 1.6, color: 'var(--chat-muted)', marginBottom: 4 }}>
         {entry.source === 'drawer' && <span style={tagStyle}>drawer</span>}
         {entry.format && <span style={tagStyle}>{entry.format}</span>}
         → {entry.nodeTitles.join(', ')}
@@ -109,7 +109,7 @@ function HistoryEntry({ entry, onReuse }) {
   );
 }
 
-export function ConstellationChat({
+export function ChatDrawer({
   open, onToggle, nodes, selectedIds, onToggleSelect, onSetSelection, onClearSelection,
   seedNodeIds, focusedNode, history, intro, search, busy, onSend,
   format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat,
@@ -153,9 +153,9 @@ export function ConstellationChat({
           transition: 'transform .35s cubic-bezier(.2,.8,.2,1)',
           fontFamily: MONO, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
           padding: '14px 10px',
-          border: '1px solid #2a2b38', borderLeft: 'none',
-          background: 'rgba(8,8,13,0.9)',
-          color: '#7c7c8a',
+          border: '1px solid var(--chat-border)', borderLeft: 'none',
+          background: 'var(--chat-bg)',
+          color: 'var(--chat-muted)',
           cursor: 'pointer',
           zIndex: 109,
         }}
@@ -167,8 +167,8 @@ export function ConstellationChat({
         style={{
           position: 'fixed', top: 0, left: 0, bottom: 0,
           width: CHAT_WIDTH,
-          background: 'linear-gradient(180deg, #1b1c26, #14141d)',
-          borderRight: '1px solid #2a2b38',
+          background: 'var(--chat-bg)',
+          borderRight: '1px solid var(--chat-border)',
           transform: open ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform .35s cubic-bezier(.2,.8,.2,1)',
           padding: '30px 24px 24px',
@@ -190,7 +190,7 @@ export function ConstellationChat({
           style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}
         >
           {intro && !history.some((e) => e.kind === 'clarify') && (
-            <p style={{ fontSize: 12, lineHeight: 1.7, color: '#c9c7bd', margin: 0, paddingLeft: 8, borderLeft: '2px solid #7c5cfc' }}>
+            <p style={{ fontSize: 12, lineHeight: 1.7, color: 'var(--chat-text)', margin: 0, paddingLeft: 8, borderLeft: '2px solid var(--chat-accent)' }}>
               {intro}
             </p>
           )}
@@ -198,7 +198,7 @@ export function ConstellationChat({
             ? <SearchEntry key={entry.id} entry={entry} onRetry={search?.status === 'error' ? search.onRetry : null} />
             : <HistoryEntry key={entry.id} entry={entry} onReuse={reuse} />))}
           {!search && !history.some((e) => e.kind !== 'clarify') && (
-            <p style={{ fontSize: 12, lineHeight: 1.7, color: '#7c7c8a', margin: 0 }}>
+            <p style={{ fontSize: 12, lineHeight: 1.7, color: 'var(--chat-muted)', margin: 0 }}>
               Ask for more of the path here, e.g. “add the Robin stories” or “focus on crossover events”.
               Shift-click nodes to choose what to expand.
             </p>
@@ -207,8 +207,8 @@ export function ConstellationChat({
             <ClarifyQuestion question={search.question} onAnswer={search.onAnswer} onCancel={search.onCancel} />
           )}
           {formatQuestion && (
-            <div style={{ padding: '10px 12px', background: '#14141d', border: '1px solid #7c5cfc' }}>
-              <div style={{ fontSize: 12, lineHeight: 1.6, color: '#c9c7bd', marginBottom: 8 }}>
+            <div style={{ padding: '10px 12px', background: 'var(--chat-panel)', border: '1px solid var(--chat-accent)' }}>
+              <div style={{ fontSize: 12, lineHeight: 1.6, color: 'var(--chat-text)', marginBottom: 8 }}>
                 Single issues or collected editions?
               </div>
               <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
@@ -219,9 +219,9 @@ export function ConstellationChat({
                     style={{
                       flex: 1, fontFamily: MONO, fontSize: 11,
                       padding: '8px 6px',
-                      border: '1px solid #7c5cfc',
-                      background: 'rgba(124,92,252,0.13)',
-                      color: '#7c5cfc',
+                      border: '1px solid var(--chat-accent)',
+                      background: 'var(--chat-accent-soft)',
+                      color: 'var(--chat-accent)',
                       cursor: 'pointer',
                     }}
                   >
@@ -229,7 +229,7 @@ export function ConstellationChat({
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#7c7c8a' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--chat-muted)' }}>
                 <span>You can change this any time below</span>
                 <button onClick={onCancelFormat} style={linkButtonStyle}>Cancel</button>
               </div>
@@ -262,7 +262,7 @@ export function ConstellationChat({
               );
             })
           ) : seedNodes.length > 0 ? (
-            <span style={{ fontSize: 11, padding: '4px 8px', border: '1px dashed #2a2b38', color: '#7c7c8a' }}>
+            <span style={{ fontSize: 11, padding: '4px 8px', border: '1px dashed var(--chat-border)', color: 'var(--chat-muted)' }}>
               {seedNodes.length === 1 ? 'Seed' : 'Seeds'}: {seedNodes.map((n) => n.title).join(', ')}
             </span>
           ) : null}
@@ -271,15 +271,15 @@ export function ConstellationChat({
               onClick={() => onToggleSelect(focusedNode.id)}
               style={{
                 fontFamily: MONO, fontSize: 11, padding: '4px 8px',
-                border: '1px dashed #3a3b48', background: 'transparent',
-                color: '#c9c7bd', cursor: 'pointer',
+                border: '1px dashed var(--chat-strong-border)', background: 'transparent',
+                color: 'var(--chat-text)', cursor: 'pointer',
               }}
             >
               + {focusedNode.title}
             </button>
           )}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 10, color: '#555' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, fontSize: 10, color: 'var(--chat-muted)' }}>
           <span>shift-click nodes to select</span>
           {selectedNodes.length > 0 && (
             <button onClick={onClearSelection} style={linkButtonStyle}>Clear</button>
@@ -288,7 +288,7 @@ export function ConstellationChat({
 
         {/* Format */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <span style={{ fontSize: 10, color: '#555' }}>build from</span>
+          <span style={{ fontSize: 10, color: 'var(--chat-muted)' }}>build from</span>
           <div style={{ display: 'flex', flex: 1 }}>
             {FORMATS.map((f, i) => {
               const active = format === f.id;
@@ -300,11 +300,11 @@ export function ConstellationChat({
                   style={{
                     flex: 1, fontFamily: MONO, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase',
                     padding: '5px 8px',
-                    border: `1px solid ${active ? '#7c5cfc' : '#2a2b38'}`,
+                    border: `1px solid ${active ? 'var(--chat-accent)' : 'var(--chat-border)'}`,
                     marginLeft: i === 0 ? 0 : -1,
                     position: 'relative', zIndex: active ? 1 : 0,
-                    background: active ? 'rgba(124,92,252,0.13)' : 'transparent',
-                    color: active ? '#7c5cfc' : '#7c7c8a',
+                    background: active ? 'var(--chat-accent-soft)' : 'transparent',
+                    color: active ? 'var(--chat-accent)' : 'var(--chat-muted)',
                     cursor: 'pointer',
                   }}
                 >
@@ -331,9 +331,9 @@ export function ConstellationChat({
             width: '100%', fontFamily: MONO,
             fontSize: 12, lineHeight: 1.6,
             padding: '8px 10px', marginBottom: 8,
-            background: '#14141d',
-            border: '1px solid #2a2b38',
-            color: '#c9c7bd',
+            background: 'var(--chat-panel)',
+            border: '1px solid var(--chat-border)',
+            color: 'var(--chat-text)',
             resize: 'vertical',
             minHeight: 60, maxHeight: 160,
             boxSizing: 'border-box',
@@ -346,9 +346,9 @@ export function ConstellationChat({
             width: '100%', fontFamily: MONO,
             fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
             padding: '10px 14px',
-            border: '1px solid #7c5cfc',
-            background: 'rgba(124,92,252,0.13)',
-            color: '#7c5cfc',
+            border: '1px solid var(--chat-accent)',
+            background: 'var(--chat-accent-soft)',
+            color: 'var(--chat-accent)',
             cursor: canSend ? 'pointer' : 'default',
             opacity: canSend ? 1 : 0.5,
           }}

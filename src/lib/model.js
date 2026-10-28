@@ -4,7 +4,7 @@
 
 // Bump when the persisted graph / reading-list shape changes; saved data from
 // another version is discarded rather than migrated.
-export const GRAPH_VERSION = 2;
+export const GRAPH_VERSION = 3;
 
 export const CATEGORIES = ['essential', 'optional', 'skip'];
 
@@ -56,8 +56,14 @@ export function normalizeTitle(title) {
 }
 
 export function emptyGraph() {
-  return { v: GRAPH_VERSION, seeds: [], nodes: [], edges: [], pathNote: '', mode: null };
+  return { v: GRAPH_VERSION, id: '', seeds: [], nodes: [], edges: [], paths: [], pathNote: '', mode: null };
 }
+
+// Reading paths are lettered A, B, C… in the order the model gives them.
+export const PATH_IDS = ['A', 'B', 'C', 'D'];
+
+// Labels for the two connector kinds, as the map and the reading view word them.
+export const EDGE_LABELS = { rec: 'Directly follows', enh: 'Leads up to' };
 
 export function seedNodeIds(graph) {
   return graph.nodes.filter((n) => n.isSeed).map((n) => n.id);

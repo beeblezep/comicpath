@@ -33,8 +33,10 @@ src/
   components/
     SearchBar.jsx            Single search input + example prompts
     ClarifyQuestion.jsx      Multiple-choice clarifying question + "Other"
-    PathView.jsx             Canvas + chat drawer for the current path
-    Constellation*.jsx       Canvas, nodes, edges, detail panel, chat, toolbar
+    PathView.jsx             Map + chat drawer for the current path
+    ChatDrawer.jsx           Chat drawer: clarifying questions, expansions
+    map/                     The map: MetroMap, TitleCard, SeedRegion, Connector,
+                             PathLine, PathPill, Legend, TitleDetails, ReadingView
     ReadingListPanel.jsx     Slide-in saved-items sidebar
   hooks/
     useIntent.js             Prompt → seeds + mode, with clarifying questions
@@ -42,30 +44,43 @@ src/
     useReadingList.js        Persisted reading list (localStorage)
     useAlreadyRead.js        Persisted read marks (localStorage)
     usePromptHistory.js      Chat history for the session
+    useMapState.js           Selection, traced/pinned paths, skips & adds (saved per path)
   lib/
     model.js                 Seeds, categories, graph shape
     api.js                   LLM client, prompts, parsing
     comicvine.js             ComicVine lookups
     graphMerge.js            Merging chat expansions into the path
-    constellationLayout.js   Canvas layout
+    readingPaths.js          Reading-path logic: visible titles, skips, order, summaries
+    metroLayout.js           Deterministic map layout and line routing
   styles/
     global.css               CSS custom properties + reset
+    map.css                  All map styles (lo-fi wireframe; --map-* tokens)
 ```
 
 ## Title categories
 
 Every title gets exactly one category (defined in `src/lib/model.js`):
 
-| Color  | Category  | Meaning                                            |
-|--------|-----------|----------------------------------------------------|
-| Purple | Essential | Must read — canon for this path                    |
-| Amber  | Optional  | Might read — worth reading, alternate or Elseworlds |
-| Gray   | Skip      | Not needed — safe to pass on                       |
+| Tag       | Meaning                                            |
+|-----------|----------------------------------------------------|
+| Essential | Must read — canon for this path                    |
+| Optional  | Might read — worth reading, alternate or Elseworlds |
+| Skip      | Not needed — safe to pass on (hidden unless "Show skipped titles") |
 
 A reading path holds one or more seeds — a character, a group, or a story arc —
 and each title records which seed(s) it belongs to; crossovers list several.
-On the canvas each seed gets its own column (ringed anchor node), and a crossover
-sits between its seeds with a link to each of them.
+
+## The map
+
+- Each seed is a tinted region; titles shared by two seeds sit in a crossover
+  region between them.
+- Solid arrows mean "read first", dashed arrows "enhances, optional", and no line
+  means a standalone story.
+- The AI also returns 1-3 reading paths (A, B…), drawn as metro lines. Hover a
+  line or its pill to trace it, click to pin it, and use "Continue with Path B"
+  to read on. − skips a title (the line routes around it), + adds an optional
+  title, and Reset restores the suggested route. Your changes are saved per path.
+- The Reading view lists the pinned paths in order; ⓘ opens a title's details.
 
 ## Roadmap
 

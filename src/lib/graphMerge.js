@@ -9,6 +9,26 @@ function nextId(existingNodes) {
   return max + 1;
 }
 
+// A new essential or optional title joins the reading path of a title it is
+// linked to: after it if it follows on, before it if it leads up to it.
+// Titles linked to nothing on a path stay off the paths.
+function placeOnPaths(paths, newNodes, edges) {
+  const next = paths.map((p) => ({ ...p, nodeIds: [...p.nodeIds] }));
+  for (const node of newNodes) {
+    if (node.category === 'skip') continue;
+    for (const e of edges) {
+      const after = e.target === node.id ? e.source : null;
+      const before = e.source === node.id ? e.target : null;
+      const path = next.find((p) => p.nodeIds.includes(after || before));
+      if (!path) continue;
+      const at = path.nodeIds.indexOf(after || before);
+      path.nodeIds.splice(after ? at + 1 : at, 0, node.id);
+      break;
+    }
+  }
+  return next;
+}
+
 export function mergeExpansion(existingGraph, sourceNodeIds, relatedNodes, relatedEdges) {
   const seeds = existingGraph.seeds || [];
   const titleToId = new Map();
@@ -43,6 +63,8 @@ export function mergeExpansion(existingGraph, sourceNodeIds, relatedNodes, relat
       seedIds: named.length > 0 ? named : sourceSeedIds,
       weight: Math.min(5, Math.max(1, Number(rn.weight) || 3)),
       tags: Array.isArray(rn.tags) ? rn.tags : [],
+      // What was expanded to find this title, so the map can hide it again.
+      fromIds: sourceNodes.map((s) => s.id),
       ...(rn.edition ? { edition: rn.edition, collects: rn.collects || [] } : {}),
     });
     newNodeIds.push(id);
@@ -102,11 +124,13 @@ export function mergeExpansion(existingGraph, sourceNodeIds, relatedNodes, relat
   }
 
   const nodes = [...existingGraph.nodes, ...newNodes];
+  const edges = linkSeeds(nodes, [...existingGraph.edges, ...newEdges]);
   return {
     graph: {
       ...existingGraph,
       nodes,
-      edges: linkSeeds(nodes, [...existingGraph.edges, ...newEdges]),
+      edges,
+      paths: placeOnPaths(existingGraph.paths || [], newNodes, edges),
     },
     newNodeIds,
   };

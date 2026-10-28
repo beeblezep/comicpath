@@ -5,7 +5,7 @@
 import { searchComicVineSmartly, searchVolumes, searchStoryArcs, getVolumeIssues } from './comicvine.js';
 import { FORMAT_WORDS } from './formatIntent.js';
 import {
-  GRAPH_VERSION, EDGE_TYPES, edgeKind, linkSeeds, normalizeCategory, normalizeSeedType, normalizeTitle, resolveSeedIds,
+  GRAPH_VERSION, EDGE_TYPES, PATH_IDS, edgeKind, linkSeeds, normalizeCategory, normalizeSeedType, normalizeTitle, resolveSeedIds,
 } from './model.js';
 
 const CLAUDE_URL = '/api/claude';
@@ -68,6 +68,8 @@ const CATEGORY_RULE = '- category: essential = must read, canon for this path; o
 const SEED_RULE = `- seeds: what the reader is reading about. Usually exactly one. type is "character" for one character, "group" for a team or for characters read together (list them in "members"), "arc" for a story arc, event or series.
 - A group seed covers titles where its members appear together. Separate seeds cover titles for each one individually, plus crossovers where they appear together.
 - Each node's "seeds" lists the names of the seeds it features (exactly as written in "seeds"). A crossover lists every seed it involves.`;
+
+const PATH_RULE = `- paths: 1-3 reading paths, each a list of node titles in reading order (exact titles). Path 1 is the main recommended route through the essential titles. Add a second path only for a distinct line worth reading in order, e.g. the second seed's own run or a major event and its lead-up; it may start partway, from a title not on path 1. Every path is built on essential titles; put optional titles in a path only at the point they would be read (the reader chooses whether to add them) — never make a path of optional titles alone. Never put skip titles in a path. Every essential title should be on a path.`;
 
 const MODE_INSTRUCTIONS = {
   full: '10-15 nodes spanning the publication history from origin to present. Use "leads-to" edges for the main chronological path. Branch off with "branches-from" for optional side stories, "crossover" for event tie-ins. Weight the most iconic stories 4-5, moderate ones 3, minor tie-ins 1-2.',
@@ -147,6 +149,7 @@ Structure:
   "aiNote": "1-2 sentence tip.",
   "nodes": [{ "title": "", "year": "YYYY or YYYY-YYYY", "format": "Trade Paperback|Omnibus|Single Issues", "issues": "e.g. Batman #404-407", "why": "One sentence on why this matters.", "category": "essential | optional | skip", "seeds": ["Batman"], "weight": 3, "tags": [], "readFirst": true, "issueList": [{"num":"1","name":"","note":""}] }],
   "edges": [{ "sourceTitle": "exact title of one node", "targetTitle": "exact title of another node", "type": "leads-to | prerequisite | branches-from | crossover", "label": "optional short label" }],
+  "paths": [{ "name": "Short name, e.g. Main line", "titles": ["exact title", "exact title"] }],
   "pathNote": "One sentence tip about this reading path."
 }
 
@@ -159,6 +162,7 @@ ${CATEGORY_RULE}
 - readFirst: true on the single best starting point only. issueList (3-4 issues) for the top 2 essential nodes only.
 - weight: 1-5 (5 = most important).
 - Edges connect nodes by exact title. Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in). Skip nodes need no edges.
+${PATH_RULE}
 - Never use "Unknown" — always provide real values.`;
 }
 
@@ -168,8 +172,12 @@ function parseJson(text) {
     return JSON.parse(clean);
   } catch {
     const match = clean.match(/\{[\s\S]*\}/);
-    if (match) return JSON.parse(match[0]);
-    throw new Error('Response was not valid JSON');
+    if (!match) throw new Error('Response was not valid JSON');
+    // Repairs for the slips the model makes in long responses: a trailing
+    // comma before } or ], and a key missing its opening quote (`readFirst": true`).
+    return JSON.parse(match[0]
+      .replace(/,(\s*[}\]])/g, '$1')
+      .replace(/([{,]\s*)([A-Za-z_]\w*)"(\s*:)/g, '$1"$2"$3'));
   }
 }
 
@@ -297,12 +305,53 @@ function validateGraph(data, fallbackName, mode) {
 
   return {
     v: GRAPH_VERSION,
+    id: Date.now().toString(36),
     seeds,
     nodes,
     edges: linkedEdges,
+    paths: normalizePaths(data.paths, nodes, titleToId, linkedEdges),
     pathNote: data.pathNote || '',
     mode: MODE_INSTRUCTIONS[mode] ? mode : 'full',
   };
+}
+
+// Resolves the model's reading paths (titles) to node ids. Synthetic seed
+// anchors and skip titles never sit on a path. Falls back to one path through
+// the essential titles if the model gave none usable.
+function normalizePaths(rawPaths, nodes, titleToId, edges) {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const onPath = (id) => id && !byId.get(id).anchor && byId.get(id).category !== 'skip';
+  const paths = [];
+  for (const raw of (Array.isArray(rawPaths) ? rawPaths : [])) {
+    const ids = [...new Set((raw?.titles || []).map((t) => titleToId.get(normalizeTitle(t))).filter(onPath))];
+    // A path with no essential titles would draw nothing until the reader added
+    // to it, and one entirely within an earlier path adds nothing.
+    if (!ids.some((id) => byId.get(id).category === 'essential') || paths.length === PATH_IDS.length) continue;
+    if (ids.every((id) => paths.some((p) => p.nodeIds.includes(id)))) continue;
+    const id = PATH_IDS[paths.length];
+    paths.push({ id, name: raw.name ? String(raw.name) : `Reading path ${id}`, nodeIds: ids });
+  }
+  return paths.length > 0 ? paths : [defaultPath(nodes, edges)].filter((p) => p.nodeIds.length > 0);
+}
+
+// Essential titles in reading order: follow the solid edges, then by year.
+function defaultPath(nodes, edges) {
+  const ids = nodes.filter((n) => !n.anchor && n.category === 'essential').map((n) => n.id);
+  const inSet = new Set(ids);
+  const year = (id) => parseInt(nodes.find((n) => n.id === id)?.year, 10) || 9999;
+  const preds = new Map(ids.map((id) => [id, new Set()]));
+  for (const e of edges) {
+    if (e.kind === 'rec' && inSet.has(e.source) && inSet.has(e.target)) preds.get(e.target).add(e.source);
+  }
+  const order = [];
+  const left = new Set(ids);
+  while (left.size > 0) {
+    const ready = [...left].filter((id) => [...preds.get(id)].every((p) => !left.has(p)));
+    const next = (ready.length > 0 ? ready : [...left]).sort((a, b) => year(a) - year(b))[0];
+    order.push(next);
+    left.delete(next);
+  }
+  return { id: 'A', name: 'Reading path A', nodeIds: order };
 }
 
 /* ── Related-titles prompt for path builder ──────────────── */

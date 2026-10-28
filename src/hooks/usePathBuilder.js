@@ -11,8 +11,8 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    // Paths saved before multi-seed graphs are dropped, not migrated.
-    if (parsed.v !== GRAPH_VERSION || !Array.isArray(parsed.graph?.nodes) || !Array.isArray(parsed.graph?.seeds)) {
+    // Paths saved under another graph version are dropped, not migrated.
+    if (parsed.v !== GRAPH_VERSION || !Array.isArray(parsed.graph?.nodes) || !Array.isArray(parsed.graph?.paths)) {
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }
