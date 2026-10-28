@@ -18,7 +18,7 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-export function ConstellationMap({ graph, readingList, alreadyRead, character, onClose, onExpand, onExpandMany, expandedIds, expandingIds, history, format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat, onNewPath, title }) {
+export function ConstellationMap({ graph, readingList, alreadyRead, onClose, onExpand, onExpandMany, expandedIds, expandingIds, history, format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat, onNewPath, title, intro }) {
   const [focusedId, setFocusedId] = useState(null);
   const [hiddenIds, setHiddenIds] = useState(new Set());
   const [tierFilter, setTierFilter] = useState(new Set(CATEGORIES));
@@ -337,7 +337,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
         pointerEvents: 'none',
         transition: 'left .35s cubic-bezier(.2,.8,.2,1)',
       }}>
-        {title || character || 'Reading Path'}
+        {title || 'Reading Path'}
       </div>
 
       {/* HUD: top-left new path button */}
@@ -415,7 +415,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
         open={!!focusedId}
         readingList={readingList}
         alreadyRead={alreadyRead}
-        character={title || character}
+        character={title}
         onToggleRead={handleToggleRead}
         onHide={handleHide}
         onClose={() => { setFocusedId(null); zoomToFull(); }}
@@ -438,6 +438,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
           seedNodeIds={seedNodeIds(graph)}
           focusedNode={focusedNode}
           history={history || []}
+          intro={intro}
           format={format}
           onSetFormat={onSetFormat}
           formatQuestion={formatQuestion}

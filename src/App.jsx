@@ -7,53 +7,45 @@ import { usePromptHistory } from './hooks/usePromptHistory';
 import { useIntent } from './hooks/useIntent';
 import { SearchBar } from './components/SearchBar';
 import { ClarifyQuestion } from './components/ClarifyQuestion';
-import { ResultsView } from './components/ResultsView';
 import { ReadingListPanel } from './components/ReadingListPanel';
-import { PathBuilder } from './components/PathBuilder';
+import { PathView } from './components/PathView';
 
-const VIEW = { SEARCH: 'search', LOADING: 'loading', RESULTS: 'results', ERROR: 'error', BUILDER: 'builder' };
+const VIEW = { SEARCH: 'search', LOADING: 'loading', MAP: 'map', ERROR: 'error' };
 
 export default function App() {
   const [view, setView] = useState(VIEW.SEARCH);
-  const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [builderQuery, setBuilderQuery] = useState('');
   const readingList = useReadingList();
   const alreadyRead = useAlreadyRead();
   const pathBuilder = usePathBuilder();
   const promptHistory = usePromptHistory();
+  const { start: startPath } = pathBuilder;
+  const { clear: clearHistory } = promptHistory;
 
   const handleResolved = useCallback(async ({ prompt, seeds, mode }) => {
     setView(VIEW.LOADING);
     setError(null);
     try {
-      const result = await fetchPath({ query: prompt, seeds, mode });
-      setData(result);
-      setView(VIEW.RESULTS);
+      const { graph } = await fetchPath({ query: prompt, seeds, mode });
+      startPath(graph);
+      clearHistory();
+      setView(VIEW.MAP);
     } catch (err) {
       setError(err.message);
       setView(VIEW.ERROR);
     }
-  }, []);
+  }, [startPath, clearHistory]);
   const intent = useIntent(handleResolved);
 
-  // mode is null unless the reader picked one, in which case it isn't asked about.
-  function handleSearch(query, mode) {
+  function handleSearch(query) {
     setError(null);
-    intent.start(query, mode);
-  }
-
-  function handleBuildPath(query) {
-    setBuilderQuery(query);
-    setView(VIEW.BUILDER);
+    intent.start(query);
   }
 
   function handleReset() {
     intent.cancel();
     setView(VIEW.SEARCH);
-    setData(null);
-    setBuilderQuery('');
   }
 
   return (
@@ -111,9 +103,9 @@ export default function App() {
       {(view === VIEW.SEARCH || view === VIEW.LOADING) && (
         <SearchBar
           onSearch={handleSearch}
-          onBuildPath={handleBuildPath}
+          onResume={() => setView(VIEW.MAP)}
           loading={view === VIEW.LOADING || intent.status === 'resolving'}
-          hasSavedPath={pathBuilder.hasSavedPath}
+          savedTitle={pathBuilder.hasSavedPath ? pathBuilder.title : null}
         />
       )}
 
@@ -140,21 +132,16 @@ export default function App() {
 
       {view === VIEW.LOADING && (
         <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-muted)', fontSize: '13px' }}>
-          Building your reading guide...
+          Building your reading path...
         </div>
       )}
 
-      {view === VIEW.RESULTS && data && (
-        <ResultsView data={data} readingList={readingList} alreadyRead={alreadyRead} onReset={handleReset} />
-      )}
-
-      {view === VIEW.BUILDER && (
-        <PathBuilder
+      {view === VIEW.MAP && (
+        <PathView
           pathBuilder={pathBuilder}
           readingList={readingList}
           alreadyRead={alreadyRead}
           onReset={handleReset}
-          initialQuery={builderQuery}
           history={promptHistory}
         />
       )}

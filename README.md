@@ -1,6 +1,6 @@
 # ComicPath
 
-An AI-native comic book reading guide. Search any character, team, or series and get a ranked, categorized reading guide built by Claude.
+An AI-native comic book reading guide. Ask for any character, team, or story arc and get a categorized reading path built by Claude.
 
 ## Getting started
 
@@ -11,29 +11,41 @@ npm run dev
 
 ## API key setup
 
-The app calls the Anthropic API from the browser. For local development, add your key to `.env.local` (git-ignored):
+API calls go through serverless proxies in `api/` (Claude, with Groq as a
+fallback, and ComicVine), so keys stay server-side. For local development put
+`ANTHROPIC_API_KEY`, `GROQ_API_KEY` and `COMICVINE_API_KEY` in `.env`; the Vite
+dev server runs the same proxies.
 
-```
-VITE_ANTHROPIC_API_KEY=sk-ant-...
-```
+## How a search works
 
-Then pass it as `x-api-key` in `src/lib/api.js`. In production, route requests through a backend proxy so the key is never exposed client-side.
+One free-text prompt ("catch me up on Absolute Power") is resolved into seeds
+and a mode (Full guide / Catch up / Deep dive). If the entity, the seed
+structure, or the mode is unclear, ComicPath asks one multiple-choice question
+at a time. The result opens as a canvas with a chat drawer for expanding it.
 
 ## Project structure
 
 ```
 src/
-  App.jsx                    Top-level state & view routing
+  App.jsx                    Top-level state & view switching
   components/
-    SearchBar.jsx            Search input + quick picks
-    ResultsView.jsx          Character header + story sections
-    StorySection.jsx         Grouped story category with label
-    StoryCard.jsx            Individual story — expandable, saveable
+    SearchBar.jsx            Single search input + example prompts
+    ClarifyQuestion.jsx      Multiple-choice clarifying question + "Other"
+    PathView.jsx             Canvas + chat drawer for the current path
+    Constellation*.jsx       Canvas, nodes, edges, detail panel, chat, toolbar
     ReadingListPanel.jsx     Slide-in saved-items sidebar
   hooks/
+    useIntent.js             Prompt → seeds + mode, with clarifying questions
+    usePathBuilder.js        Persisted current path (localStorage)
     useReadingList.js        Persisted reading list (localStorage)
+    useAlreadyRead.js        Persisted read marks (localStorage)
+    usePromptHistory.js      Chat history for the session
   lib/
-    api.js                   Anthropic API client + prompt builder
+    model.js                 Seeds, categories, graph shape
+    api.js                   LLM client, prompts, parsing
+    comicvine.js             ComicVine lookups
+    graphMerge.js            Merging chat expansions into the path
+    constellationLayout.js   Canvas layout
   styles/
     global.css               CSS custom properties + reset
 ```

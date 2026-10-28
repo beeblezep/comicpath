@@ -73,6 +73,13 @@ export function usePathBuilder() {
     });
   }, []);
 
+  // Replaces the saved path with a freshly fetched one.
+  const start = useCallback((graph) => {
+    const next = { graph, expandedIds: new Set(), format: null };
+    save(next);
+    setState(next);
+  }, []);
+
   const reset = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setState({
@@ -91,6 +98,7 @@ export function usePathBuilder() {
     setGraph,
     markExpanded,
     setFormat,
+    start,
     reset,
   };
 }

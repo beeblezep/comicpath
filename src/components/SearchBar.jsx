@@ -1,34 +1,20 @@
 import { useState } from 'react';
 
-const QUICK_PICKS = [
-  'Batman',
-  'Spider-Man',
-  'X-Men',
-  'Wonder Woman',
+const EXAMPLES = [
+  "I'm new to Batman",
+  'Catch me up on Absolute Power',
+  'Deep cuts for the X-Men',
+  'Titles about Batman and Robin',
   'The Sandman',
   'Saga',
 ];
 
-const MODES = [
-  { key: 'full', label: 'Full Guide', desc: 'Complete reading path from origin to present' },
-  { key: 'catch-up', label: 'Catch Up', desc: 'Jump back in from a recent starting point' },
-  { key: 'deep-dive', label: 'Deep Dive', desc: 'Prerequisites for the latest major arc' },
-  { key: 'build', label: 'Build Path', desc: 'Build your own reading path from any title' },
-];
-
-export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
+export function SearchBar({ onSearch, onResume, loading, savedTitle }) {
   const [value, setValue] = useState('');
-  // null = let the search work out the mode (asking if unclear).
-  const [mode, setMode] = useState(null);
 
-  function submit() {
-    const q = value.trim();
+  function submit(q = value.trim()) {
     if (!q) return;
-    if (mode === 'build') {
-      onBuildPath?.(q);
-    } else {
-      onSearch(q, mode);
-    }
+    onSearch(q);
   }
 
   return (
@@ -37,7 +23,7 @@ export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
         Find your next read.
       </h1>
       <p style={{ color: 'var(--color-muted)', fontSize: 'var(--font-size-sm)', marginBottom: 20 }}>
-        Search any character, team, or series — get a ranked reading guide.
+        Ask for any character, team, or story arc — and say whether you're new, catching up, or after deep cuts.
       </p>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
@@ -60,7 +46,7 @@ export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
           }}
         />
         <button
-          onClick={submit}
+          onClick={() => submit()}
           disabled={loading || !value.trim()}
           style={{
             padding: '11px 20px',
@@ -73,37 +59,14 @@ export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
             opacity: loading || !value.trim() ? 0.5 : 1,
           }}
         >
-          {loading ? 'Loading...' : mode === 'build' ? 'Build' : 'Explore'}
+          {loading ? 'Loading...' : 'Explore'}
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 0, marginBottom: 14, borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-        {MODES.map(m => (
-          <button
-            key={m.key}
-            onClick={() => setMode(mode === m.key ? null : m.key)}
-            disabled={loading}
-            title={m.desc}
-            style={{
-              flex: 1,
-              padding: '8px 4px',
-              background: mode === m.key ? 'var(--color-accent)' : 'var(--color-surface)',
-              color: mode === m.key ? '#fff' : 'var(--color-muted)',
-              border: 'none',
-              fontSize: 12,
-              fontWeight: mode === m.key ? 600 : 400,
-              cursor: 'pointer',
-              borderRight: m.key !== 'build' ? '1px solid var(--color-border)' : 'none',
-            }}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      {hasSavedPath && (
+      {savedTitle !== null && (
         <button
-          onClick={() => onBuildPath?.('')}
+          onClick={onResume}
+          disabled={loading}
           style={{
             display: 'block', width: '100%', marginBottom: 14,
             padding: '10px 16px', textAlign: 'left',
@@ -115,15 +78,15 @@ export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
             cursor: 'pointer',
           }}
         >
-          Resume saved reading path →
+          Resume: {savedTitle || 'saved reading path'} →
         </button>
       )}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {QUICK_PICKS.map(label => (
+        {EXAMPLES.map(label => (
           <button
             key={label}
-            onClick={() => { setValue(label); onSearch(label, mode); }}
+            onClick={() => { setValue(label); submit(label); }}
             disabled={loading}
             style={{
               padding: '5px 12px',

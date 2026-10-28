@@ -69,7 +69,7 @@ function HistoryEntry({ entry, onReuse }) {
 
 export function ConstellationChat({
   open, onToggle, nodes, selectedIds, onToggleSelect, onSetSelection, onClearSelection,
-  seedNodeIds, focusedNode, history, busy, onSend,
+  seedNodeIds, focusedNode, history, intro, busy, onSend,
   format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat,
 }) {
   const [prompt, setPrompt] = useState('');
@@ -147,6 +147,11 @@ export function ConstellationChat({
           ref={listRef}
           style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}
         >
+          {intro && (
+            <p style={{ fontSize: 12, lineHeight: 1.7, color: '#c9c7bd', margin: 0, paddingLeft: 8, borderLeft: '2px solid #7c5cfc' }}>
+              {intro}
+            </p>
+          )}
           {history.length === 0 ? (
             <p style={{ fontSize: 12, lineHeight: 1.7, color: '#7c7c8a', margin: 0 }}>
               Ask for more of the path here, e.g. “add the Robin stories” or “focus on crossover events”.

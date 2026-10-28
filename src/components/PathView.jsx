@@ -1,17 +1,13 @@
 import { useState, useCallback, useRef } from 'react';
 import { fetchRelatedTitles } from '../lib/api';
-import { GRAPH_VERSION } from '../lib/model';
 import { mergeExpansion } from '../lib/graphMerge';
 import { detectFormat } from '../lib/formatIntent';
-import { TitleSearchPanel } from './TitleSearchPanel';
 import { ConstellationMap } from './ConstellationMap';
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
-const PHASE = { SEARCH: 'search', BUILDING: 'building' };
-
-export function PathBuilder({ pathBuilder: pb, readingList, alreadyRead, onReset, initialQuery, history }) {
-  const [phase, setPhase] = useState(pb.hasSavedPath ? PHASE.BUILDING : PHASE.SEARCH);
+// The canvas + chat drawer for the current reading path, whatever produced it.
+export function PathView({ pathBuilder: pb, readingList, alreadyRead, onReset, history }) {
   const [expandingIds, setExpandingIds] = useState(new Set());
   const [toast, setToast] = useState(null);
   // The expansion waiting on the reader's issues-or-collected answer, if any.
@@ -26,33 +22,6 @@ export function PathBuilder({ pathBuilder: pb, readingList, alreadyRead, onReset
     setToast(msg);
     setTimeout(() => setToast(null), 4000);
   }
-
-  // A picked series or story arc becomes a single title seed. (Series map to
-  // "arc" for now; the search-based seed picker goes away with intent resolution.)
-  const handleSelect = useCallback((result) => {
-    const seed = { id: 's1', name: result.name, type: 'arc' };
-    const seedNode = {
-      id: 'n1',
-      title: result.name,
-      year: result.year || '',
-      issues: result.issueCount ? `${result.issueCount} issues` : '',
-      why: 'Your starting point.',
-      category: 'essential',
-      seedIds: [seed.id],
-      weight: 5,
-      tags: ['seed'],
-      isSeed: true,
-    };
-    pb.setGraph({
-      v: GRAPH_VERSION,
-      seeds: [seed],
-      nodes: [seedNode],
-      edges: [],
-      pathNote: '',
-      mode: null,
-    });
-    setPhase(PHASE.BUILDING);
-  }, [pb]);
 
   const runExpansion = useCallback(async (nodes, refinementPrompt, format, entryId) => {
     const ids = nodes.map((n) => n.id);
@@ -147,36 +116,8 @@ export function PathBuilder({ pathBuilder: pb, readingList, alreadyRead, onReset
     pb.reset();
     history.clear();
     setFormatQuestion(null);
-    setPhase(PHASE.SEARCH);
-  }, [pb, history]);
-
-  if (phase === PHASE.SEARCH) {
-    return (
-      <div>
-        {pb.hasSavedPath && (
-          <div style={{ maxWidth: 680, margin: '0 auto', padding: '16px 20px 0' }}>
-            <button
-              onClick={() => setPhase(PHASE.BUILDING)}
-              style={{
-                width: '100%', padding: '12px 16px',
-                background: 'rgba(124,92,252,0.1)',
-                border: '1px solid rgba(124,92,252,0.3)',
-                borderRadius: 'var(--radius-sm)',
-                color: '#7c5cfc',
-                fontFamily: MONO, fontSize: 12, letterSpacing: '0.04em',
-                cursor: 'pointer',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              }}
-            >
-              <span>Resume: {pb.title || 'Saved path'}</span>
-              <span style={{ fontSize: 11, opacity: 0.7 }}>{pb.graph.nodes.length} nodes →</span>
-            </button>
-          </div>
-        )}
-        <TitleSearchPanel onSelect={handleSelect} initialQuery={initialQuery} />
-      </div>
-    );
-  }
+    onReset();
+  }, [pb, history, onReset]);
 
   return (
     <>
@@ -184,7 +125,6 @@ export function PathBuilder({ pathBuilder: pb, readingList, alreadyRead, onReset
         graph={pb.graph}
         readingList={readingList}
         alreadyRead={alreadyRead}
-        character={null}
         onClose={handleClose}
         onExpand={handleExpand}
         onExpandMany={handleExpandMany}
@@ -198,6 +138,7 @@ export function PathBuilder({ pathBuilder: pb, readingList, alreadyRead, onReset
         onCancelFormat={handleCancelFormat}
         onNewPath={handleStartNew}
         title={pb.title || 'Reading Path'}
+        intro={pb.graph.note}
       />
 
       {/* Toast overlay */}

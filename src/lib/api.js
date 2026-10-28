@@ -198,8 +198,7 @@ function validateResponse(data, mode) {
 
   return {
     character: data.character,
-    aiNote: data.aiNote || '',
-    graph,
+    graph: { ...graph, note: data.aiNote || '' },
   };
 }
 
@@ -624,7 +623,7 @@ export async function fetchPath({ query, seeds, mode = 'full' }) {
 
 /* ── Intent resolution ───────────────────────────────────── */
 
-export const MODE_OPTIONS = [
+const MODE_OPTIONS = [
   { id: 'full', label: 'Full guide', hint: "I'm new" },
   { id: 'catch-up', label: 'Catch up', hint: "I'm familiar, getting back in" },
   { id: 'deep-dive', label: 'Deep dive', hint: 'The more obscure good stuff' },
@@ -632,11 +631,10 @@ export const MODE_OPTIONS = [
 
 const MAX_QUESTIONS = 3;
 
-function buildIntentPrompt(prompt, answers, modeHint) {
+function buildIntentPrompt(prompt, answers) {
   const answered = answers.length
     ? `\nClarifications so far:\n${answers.map((a) => `- Q: ${a.question}\n  A: ${a.answer}`).join('\n')}\n`
     : '';
-  const modeLine = modeHint ? `\nThe reader already chose the mode "${modeHint}"; use it and never ask about mode.\n` : '';
   const stop = answers.length >= MAX_QUESTIONS
     ? '\nYou have asked enough questions. Return "ready" now with your best interpretation.\n'
     : '';
@@ -644,18 +642,18 @@ function buildIntentPrompt(prompt, answers, modeHint) {
   return `You are ComicPath's request resolver. A reader typed a free-text request for comic reading recommendations. Work out (a) the seeds — what they want to read about — and (b) the mode. Ask ONE clarifying question only when something is genuinely unclear.
 
 Reader's request: "${prompt}"
-${answered}${modeLine}${stop}
+${answered}${stop}
 SEEDS:
 - A seed is a character ("Batman"), a group read together ("Batman & Robin", a team like "X-Men"), or a story arc, event or series ("Absolute Power").
 - Unclear entity — ask (kind "entity"): the name refers to clearly different, well-known entities, e.g. "Sandman" could be Dream of the Endless (Neil Gaiman), Wesley Dodds (Golden Age DC), or Marvel's Spider-Man villain. Give 2-4 options.
 - Do NOT ask about mantles or continuity: default to mainstream continuity (DC: Prime Earth, Marvel: 616) and the most iconic version (e.g. "Flash" → Barry Allen) unless the request names an alternate. "Batman" alone is clear.
 - Unclear seed structure — ask (kind "seedStructure"): the request names two or more characters without saying whether they want them together or each on their own, e.g. "titles about Batman and Robin". Options: only titles where they appear together (one group seed), or each one individually including crossovers (separate seeds). A team or series known by one name (e.g. "X-Men", "Guardians of the Galaxy") is a single group seed, no question.
-${modeHint ? '' : `
+
 MODE:
 - full = Full guide, the reader is new; catch-up = Catch up, familiar and getting back in; deep-dive = Deep dive, the more obscure good stuff.
 - Infer the mode from wording like "new to", "start", "from the beginning" (full), "catch me up", "getting back into", "latest" (catch-up), "obscure", "deep cuts", "hidden gems" (deep-dive).
 - If nothing in the request or clarifications indicates the mode, ask (kind "mode").
-`}
+
 Ask about the entity first, then seed structure, then mode. Never ask about something already answered.
 
 Return ONLY a JSON object — no markdown, no preamble. Either:
@@ -664,7 +662,7 @@ or:
 { "status": "ready", "mode": "full | catch-up | deep-dive", "seeds": [{ "name": "Batman", "type": "character | group | arc", "members": ["only for group seeds"] }] }`;
 }
 
-function parseIntent(text, modeHint) {
+function parseIntent(text) {
   const data = parseJson(text);
   const validMode = (m) => MODE_OPTIONS.some((o) => o.id === m);
 
@@ -679,7 +677,7 @@ function parseIntent(text, modeHint) {
         ...(Array.isArray(s.members) && s.members.length > 0 ? { members: s.members.map(String) } : {}),
       }));
     if (seeds.length === 0) throw new Error('Could not work out what to look up. Try rephrasing.');
-    const mode = modeHint || data.mode;
+    const { mode } = data;
     // A missing mode is asked about here rather than guessed.
     if (!validMode(mode)) {
       return { status: 'clarify', question: { kind: 'mode', text: 'How do you want to read?', options: MODE_OPTIONS } };
@@ -701,7 +699,7 @@ function parseIntent(text, modeHint) {
 
 // One resolution step: either a clarifying question or the resolved seeds + mode.
 // answers: [{ question, answer }] from earlier steps of the same request.
-export async function resolveIntent(prompt, answers = [], modeHint = null) {
-  const text = await callLLM(buildIntentPrompt(prompt, answers, modeHint), 1500);
-  return parseIntent(text, modeHint);
+export async function resolveIntent(prompt, answers = []) {
+  const text = await callLLM(buildIntentPrompt(prompt, answers), 1500);
+  return parseIntent(text);
 }
