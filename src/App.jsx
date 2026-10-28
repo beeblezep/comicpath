@@ -85,7 +85,7 @@ export default function App() {
           Saved
           {readingList.items.length > 0 && (
             <span style={{
-              background: 'var(--color-canon)',
+              background: 'var(--color-accent)',
               color: '#fff',
               borderRadius: 10,
               fontSize: 10,
@@ -119,6 +119,7 @@ export default function App() {
 
       {view === VIEW.BUILDER && (
         <PathBuilder
+          pathBuilder={pathBuilder}
           readingList={readingList}
           alreadyRead={alreadyRead}
           onReset={handleReset}

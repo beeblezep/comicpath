@@ -63,7 +63,7 @@ export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
           disabled={loading || !value.trim()}
           style={{
             padding: '11px 20px',
-            background: 'var(--color-canon)',
+            background: 'var(--color-accent)',
             color: '#fff',
             border: 'none',
             borderRadius: 'var(--radius-sm)',
@@ -86,7 +86,7 @@ export function SearchBar({ onSearch, onBuildPath, loading, hasSavedPath }) {
             style={{
               flex: 1,
               padding: '8px 4px',
-              background: mode === m.key ? 'var(--color-canon)' : 'var(--color-surface)',
+              background: mode === m.key ? 'var(--color-accent)' : 'var(--color-surface)',
               color: mode === m.key ? '#fff' : 'var(--color-muted)',
               border: 'none',
               fontSize: 12,

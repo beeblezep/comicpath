@@ -1,23 +1,30 @@
 import { useState, useEffect } from 'react';
+import { GRAPH_VERSION } from '../lib/model';
 
 const STORAGE_KEY = 'comicpath_reading_list';
 
+// Lists saved before the 3-category model are dropped, not migrated.
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (parsed?.v === GRAPH_VERSION && Array.isArray(parsed.items)) return parsed.items;
+    if (raw) localStorage.removeItem(STORAGE_KEY);
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Persisted reading list state.
- * Each item: { id, title, type, format, character }
+ * Each item: { id, title, category, format, subject }
  */
 export function useReadingList() {
-  const [items, setItems] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [items, setItems] = useState(load);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ v: GRAPH_VERSION, items }));
   }, [items]);
 
   function add(item) {

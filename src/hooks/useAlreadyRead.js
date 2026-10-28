@@ -1,19 +1,26 @@
 import { useState, useEffect } from 'react';
+import { GRAPH_VERSION } from '../lib/model';
 
 const STORAGE_KEY = 'comicpath_already_read';
 
+// Ids are slugify(title). Older saves used other slug formats, so they're dropped.
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (parsed?.v === GRAPH_VERSION && Array.isArray(parsed.ids)) return new Set(parsed.ids);
+    if (raw) localStorage.removeItem(STORAGE_KEY);
+    return new Set();
+  } catch {
+    return new Set();
+  }
+}
+
 export function useAlreadyRead() {
-  const [readIds, setReadIds] = useState(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? new Set(JSON.parse(raw)) : new Set();
-    } catch {
-      return new Set();
-    }
-  });
+  const [readIds, setReadIds] = useState(load);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...readIds]));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ v: GRAPH_VERSION, ids: [...readIds] }));
   }, [readIds]);
 
   function markRead(id) {

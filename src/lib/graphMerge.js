@@ -1,29 +1,26 @@
-const VALID_TIERS = new Set(['essential', 'recommended', 'optional']);
-const VALID_EDGE_TYPES = new Set(['leads-to', 'prerequisite', 'branches-from', 'crossover']);
+import { EDGE_TYPES, edgeKind, normalizeCategory, normalizeTitle, resolveSeedIds } from './model.js';
 
 function nextId(existingNodes) {
   let max = 0;
   for (const n of existingNodes) {
-    const num = parseInt(n.id.replace('n', ''), 10);
+    const num = Number(/^n(\d+)$/.exec(n.id)?.[1]);
     if (num > max) max = num;
   }
   return max + 1;
 }
 
-function normalizeTitle(title) {
-  return title.toLowerCase().replace(/[^a-z0-9]/g, '');
-}
-
-export function mergeExpansion(existingGraph, sourceNodeId, relatedNodes, relatedEdges) {
+export function mergeExpansion(existingGraph, sourceNodeIds, relatedNodes, relatedEdges) {
+  const seeds = existingGraph.seeds || [];
   const titleToId = new Map();
   for (const n of existingGraph.nodes) {
     titleToId.set(normalizeTitle(n.title), n.id);
   }
 
-  const sourceNode = existingGraph.nodes.find((n) => n.id === sourceNodeId);
-  if (sourceNode) {
-    titleToId.set(normalizeTitle(sourceNode.title), sourceNode.id);
-  }
+  const sourceNodes = sourceNodeIds
+    .map((id) => existingGraph.nodes.find((n) => n.id === id))
+    .filter(Boolean);
+  // Without seed names from the model, new nodes belong to the seeds of what was expanded.
+  const sourceSeedIds = [...new Set(sourceNodes.flatMap((n) => n.seedIds || []))];
 
   let counter = nextId(existingGraph.nodes);
   const newNodes = [];
@@ -35,13 +32,15 @@ export function mergeExpansion(existingGraph, sourceNodeId, relatedNodes, relate
 
     const id = `n${counter++}`;
     titleToId.set(key, id);
+    const named = rn.seeds?.length ? resolveSeedIds(rn.seeds, seeds) : [];
     newNodes.push({
       id,
       title: rn.title || 'Untitled',
       year: rn.year || '',
       issues: rn.issues || '',
       why: rn.why || '',
-      tier: VALID_TIERS.has(rn.tier) ? rn.tier : 'recommended',
+      category: normalizeCategory(rn.category),
+      seedIds: named.length > 0 ? named : sourceSeedIds,
       weight: Math.min(5, Math.max(1, Number(rn.weight) || 3)),
       tags: Array.isArray(rn.tags) ? rn.tags : [],
       ...(rn.edition ? { edition: rn.edition, collects: rn.collects || [] } : {}),
@@ -64,17 +63,20 @@ export function mergeExpansion(existingGraph, sourceNodeId, relatedNodes, relate
     if (existingEdgeKeys.has(key) || existingEdgeKeys.has(reverseKey)) continue;
 
     existingEdgeKeys.add(key);
+    const type = EDGE_TYPES.includes(re.type) ? re.type : 'leads-to';
     newEdges.push({
       source: srcId,
       target: tgtId,
-      type: VALID_EDGE_TYPES.has(re.type) ? re.type : 'leads-to',
+      type,
+      kind: edgeKind(type),
       label: re.label || '',
     });
   }
 
   // New nodes the model left unattached to the existing graph (directly or via
-  // other new nodes) would float free, so anchor each such group to the source.
-  if (sourceNode) {
+  // other new nodes) would float free, so anchor each such group to the
+  // expanded node that shares its seed (or the first one).
+  if (sourceNodes.length > 0) {
     const attached = new Set(existingGraph.nodes.map((n) => n.id));
     const spread = () => {
       let grew = true;
@@ -90,20 +92,20 @@ export function mergeExpansion(existingGraph, sourceNodeId, relatedNodes, relate
       }
     };
     spread();
-    for (const id of newNodeIds) {
-      if (attached.has(id)) continue;
-      newEdges.push({ source: sourceNode.id, target: id, type: 'branches-from', label: '' });
-      attached.add(id);
+    for (const node of newNodes) {
+      if (attached.has(node.id)) continue;
+      const anchor = sourceNodes.find((s) => s.seedIds?.some((sid) => node.seedIds.includes(sid))) || sourceNodes[0];
+      newEdges.push({ source: anchor.id, target: node.id, type: 'branches-from', kind: 'enh', label: '' });
+      attached.add(node.id);
       spread();
     }
   }
 
   return {
     graph: {
-      targetTitle: existingGraph.targetTitle,
+      ...existingGraph,
       nodes: [...existingGraph.nodes, ...newNodes],
       edges: [...existingGraph.edges, ...newEdges],
-      pathNote: existingGraph.pathNote,
     },
     newNodeIds,
   };

@@ -1,26 +1,11 @@
 import { useState, useEffect } from 'react';
-
-const TIER_COLORS = {
-  essential: '#7c5cfc',
-  recommended: '#e8a33d',
-  optional: '#7c7c8a',
-};
-
-const TIER_LABELS = {
-  essential: 'Essential',
-  recommended: 'Recommended',
-  optional: 'Optional',
-};
+import { categoryMeta, slugify } from '../lib/model';
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
 export function ConstellationDetail({ node, open, readingList, alreadyRead, character, onToggleRead, onHide, onClose, nodeIndex, totalNodes, onExpand, expandable, expanding }) {
-  const color = node ? (TIER_COLORS[node.tier] || TIER_COLORS.recommended) : '#7c7c8a';
-
-  const prefix = character || (node ? node.title : '');
-  const slug = node
-    ? `${prefix}-${node.title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-    : '';
+  const { color, label } = node ? categoryMeta(node.category) : { color: '#7c7c8a', label: '' };
+  const slug = node ? slugify(node.title) : '';
 
   const isRead = node ? alreadyRead.isRead(slug) : false;
   const isSaved = node ? readingList.has(slug) : false;
@@ -59,7 +44,7 @@ export function ConstellationDetail({ node, open, readingList, alreadyRead, char
           </h2>
 
           <p style={{ fontFamily: MONO, fontSize: 13, color: '#7c7c8a', margin: '0 0 22px' }}>
-            {TIER_LABELS[node.tier] || 'Recommended'} · {node.year || ''}{node.edition ? ` · ${node.edition}` : ''}
+            {node.isSeed ? 'Seed' : label} · {node.year || ''}{node.edition ? ` · ${node.edition}` : ''}
           </p>
 
           <div style={{ width: '100%', height: 3, background: color, marginBottom: 22 }} />
@@ -167,9 +152,9 @@ export function ConstellationDetail({ node, open, readingList, alreadyRead, char
                 readingList.toggle({
                   id: slug,
                   title: node.title,
-                  type: node.tier,
+                  category: node.category,
                   format: node.issues || '',
-                  character,
+                  subject: character,
                 });
               }}
               style={{

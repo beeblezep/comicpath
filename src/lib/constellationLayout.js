@@ -7,7 +7,7 @@ export function nodeRadius(weight) {
   return BASE_RADIUS + (weight || 3) * WEIGHT_SCALE;
 }
 
-export function computeConstellationLayout(nodes, edges, width, height, targetTitle, previousPositions) {
+export function computeConstellationLayout(nodes, edges, width, height, previousPositions) {
   if (!nodes || nodes.length === 0) return { positions: new Map(), edgePaths: [] };
 
   const simNodes = nodes.map((n) => {
@@ -15,7 +15,7 @@ export function computeConstellationLayout(nodes, edges, width, height, targetTi
     return {
       id: n.id,
       weight: n.weight || 3,
-      isTarget: targetTitle && n.title === targetTitle,
+      isSeed: !!n.isSeed,
       ...(prev ? { x: prev.x, y: prev.y } : {}),
     };
   });
@@ -30,11 +30,12 @@ export function computeConstellationLayout(nodes, edges, width, height, targetTi
       type: e.type,
     }));
 
-  const targetNode = simNodes.find((n) => n.isTarget);
-  if (targetNode) {
-    targetNode.fx = width / 2;
-    targetNode.fy = height / 2;
-  }
+  // Seeds are pinned, spread evenly across the middle of the canvas.
+  const seedNodes = simNodes.filter((n) => n.isSeed);
+  seedNodes.forEach((n, i) => {
+    n.fx = (width * (i + 1)) / (seedNodes.length + 1);
+    n.fy = height / 2;
+  });
 
   const sim = forceSimulation(simNodes)
     .force('link', forceLink(simLinks)

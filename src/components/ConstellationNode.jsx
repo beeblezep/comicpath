@@ -1,16 +1,11 @@
 import { nodeRadius } from '../lib/constellationLayout';
-
-const TIER_COLORS = {
-  essential: '#7c5cfc',
-  recommended: '#e8a33d',
-  optional: '#7c7c8a',
-};
+import { categoryMeta } from '../lib/model';
 
 export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hidden, expandable, selected, onClick }) {
   if (hidden) return null;
 
   const r = nodeRadius(node.weight);
-  const color = TIER_COLORS[node.tier] || TIER_COLORS.recommended;
+  const { color, label } = categoryMeta(node.category);
   const opacity = dimmed ? 0.15 : alreadyRead ? 0.5 : 1;
 
   return (
@@ -71,7 +66,7 @@ export function ConstellationNode({ node, x, y, focused, dimmed, alreadyRead, hi
         fontSize={11}
         style={{ pointerEvents: 'none', letterSpacing: '0.04em' }}
       >
-        {node.tier} · {node.year || ''}{node.edition ? ` · ${node.edition.toLowerCase()}` : ''}
+        {node.isSeed ? 'seed' : label.toLowerCase()} · {node.year || ''}{node.edition ? ` · ${node.edition.toLowerCase()}` : ''}
       </text>
     </g>
   );

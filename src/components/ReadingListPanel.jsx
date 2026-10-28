@@ -1,8 +1,4 @@
-const TYPE_COLOR = {
-  canon:     'var(--color-canon)',
-  secondary: 'var(--color-secondary)',
-  elseworld: 'var(--color-elseworld)',
-};
+import { categoryMeta } from '../lib/model';
 
 export function ReadingListPanel({ items, onRemove, open, onClose }) {
   return (
@@ -62,7 +58,7 @@ export function ReadingListPanel({ items, onRemove, open, onClose }) {
               style={{
                 background: 'var(--color-bg)',
                 border: '1px solid var(--color-border)',
-                borderLeft: `3px solid ${TYPE_COLOR[item.type] ?? 'var(--color-border)'}`,
+                borderLeft: `3px solid ${categoryMeta(item.category).color}`,
                 borderRadius: 'var(--radius-sm)',
                 padding: 'var(--space-sm) var(--space-md)',
                 display: 'flex',
@@ -76,7 +72,7 @@ export function ReadingListPanel({ items, onRemove, open, onClose }) {
                   {item.title}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--color-muted)' }}>
-                  {item.character} · {item.format}
+                  {[item.subject, item.format].filter(Boolean).join(' · ')}
                 </div>
               </div>
               <button

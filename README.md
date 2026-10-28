@@ -38,14 +38,18 @@ src/
     global.css               CSS custom properties + reset
 ```
 
-## Story categories
+## Title categories
 
-| Color  | Category               | Meaning                                      |
-|--------|------------------------|----------------------------------------------|
-| Purple | Canon & Essential      | Must-read; core to understanding the character |
-| Amber  | Worth Reading          | Good stories for fans who want more          |
-| Coral  | Elseworlds & Alternates | Fun what-ifs; not required                  |
-| Gray   | You Can Skip           | Low value; completionist fodder              |
+Every title gets exactly one category (defined in `src/lib/model.js`):
+
+| Color  | Category  | Meaning                                            |
+|--------|-----------|----------------------------------------------------|
+| Purple | Essential | Must read — canon for this path                    |
+| Amber  | Optional  | Might read — worth reading, alternate or Elseworlds |
+| Gray   | Skip      | Not needed — safe to pass on                       |
+
+A reading path holds one or more seeds — a character, a group, or a story arc —
+and each title records which seed(s) it belongs to; crossovers list several.
 
 ## Roadmap
 

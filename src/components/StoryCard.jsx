@@ -1,18 +1,13 @@
 import { useState } from 'react';
+import { categoryMeta, slugify } from '../lib/model';
 
-const BORDER_COLOR = {
-  canon:     'var(--color-canon)',
-  secondary: 'var(--color-secondary)',
-  elseworld: 'var(--color-elseworld)',
-  skip:      'var(--color-skip)',
-};
-
-export function StoryCard({ story, type, character, onToggleSave, isSaved }) {
+export function StoryCard({ story, character, onToggleSave, isSaved }) {
   const [expanded, setExpanded] = useState(false);
   const hasIssues = story.issueList?.length > 0;
-  const accentColor = BORDER_COLOR[type] ?? 'var(--color-border)';
+  const { category } = story;
+  const accentColor = categoryMeta(category).color;
 
-  const itemId = `${character}-${story.title}`.replace(/\s+/g, '-').toLowerCase();
+  const itemId = slugify(story.title);
 
   return (
     <div
@@ -22,7 +17,7 @@ export function StoryCard({ story, type, character, onToggleSave, isSaved }) {
         borderLeft: `3px solid ${accentColor}`,
         borderRadius: 'var(--radius-md)',
         padding: 'var(--space-md)',
-        opacity: type === 'skip' ? 0.6 : 1,
+        opacity: category === 'skip' ? 0.6 : 1,
       }}
     >
       {/* Top row */}
@@ -32,15 +27,15 @@ export function StoryCard({ story, type, character, onToggleSave, isSaved }) {
         </span>
 
         <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'flex-start' }}>
-          {type !== 'skip' && (
+          {category !== 'skip' && (
             <button
-              onClick={() => onToggleSave({ id: itemId, title: story.title, type, format: story.format, character })}
+              onClick={() => onToggleSave({ id: itemId, title: story.title, category, format: story.format || story.issues, subject: character })}
               title={isSaved ? 'Remove from list' : 'Save to reading list'}
               style={{
                 background: 'transparent',
                 border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-sm)',
-                color: isSaved ? 'var(--color-secondary)' : 'var(--color-muted)',
+                color: isSaved ? 'var(--color-optional)' : 'var(--color-muted)',
                 width: 28, height: 28,
                 fontSize: 14,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -81,7 +76,7 @@ export function StoryCard({ story, type, character, onToggleSave, isSaved }) {
         {story.format && <Pill>{story.format}</Pill>}
         {story.year   && <Pill>{story.year}</Pill>}
         {story.issues && <Pill>{story.issues}</Pill>}
-        {story.readFirst && <Pill color="var(--color-canon)">Start here</Pill>}
+        {story.readFirst && <Pill color="var(--color-accent)">Start here</Pill>}
       </div>
 
       {/* Issue drill-down */}

@@ -111,7 +111,7 @@ export function TitleSearchPanel({ onSelect, initialQuery }) {
           disabled={!value.trim()}
           style={{
             padding: '11px 20px',
-            background: 'var(--color-canon)',
+            background: 'var(--color-accent)',
             color: '#fff',
             border: 'none',
             borderRadius: 'var(--radius-sm)',

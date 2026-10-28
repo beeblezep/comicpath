@@ -1,15 +1,9 @@
 import { StoryCard } from './StoryCard';
+import { categoryMeta, slugify } from '../lib/model';
 
-const SECTION_META = {
-  canon:     { label: 'Canon & Essential',      color: 'var(--color-canon)'     },
-  secondary: { label: 'Worth Reading',           color: 'var(--color-secondary)' },
-  elseworld: { label: 'Elseworlds & Alternates', color: 'var(--color-elseworld)' },
-  skip:      { label: 'You Can Skip',            color: 'var(--color-skip)'      },
-};
-
-export function StorySection({ type, stories, character, readingList }) {
+export function StorySection({ category, stories, character, readingList }) {
   if (!stories?.length) return null;
-  const { label, color } = SECTION_META[type] ?? { label: type, color: 'var(--color-muted)' };
+  const { label, desc, color } = categoryMeta(category);
 
   return (
     <section style={{ marginBottom: 'var(--space-xl)' }}>
@@ -25,6 +19,7 @@ export function StorySection({ type, stories, character, readingList }) {
           }}
         />
         <span style={{ fontWeight: 600, fontSize: 'var(--font-size-base)' }}>{label}</span>
+        <span style={{ color: 'var(--color-muted)', fontSize: 'var(--font-size-sm)' }}>{desc}</span>
         <span style={{ color: 'var(--color-muted)', fontSize: 'var(--font-size-sm)' }}>
           {stories.length}
         </span>
@@ -32,15 +27,13 @@ export function StorySection({ type, stories, character, readingList }) {
 
       {/* Cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-        {stories.map((story, i) => {
-          const itemId = `${character}-${story.title}`.replace(/\s+/g, '-').toLowerCase();
+        {stories.map((story) => {
           return (
             <StoryCard
-              key={i}
+              key={story.id}
               story={story}
-              type={type}
               character={character}
-              isSaved={readingList.has(itemId)}
+              isSaved={readingList.has(slugify(story.title))}
               onToggleSave={readingList.toggle}
             />
           );

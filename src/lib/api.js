@@ -4,6 +4,9 @@
 
 import { searchComicVineSmartly, searchVolumes, searchStoryArcs, getVolumeIssues } from './comicvine.js';
 import { FORMAT_WORDS } from './formatIntent.js';
+import {
+  GRAPH_VERSION, EDGE_TYPES, edgeKind, normalizeCategory, normalizeSeedType, normalizeTitle, resolveSeedIds,
+} from './model.js';
 
 const CLAUDE_URL = '/api/claude';
 const GROQ_URL = '/api/groq/openai/v1/chat/completions';
@@ -55,41 +58,20 @@ async function callLLM(prompt, groqMaxTokens) {
 const DISAMBIGUATION_RULES = `
 CONTINUITY RULES:
 - Default to mainstream continuity (DC: Prime Earth, Marvel: 616) unless the query names an alternate (e.g. "Ultimate Spider-Man").
-- Alternate-continuity stories go ONLY in "elseworldsStories" — never in canon or secondary.
-- For ambiguous mantles (e.g. "Flash"), default to the most iconic version; mention others in "aiNote".
+- Alternate-continuity and Elseworlds stories are always category "optional" — never "essential".
+- For ambiguous mantles (e.g. "Flash"), default to the most iconic version; mention others in the note.
 - If an alternate is explicitly requested, treat it as primary; don't mix continuities.
 `;
 
-const CONSTELLATION_GRAPH_SCHEMA = `
-"constellationGraph": {
-  "targetTitle": "The specific title the reader is building toward, or null if exploring broadly",
-  "nodes": [
-    {
-      "id": "n1",
-      "title": "Story or arc title",
-      "year": "YYYY or YYYY–YYYY",
-      "issues": "e.g. Batman #404–407",
-      "why": "One sentence on why this matters for the reading journey.",
-      "tier": "essential | recommended | optional",
-      "weight": 3,
-      "tags": ["origin", "crossover", "recent"]
-    }
-  ],
-  "edges": [
-    {
-      "source": "n1",
-      "target": "n2",
-      "type": "leads-to | prerequisite | branches-from | crossover",
-      "label": "optional short label for the connection"
-    }
-  ],
-  "pathNote": "One sentence tip about this reading constellation."
-}`;
+const CATEGORY_RULE = '- category: essential = must read, canon for this path; optional = worth reading, alternate or Elseworlds; skip = not needed, safe to pass on.';
+
+const SEED_RULE = `- seeds: what the reader is reading about. Usually exactly one. type is "character" for one character, "group" for a team or for characters read together (list them in "members"), "arc" for a story arc, event or series.
+- Each node's "seeds" lists the names of the seeds it features (exactly as written in "seeds"). A crossover lists every seed it involves.`;
 
 const MODE_INSTRUCTIONS = {
-  full: '8-12 nodes spanning the character\'s publication history from origin to present. Use "leads-to" edges for the main chronological path. Branch off with "branches-from" for optional side stories, "crossover" for event tie-ins. Weight the most iconic stories 4-5, moderate ones 3, minor tie-ins 1-2.',
-  'catch-up': '5-8 nodes starting from a recent good entry point to get the reader current. Tighter graph with mostly "leads-to" and "prerequisite" edges. Weight the entry point and destination highest (4-5). Only truly essential tie-ins.',
-  'deep-dive': '6-10 nodes showing the prerequisites and lead-up to the character\'s most relevant current or recent arc. Use "prerequisite" edges for required reading, "crossover" for event tie-ins, "branches-from" for depth stories. Weight the target arc node 5.',
+  full: '10-15 nodes spanning the publication history from origin to present. Use "leads-to" edges for the main chronological path. Branch off with "branches-from" for optional side stories, "crossover" for event tie-ins. Weight the most iconic stories 4-5, moderate ones 3, minor tie-ins 1-2.',
+  'catch-up': '6-10 nodes starting from a recent good entry point to get the reader current. Mostly "leads-to" and "prerequisite" edges. Weight the entry point and destination highest (4-5). Only truly essential tie-ins.',
+  'deep-dive': '8-12 nodes showing the prerequisites and lead-up to the most relevant current or recent arc, favouring the more obscure good stuff. Use "prerequisite" edges for required reading, "crossover" for event tie-ins, "branches-from" for depth stories. Weight the target arc node 5.',
 };
 
 function buildPrompt(query, cvData, mode = 'full') {
@@ -135,16 +117,12 @@ ${target.deck ? `Description: ${target.deck}` : ''}
 ${target.startYear ? `Year: ${target.startYear}` : ''}
 ${target.issueCount ? `Issues: ${target.issueCount}` : ''}
 
-The reader wants to catch up on recent events and context LEADING UP TO this title. Build a constellation graph where this target title is the destination node (weight 5). Include prerequisite stories, related arcs, and crossover events that provide essential context.
+The reader wants to catch up on recent events and context LEADING UP TO this title. Make this title an "arc" seed and a node (weight 5) that the graph builds toward. Include prerequisite stories, related arcs, and crossover events that provide essential context.
 
 IMPORTANT: Use your knowledge of this title's continuity to recommend real titles with accurate issue numbers, years, and titles.
 `;
     }
   }
-
-  const targetInstruction = queryType !== 'character'
-    ? `\nThe "targetTitle" field should be set to "${query}" — the title the reader is building toward. This node should have weight 5 and appear as the destination in the graph.`
-    : '\nSet "targetTitle" to null since this is a character-based exploration.';
 
   return `You are ComicPath, an expert comic book guide for new and returning readers.
 
@@ -156,37 +134,41 @@ Return ONLY a JSON object — no markdown, no preamble, no trailing text.
 Structure:
 {
   "character": { "name": "", "initials": "XX", "publisher": "", "firstAppearance": "YYYY", "description": "2-3 sentences.", "tags": [] },
-  "canonStories": [{ "title": "", "year": "", "format": "Trade Paperback|Omnibus|Single Issues", "issues": "", "why": "", "readFirst": true, "issueList": [{"num":"1","name":"","note":""}] }],
-  "secondaryStories": [{ "title": "", "year": "", "format": "", "issues": "", "why": "" }],
-  "elseworldsStories": [{ "title": "", "year": "", "format": "", "issues": "", "why": "" }],
-  "skipStories": [{ "title": "", "year": "", "why": "" }],
+  "seeds": [{ "name": "Batman", "type": "character | group | arc", "members": [] }],
   "aiNote": "1-2 sentence tip.",
-  "timeline": [{ "title": "", "year": 1987, "type": "canon" }],
-  ${CONSTELLATION_GRAPH_SCHEMA}
+  "nodes": [{ "title": "", "year": "YYYY or YYYY-YYYY", "format": "Trade Paperback|Omnibus|Single Issues", "issues": "e.g. Batman #404-407", "why": "One sentence on why this matters.", "category": "essential | optional | skip", "seeds": ["Batman"], "weight": 3, "tags": [], "readFirst": true, "issueList": [{"num":"1","name":"","note":""}] }],
+  "edges": [{ "sourceTitle": "exact title of one node", "targetTitle": "exact title of another node", "type": "leads-to | prerequisite | branches-from | crossover", "label": "optional short label" }],
+  "pathNote": "One sentence tip about this reading path."
 }
 
 Rules:
-- canonStories: 4-6 entries; issueList (3-4 issues) for top 2 only.
-- secondaryStories: 3-4. elseworldsStories: 2-3. skipStories: 2-3.
-- timeline: 6-10 items spanning publication history.
-- constellationGraph: ${MODE_INSTRUCTIONS[mode] || MODE_INSTRUCTIONS.full} Connected graph, no orphan nodes. IDs: "n1","n2",etc. tier: essential|recommended|optional. weight: 1-5. Edge type: leads-to|prerequisite|branches-from|crossover.${targetInstruction}
+- "character" describes what the reader searched for (a character, team or title).
+${SEED_RULE}
+- nodes: ${MODE_INSTRUCTIONS[mode] || MODE_INSTRUCTIONS.full}
+- Across nodes: 4-6 essential, 3-6 optional (including 2-3 alternate-continuity or Elseworlds stories), 2-3 skip.
+${CATEGORY_RULE}
+- readFirst: true on the single best starting point only. issueList (3-4 issues) for the top 2 essential nodes only.
+- weight: 1-5 (5 = most important).
+- Edges connect nodes by exact title. Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in). Skip nodes need no edges.
 - Never use "Unknown" — always provide real values.`;
 }
 
-function parseResponse(text) {
+function parseJson(text) {
   const clean = text.replace(/```json|```/gi, '').trim();
-  let parsed;
   try {
-    parsed = JSON.parse(clean);
+    return JSON.parse(clean);
   } catch {
     const match = clean.match(/\{[\s\S]*\}/);
-    if (match) parsed = JSON.parse(match[0]);
-    else throw new Error('Response was not valid JSON');
+    if (match) return JSON.parse(match[0]);
+    throw new Error('Response was not valid JSON');
   }
-  return validateResponse(parsed);
 }
 
-function validateResponse(data) {
+function parseResponse(text, mode) {
+  return validateResponse(parseJson(text), mode);
+}
+
+function validateResponse(data, mode) {
   if (!data.character?.name || data.character.name.toLowerCase() === 'unknown') {
     throw new Error('Invalid response: missing character name');
   }
@@ -197,121 +179,117 @@ function validateResponse(data) {
     data.character.firstAppearance = null;
   }
 
-  const stripUnknown = (stories) =>
-    (stories || []).filter((s) => s.title && s.title.toLowerCase() !== 'unknown');
-
-  data.canonStories = stripUnknown(data.canonStories);
-  data.secondaryStories = stripUnknown(data.secondaryStories);
-  data.elseworldsStories = stripUnknown(data.elseworldsStories);
-  data.skipStories = stripUnknown(data.skipStories);
-
-  if (data.canonStories.length === 0) {
-    throw new Error('Invalid response: no canon stories returned');
+  const graph = validateGraph(data, data.character.name, mode);
+  if (!graph.nodes.some((n) => n.category === 'essential' && !n.anchor)) {
+    throw new Error('Invalid response: no essential stories returned');
   }
-
-  data.constellationGraph = validateConstellationGraph(data.constellationGraph)
-    || readingPathToGraph(data.readingPath);
-
-  return data;
-}
-
-const VALID_TIERS = new Set(['essential', 'recommended', 'optional']);
-const VALID_EDGE_TYPES = new Set(['leads-to', 'prerequisite', 'branches-from', 'crossover']);
-
-function validateConstellationGraph(cg) {
-  if (!cg || !Array.isArray(cg.nodes) || cg.nodes.length === 0) return null;
-
-  let idCounter = 1;
-  const nodes = cg.nodes.slice(0, 15).map((n) => {
-    const id = n.id || `n${idCounter++}`;
-    return {
-      id,
-      title: n.title || 'Untitled',
-      year: n.year || '',
-      issues: n.issues || '',
-      why: n.why || '',
-      tier: VALID_TIERS.has(n.tier) ? n.tier : 'recommended',
-      weight: Math.min(5, Math.max(1, Number(n.weight) || 3)),
-      tags: Array.isArray(n.tags) ? n.tags : [],
-    };
-  });
-
-  const nodeIds = new Set(nodes.map((n) => n.id));
-
-  const edges = (cg.edges || []).slice(0, 30)
-    .filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target))
-    .map((e) => ({
-      source: e.source,
-      target: e.target,
-      type: VALID_EDGE_TYPES.has(e.type) ? e.type : 'leads-to',
-      label: e.label || '',
-    }));
-
-  const connectedIds = new Set();
-  for (const e of edges) {
-    connectedIds.add(e.source);
-    connectedIds.add(e.target);
-  }
-  const connectedNodes = nodes.filter((n) => connectedIds.has(n.id));
-
-  if (connectedNodes.length === 0) return null;
 
   return {
-    targetTitle: cg.targetTitle || null,
-    nodes: connectedNodes,
-    edges,
-    pathNote: cg.pathNote || '',
+    character: data.character,
+    aiNote: data.aiNote || '',
+    graph,
   };
 }
 
-function readingPathToGraph(rp) {
-  if (!rp || !Array.isArray(rp.mainLine) || rp.mainLine.length === 0) return null;
+function normalizeSeeds(rawSeeds, fallbackName) {
+  const list = (Array.isArray(rawSeeds) ? rawSeeds : [])
+    .filter((s) => s?.name && s.name.toLowerCase() !== 'unknown')
+    .slice(0, 6);
+  if (list.length === 0) list.push({ name: fallbackName, type: 'character' });
+  return list.map((s, i) => ({
+    id: `s${i + 1}`,
+    name: s.name,
+    type: normalizeSeedType(s.type),
+    ...(Array.isArray(s.members) && s.members.length > 0 ? { members: s.members.map(String) } : {}),
+  }));
+}
 
+function normalizeNode(n, id, seeds) {
+  return {
+    id,
+    title: n.title || 'Untitled',
+    year: n.year ? String(n.year) : '',
+    issues: n.issues || '',
+    why: n.why || '',
+    category: normalizeCategory(n.category ?? n.tier),
+    seedIds: resolveSeedIds(n.seeds, seeds),
+    weight: Math.min(5, Math.max(1, Number(n.weight) || 3)),
+    tags: Array.isArray(n.tags) ? n.tags : [],
+    ...(n.format ? { format: n.format } : {}),
+    ...(n.readFirst ? { readFirst: true } : {}),
+    ...(Array.isArray(n.issueList) && n.issueList.length > 0 ? { issueList: n.issueList } : {}),
+  };
+}
+
+// Builds a v2 graph from a guide response: one anchor node per seed (reusing a
+// node whose title is the seed, e.g. a story-arc seed), categorized nodes, and
+// title-based edges resolved to ids. Nodes left without edges hang off their seed.
+function validateGraph(data, fallbackName, mode) {
+  const seeds = normalizeSeeds(data.seeds, fallbackName);
+
+  let idCounter = 1;
   const nodes = [];
-  const edges = [];
+  const titleToId = new Map();
+  for (const raw of (data.nodes || []).slice(0, 20)) {
+    if (!raw?.title || raw.title.toLowerCase() === 'unknown') continue;
+    const key = normalizeTitle(raw.title);
+    if (titleToId.has(key)) continue;
+    const node = normalizeNode(raw, `n${idCounter++}`, seeds);
+    titleToId.set(key, node.id);
+    nodes.push(node);
+  }
 
-  rp.mainLine.forEach((node, i) => {
-    const id = node.id || `n${i + 1}`;
-    nodes.push({
-      id,
-      title: node.title || 'Untitled',
-      year: node.year || '',
-      issues: node.issues || '',
-      why: node.why || '',
-      tier: VALID_TIERS.has(node.tier) ? node.tier : 'recommended',
-      weight: i === 0 ? 4 : i === rp.mainLine.length - 1 ? 5 : 3,
-      tags: [],
-    });
-
-    if (i > 0) {
-      const prevId = rp.mainLine[i - 1].id || `n${i}`;
-      edges.push({ source: prevId, target: id, type: 'leads-to', label: '' });
+  for (const seed of seeds) {
+    const id = titleToId.get(normalizeTitle(seed.name));
+    const existing = id && nodes.find((n) => n.id === id);
+    if (existing) {
+      Object.assign(existing, { isSeed: true, category: 'essential', seedIds: [seed.id] });
+      continue;
     }
+    const anchor = {
+      id: `n${idCounter++}`,
+      title: seed.name,
+      year: '',
+      issues: '',
+      why: '',
+      category: 'essential',
+      seedIds: [seed.id],
+      weight: 5,
+      tags: ['seed'],
+      isSeed: true,
+      anchor: true,
+    };
+    titleToId.set(normalizeTitle(seed.name), anchor.id);
+    nodes.unshift(anchor);
+  }
 
-    (node.branches || []).forEach((branch, bi) => {
-      if (!Array.isArray(branch)) return;
-      branch.forEach((bn, bni) => {
-        const bid = bn.id || `n${i + 1}b${bi}${bni}`;
-        nodes.push({
-          id: bid,
-          title: bn.title || 'Untitled',
-          year: bn.year || '',
-          issues: bn.issues || '',
-          why: bn.why || '',
-          tier: VALID_TIERS.has(bn.tier) ? bn.tier : 'optional',
-          weight: 2,
-          tags: [],
-        });
-        edges.push({ source: id, target: bid, type: 'branches-from', label: '' });
-      });
-    });
-  });
+  const edges = [];
+  const edgeKeys = new Set();
+  for (const e of (data.edges || []).slice(0, 40)) {
+    const source = titleToId.get(normalizeTitle(e.sourceTitle));
+    const target = titleToId.get(normalizeTitle(e.targetTitle));
+    if (!source || !target || source === target) continue;
+    if (edgeKeys.has(`${source}->${target}`) || edgeKeys.has(`${target}->${source}`)) continue;
+    edgeKeys.add(`${source}->${target}`);
+    const type = EDGE_TYPES.includes(e.type) ? e.type : 'leads-to';
+    edges.push({ source, target, type, kind: edgeKind(type), label: e.label || '' });
+  }
+
+  const connected = new Set(edges.flatMap((e) => [e.source, e.target]));
+  for (const n of nodes) {
+    if (n.isSeed || connected.has(n.id)) continue;
+    const seedNode = nodes.find((s) => s.isSeed && s.seedIds[0] === n.seedIds[0]);
+    if (!seedNode) continue;
+    edges.push({ source: seedNode.id, target: n.id, type: 'branches-from', kind: 'enh', label: '' });
+  }
 
   return {
-    targetTitle: null,
+    v: GRAPH_VERSION,
+    seeds,
     nodes,
     edges,
-    pathNote: rp.pathNote || '',
+    pathNote: data.pathNote || '',
+    mode: MODE_INSTRUCTIONS[mode] ? mode : 'full',
   };
 }
 
@@ -365,7 +343,13 @@ ComicVine title-search results for the reader's request. These are real publicat
 ${volLines.length ? `Series:\n${volLines.join('\n')}\n` : ''}${arcLines.length ? `Story arcs:\n${arcLines.join('\n')}\n` : ''}`;
 }
 
-function buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt = '', requestContext = null, format = 'issues') {
+function buildSeedBlock(seeds) {
+  if (!seeds.length) return '';
+  const lines = seeds.map((s) => `- ${s.name} (${s.type}${s.members?.length ? `: ${s.members.join(', ')}` : ''})`);
+  return `\nThis reading path is about these seeds:\n${lines.join('\n')}\n`;
+}
+
+function buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt = '', requestContext = null, format = 'issues', seeds = []) {
   const collected = format === 'collected';
   const contextBlock = cvContexts
     .map((ctx, i) => {
@@ -422,8 +406,8 @@ ${collected
       "collects": [{ "issues": "Batman #404-407", "story": "Year One" }]`
     : '';
   const countRule = refinementPrompt
-    ? '- Up to 8 titles, all matching the reader\'s request. Categorize each as essential, recommended, or optional.'
-    : '- 4-8 related titles. Categorize each as essential, recommended, or optional.';
+    ? '- Up to 8 titles, all matching the reader\'s request. Categorize each as essential, optional, or skip.'
+    : '- 4-8 related titles. Categorize each as essential, optional, or skip.';
   const edgeRule = multi
     ? `- Edges should connect each related title to one or more of ${quoted} (use their exact titles). Also include edges between related titles where relationships exist.`
     : `- Edges should connect ${quoted} to the related titles. Also include edges between related titles where relationships exist.`;
@@ -441,7 +425,7 @@ ${collected
   return `You are ComicPath, an expert comic book guide.
 
 ${intro}
-${contextBlock}${excludeList}${refinementBlock}
+${buildSeedBlock(seeds)}${contextBlock}${excludeList}${refinementBlock}${DISAMBIGUATION_RULES}
 Return ONLY a JSON object — no markdown, no preamble, no trailing text.
 
 Structure:
@@ -452,7 +436,8 @@ ${noteField}  "relatedNodes": [
       "year": "YYYY or YYYY-YYYY",
       "issues": "e.g. Batman #404-407",
       "why": "One sentence on why this matters.",
-      "tier": "essential | recommended | optional",
+      "category": "essential | optional | skip",
+      "seeds": ["name of each seed this title features"],
       "weight": 3,
       "tags": ["origin", "crossover", "sequel"]${editionFields}
     }
@@ -472,8 +457,8 @@ ${countRule}
 - weight: 1-5 (5 = most important).
 ${edgeRule}
 ${formatRule}${noteRule}- Use real titles with accurate issue numbers from actual publications.
-- tier: essential = must-read context, recommended = enriches the experience, optional = for completists.
-- Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in).
+${CATEGORY_RULE}
+${seeds.length ? '- "seeds" lists, by exact name, every seed above that the title features; a crossover lists each one.\n' : ''}- Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in).
 - Never use "Unknown" — always provide real values.`;
 }
 
@@ -486,22 +471,15 @@ function parseEdition(n) {
 }
 
 function parseRelatedTitlesResponse(text, format = 'issues') {
-  const clean = text.replace(/```json|```/gi, '').trim();
-  let parsed;
-  try {
-    parsed = JSON.parse(clean);
-  } catch {
-    const match = clean.match(/\{[\s\S]*\}/);
-    if (match) parsed = JSON.parse(match[0]);
-    else throw new Error('Response was not valid JSON');
-  }
+  const parsed = parseJson(text);
 
   const nodes = (parsed.relatedNodes || []).slice(0, 10).map((n) => ({
     title: n.title || 'Untitled',
     year: n.year || '',
     issues: n.issues || '',
     why: n.why || '',
-    tier: VALID_TIERS.has(n.tier) ? n.tier : 'recommended',
+    category: normalizeCategory(n.category ?? n.tier),
+    seeds: Array.isArray(n.seeds) ? n.seeds.map(String) : [],
     weight: Math.min(5, Math.max(1, Number(n.weight) || 3)),
     tags: Array.isArray(n.tags) ? n.tags : [],
     ...(format === 'collected' ? parseEdition(n) : {}),
@@ -510,7 +488,7 @@ function parseRelatedTitlesResponse(text, format = 'issues') {
   const edges = (parsed.edges || []).slice(0, 20).map((e) => ({
     sourceTitle: e.sourceTitle || '',
     targetTitle: e.targetTitle || '',
-    type: VALID_EDGE_TYPES.has(e.type) ? e.type : 'leads-to',
+    type: EDGE_TYPES.includes(e.type) ? e.type : 'leads-to',
     label: e.label || '',
   }));
 
@@ -595,7 +573,7 @@ async function lookupRequestContext(refinementPrompt) {
   }
 }
 
-export async function fetchRelatedTitles(titleOrTitles, existingTitles = [], refinementPrompt = '', format = 'issues') {
+export async function fetchRelatedTitles(titleOrTitles, existingTitles = [], refinementPrompt = '', format = 'issues', seeds = []) {
   const titles = Array.isArray(titleOrTitles) ? titleOrTitles : [titleOrTitles];
   const [cvContexts, requestContext] = await Promise.all([
     Promise.all(titles.slice(0, 3).map(lookupTitleContext)),
@@ -603,7 +581,7 @@ export async function fetchRelatedTitles(titleOrTitles, existingTitles = [], ref
   ]);
 
   const text = await callLLM(
-    buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt, requestContext, format),
+    buildRelatedTitlesPrompt(titles, cvContexts, existingTitles, refinementPrompt, requestContext, format, seeds),
     4000,
   );
   return parseRelatedTitlesResponse(text, format);
@@ -618,5 +596,5 @@ export async function fetchComicGuide(query, mode = 'full') {
   }
 
   const text = await callLLM(buildPrompt(query, cvData, mode), 5500);
-  return parseResponse(text);
+  return parseResponse(text, mode);
 }

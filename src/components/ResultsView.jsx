@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { StorySection } from './StorySection';
 import { ConstellationMap } from './ConstellationMap';
+import { CATEGORIES } from '../lib/model';
 
 export function ResultsView({ data, readingList, alreadyRead, onReset }) {
-  const { character, canonStories, secondaryStories, elseworldsStories, skipStories, aiNote, constellationGraph } = data;
+  const { character, aiNote, graph } = data;
   const [tab, setTab] = useState('guide');
   const [constellationOpen, setConstellationOpen] = useState(false);
-  const hasPath = constellationGraph && constellationGraph.nodes?.length > 0;
+  const hasPath = graph.nodes.length > 0;
+  // Seed anchors (a character or group, not a title) only exist for the map.
+  const stories = graph.nodes.filter((n) => !n.anchor);
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 20px 60px' }}>
@@ -17,7 +20,7 @@ export function ResultsView({ data, readingList, alreadyRead, onReset }) {
           style={{
             background: 'none',
             border: 'none',
-            color: 'var(--color-canon)',
+            color: 'var(--color-accent)',
             fontSize: 'var(--font-size-sm)',
             padding: 0,
           }}
@@ -43,9 +46,9 @@ export function ResultsView({ data, readingList, alreadyRead, onReset }) {
           width: 52, height: 52,
           borderRadius: 'var(--radius-sm)',
           background: 'rgba(124,92,252,0.15)',
-          border: '1px solid var(--color-canon)',
+          border: '1px solid var(--color-accent)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 700, fontSize: 20, color: 'var(--color-canon)',
+          fontWeight: 700, fontSize: 20, color: 'var(--color-accent)',
           flexShrink: 0,
         }}>
           {character.initials ?? character.name.slice(0, 2).toUpperCase()}
@@ -93,7 +96,7 @@ export function ResultsView({ data, readingList, alreadyRead, onReset }) {
           color: 'var(--color-muted)',
           lineHeight: 1.6,
         }}>
-          <span style={{ color: 'var(--color-canon)', marginRight: 8 }}>✦</span>
+          <span style={{ color: 'var(--color-accent)', marginRight: 8 }}>✦</span>
           {aiNote}
         </div>
       )}
@@ -121,7 +124,7 @@ export function ResultsView({ data, readingList, alreadyRead, onReset }) {
             disabled={t.disabled}
             style={{
               flex: 1, padding: '9px 4px', border: 'none',
-              background: tab === t.key ? 'var(--color-canon)' : 'var(--color-surface)',
+              background: tab === t.key ? 'var(--color-accent)' : 'var(--color-surface)',
               color: t.disabled ? 'var(--color-border)' : tab === t.key ? '#fff' : 'var(--color-muted)',
               fontSize: 13, fontWeight: tab === t.key ? 600 : 400,
               cursor: t.disabled ? 'default' : 'pointer',
@@ -135,16 +138,21 @@ export function ResultsView({ data, readingList, alreadyRead, onReset }) {
       {/* Content */}
       {tab === 'guide' && (
         <>
-          <StorySection type="canon"     stories={canonStories}     character={character.name} readingList={readingList} />
-          <StorySection type="secondary" stories={secondaryStories} character={character.name} readingList={readingList} />
-          <StorySection type="elseworld" stories={elseworldsStories} character={character.name} readingList={readingList} />
-          <StorySection type="skip"      stories={skipStories}      character={character.name} readingList={readingList} />
+          {CATEGORIES.map((category) => (
+            <StorySection
+              key={category}
+              category={category}
+              stories={stories.filter((n) => n.category === category)}
+              character={character.name}
+              readingList={readingList}
+            />
+          ))}
         </>
       )}
 
       {constellationOpen && hasPath && (
         <ConstellationMap
-          graph={constellationGraph}
+          graph={graph}
           readingList={readingList}
           alreadyRead={alreadyRead}
           character={character.name}

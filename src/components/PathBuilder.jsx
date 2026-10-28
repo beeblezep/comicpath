@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
-import { usePathBuilder } from '../hooks/usePathBuilder';
 import { fetchRelatedTitles } from '../lib/api';
+import { GRAPH_VERSION } from '../lib/model';
 import { mergeExpansion } from '../lib/graphMerge';
 import { detectFormat } from '../lib/formatIntent';
 import { TitleSearchPanel } from './TitleSearchPanel';
@@ -10,8 +10,7 @@ const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
 const PHASE = { SEARCH: 'search', BUILDING: 'building' };
 
-export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, history }) {
-  const pb = usePathBuilder();
+export function PathBuilder({ pathBuilder: pb, readingList, alreadyRead, onReset, initialQuery, history }) {
   const [phase, setPhase] = useState(pb.hasSavedPath ? PHASE.BUILDING : PHASE.SEARCH);
   const [expandingIds, setExpandingIds] = useState(new Set());
   const [toast, setToast] = useState(null);
@@ -23,31 +22,35 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, h
   const graphRef = useRef(pb.graph);
   graphRef.current = pb.graph;
 
-  const seedNodeId = (pb.graph.nodes.find((n) => n.tags?.includes('seed')) || pb.graph.nodes[0])?.id || null;
-
   function showToast(msg) {
     setToast(msg);
     setTimeout(() => setToast(null), 4000);
   }
 
+  // A picked series or story arc becomes a single title seed. (Series map to
+  // "arc" for now; the search-based seed picker goes away with intent resolution.)
   const handleSelect = useCallback((result) => {
+    const seed = { id: 's1', name: result.name, type: 'arc' };
     const seedNode = {
       id: 'n1',
       title: result.name,
       year: result.year || '',
       issues: result.issueCount ? `${result.issueCount} issues` : '',
       why: 'Your starting point.',
-      tier: 'essential',
+      category: 'essential',
+      seedIds: [seed.id],
       weight: 5,
       tags: ['seed'],
+      isSeed: true,
     };
     pb.setGraph({
-      targetTitle: result.name,
+      v: GRAPH_VERSION,
+      seeds: [seed],
       nodes: [seedNode],
       edges: [],
       pathNote: '',
+      mode: null,
     });
-    pb.setSeedTitle(result.name);
     setPhase(PHASE.BUILDING);
   }, [pb]);
 
@@ -56,9 +59,11 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, h
     setExpandingIds((prev) => new Set([...prev, ...ids]));
     try {
       const existingTitles = graphRef.current.nodes.map((n) => n.title);
-      const { relatedNodes, edges, note } = await fetchRelatedTitles(nodes.map((n) => n.title), existingTitles, refinementPrompt, format);
+      const { relatedNodes, edges, note } = await fetchRelatedTitles(
+        nodes.map((n) => n.title), existingTitles, refinementPrompt, format, graphRef.current.seeds,
+      );
 
-      const { graph: merged, newNodeIds } = mergeExpansion(graphRef.current, ids[0], relatedNodes, edges);
+      const { graph: merged, newNodeIds } = mergeExpansion(graphRef.current, ids, relatedNodes, edges);
       graphRef.current = merged;
       pb.setGraph(merged);
       ids.forEach((id) => pb.markExpanded(id));
@@ -163,7 +168,7 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, h
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               }}
             >
-              <span>Resume: {pb.seedTitle || 'Saved path'}</span>
+              <span>Resume: {pb.title || 'Saved path'}</span>
               <span style={{ fontSize: 11, opacity: 0.7 }}>{pb.graph.nodes.length} nodes →</span>
             </button>
           </div>
@@ -191,9 +196,8 @@ export function PathBuilder({ readingList, alreadyRead, onReset, initialQuery, h
         formatQuestion={formatQuestion}
         onAnswerFormat={handleAnswerFormat}
         onCancelFormat={handleCancelFormat}
-        seedNodeId={seedNodeId}
         onNewPath={handleStartNew}
-        title={pb.seedTitle || 'Reading Path'}
+        title={pb.title || 'Reading Path'}
       />
 
       {/* Toast overlay */}

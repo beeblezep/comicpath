@@ -5,6 +5,7 @@ import { ConstellationNode } from './ConstellationNode';
 import { ConstellationDetail } from './ConstellationDetail';
 import { ConstellationToolbar } from './ConstellationToolbar';
 import { ConstellationChat, CHAT_WIDTH } from './ConstellationChat';
+import { CATEGORIES, seedNodeIds, slugify } from '../lib/model';
 
 const CANVAS_W = 1600;
 const CANVAS_H = 1000;
@@ -17,10 +18,10 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-export function ConstellationMap({ graph, readingList, alreadyRead, character, onClose, onExpand, onExpandMany, expandedIds, expandingIds, history, format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat, seedNodeId, onNewPath, title }) {
+export function ConstellationMap({ graph, readingList, alreadyRead, character, onClose, onExpand, onExpandMany, expandedIds, expandingIds, history, format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat, onNewPath, title }) {
   const [focusedId, setFocusedId] = useState(null);
   const [hiddenIds, setHiddenIds] = useState(new Set());
-  const [tierFilter, setTierFilter] = useState(new Set(['essential', 'recommended', 'optional']));
+  const [tierFilter, setTierFilter] = useState(new Set(CATEGORIES));
   const [showHidden, setShowHidden] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [chatOpen, setChatOpen] = useState(true);
@@ -39,7 +40,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
   const prevPositions = useRef(null);
 
   const { positions, edgePaths } = useMemo(() => {
-    const result = computeConstellationLayout(graph.nodes, graph.edges, CANVAS_W, CANVAS_H, graph.targetTitle, prevPositions.current);
+    const result = computeConstellationLayout(graph.nodes, graph.edges, CANVAS_W, CANVAS_H, prevPositions.current);
     prevPositions.current = result.positions;
     return result;
   }, [graph]);
@@ -140,7 +141,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
 
   const visibleNodes = useMemo(() => {
     return graph.nodes.filter((n) => {
-      if (!tierFilter.has(n.tier)) return false;
+      if (!n.isSeed && !tierFilter.has(n.category)) return false;
       if (hiddenIds.has(n.id) && !showHidden) return false;
       return true;
     });
@@ -308,7 +309,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
         {visibleNodes.map((node) => {
           const pos = positions.get(node.id);
           if (!pos) return null;
-          const slug = `${character}-${node.title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const slug = slugify(node.title);
           const dimmed = connectedToFocused ? !connectedToFocused.has(node.id) : false;
           return (
             <ConstellationNode
@@ -414,7 +415,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
         open={!!focusedId}
         readingList={readingList}
         alreadyRead={alreadyRead}
-        character={character}
+        character={title || character}
         onToggleRead={handleToggleRead}
         onHide={handleHide}
         onClose={() => { setFocusedId(null); zoomToFull(); }}
@@ -434,7 +435,7 @@ export function ConstellationMap({ graph, readingList, alreadyRead, character, o
           onToggleSelect={toggleSelected}
           onSetSelection={(ids) => setSelectedIds(new Set(ids))}
           onClearSelection={() => setSelectedIds(new Set())}
-          seedNodeId={seedNodeId}
+          seedNodeIds={seedNodeIds(graph)}
           focusedNode={focusedNode}
           history={history || []}
           format={format}

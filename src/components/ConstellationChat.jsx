@@ -1,10 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-
-const TIER_COLORS = {
-  essential: '#7c5cfc',
-  recommended: '#e8a33d',
-  optional: '#7c7c8a',
-};
+import { categoryMeta } from '../lib/model';
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
@@ -74,7 +69,7 @@ function HistoryEntry({ entry, onReuse }) {
 
 export function ConstellationChat({
   open, onToggle, nodes, selectedIds, onToggleSelect, onSetSelection, onClearSelection,
-  seedNodeId, focusedNode, history, busy, onSend,
+  seedNodeIds, focusedNode, history, busy, onSend,
   format, onSetFormat, formatQuestion, onAnswerFormat, onCancelFormat,
 }) {
   const [prompt, setPrompt] = useState('');
@@ -86,10 +81,10 @@ export function ConstellationChat({
 
   const nodeById = new Map(nodes.map((n) => [n.id, n]));
   const selectedNodes = [...selectedIds].map((id) => nodeById.get(id)).filter(Boolean);
-  const seedNode = seedNodeId ? nodeById.get(seedNodeId) : null;
+  const seedNodes = (seedNodeIds || []).map((id) => nodeById.get(id)).filter(Boolean);
   const targetIds = selectedNodes.length > 0
     ? selectedNodes.map((n) => n.id)
-    : seedNode ? [seedNode.id] : [];
+    : seedNodes.map((n) => n.id);
 
   const trimmed = prompt.trim();
   const canSend = !busy && !formatQuestion && targetIds.length > 0 && (trimmed.length > 0 || selectedNodes.length > 0);
@@ -195,7 +190,7 @@ export function ConstellationChat({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
           {selectedNodes.length > 0 ? (
             selectedNodes.map((n) => {
-              const color = TIER_COLORS[n.tier] || TIER_COLORS.recommended;
+              const { color } = categoryMeta(n.category);
               return (
                 <span key={n.id} style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -214,9 +209,9 @@ export function ConstellationChat({
                 </span>
               );
             })
-          ) : seedNode ? (
+          ) : seedNodes.length > 0 ? (
             <span style={{ fontSize: 11, padding: '4px 8px', border: '1px dashed #2a2b38', color: '#7c7c8a' }}>
-              Seed: {seedNode.title}
+              {seedNodes.length === 1 ? 'Seed' : 'Seeds'}: {seedNodes.map((n) => n.title).join(', ')}
             </span>
           ) : null}
           {focusedNode && !selectedIds.has(focusedNode.id) && (

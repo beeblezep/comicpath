@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { GRAPH_VERSION, emptyGraph, graphTitle } from '../lib/model';
 
 const STORAGE_KEY = 'comicpath_path_builder';
 
@@ -10,11 +11,14 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed.graph || !Array.isArray(parsed.graph.nodes)) return null;
+    // Paths saved before multi-seed graphs are dropped, not migrated.
+    if (parsed.v !== GRAPH_VERSION || !Array.isArray(parsed.graph?.nodes) || !Array.isArray(parsed.graph?.seeds)) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
     return {
       graph: parsed.graph,
       expandedIds: new Set(parsed.expandedIds || []),
-      seedTitle: parsed.seedTitle || '',
       format: FORMATS.has(parsed.format) ? parsed.format : null,
     };
   } catch {
@@ -24,9 +28,9 @@ function load() {
 
 function save(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    v: GRAPH_VERSION,
     graph: state.graph,
     expandedIds: [...state.expandedIds],
-    seedTitle: state.seedTitle,
     format: state.format,
   }));
 }
@@ -34,9 +38,8 @@ function save(state) {
 export function usePathBuilder() {
   const [state, setState] = useState(() => {
     return load() || {
-      graph: { nodes: [], edges: [], targetTitle: null, pathNote: '' },
+      graph: emptyGraph(),
       expandedIds: new Set(),
-      seedTitle: '',
       format: null,
     };
   });
@@ -62,14 +65,6 @@ export function usePathBuilder() {
     });
   }, []);
 
-  const setSeedTitle = useCallback((seedTitle) => {
-    setState((prev) => {
-      const next = { ...prev, seedTitle };
-      save(next);
-      return next;
-    });
-  }, []);
-
   const setFormat = useCallback((format) => {
     setState((prev) => {
       const next = { ...prev, format };
@@ -81,9 +76,8 @@ export function usePathBuilder() {
   const reset = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setState({
-      graph: { nodes: [], edges: [], targetTitle: null, pathNote: '' },
+      graph: emptyGraph(),
       expandedIds: new Set(),
-      seedTitle: '',
       format: null,
     });
   }, []);
@@ -91,12 +85,11 @@ export function usePathBuilder() {
   return {
     graph: state.graph,
     expandedIds: state.expandedIds,
-    seedTitle: state.seedTitle,
+    title: graphTitle(state.graph),
     format: state.format,
     hasSavedPath,
     setGraph,
     markExpanded,
-    setSeedTitle,
     setFormat,
     reset,
   };

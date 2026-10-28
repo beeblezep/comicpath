@@ -12,19 +12,12 @@
   --color-text:      #e8e6f0;
   --color-muted:     #7a7890;
 
-  /* Story-category colors */
-  --color-canon:     #7c5cfc;
-  --color-secondary: #f5a623;
-  --color-elseworld: #e8594a;
-  --color-skip:      #4a4a5c;
+  --color-accent:    #7c5cfc;
 
-  /* Reading-path tier colors */
-  --color-tier-essential:   var(--color-canon);
-  --color-tier-recommended: var(--color-secondary);
-  --color-tier-optional:    var(--color-muted);
-
-  /* Constellation edge colors */
-  --color-edge-crossover:   var(--color-elseworld);
+  /* Title categories — keep in sync with CATEGORY_META in lib/model.js */
+  --color-essential: #7c5cfc;
+  --color-optional:  #e8a33d;
+  --color-skip:      #7c7c8a;
 
   /* Spacing scale */
   --space-xs: 4px;

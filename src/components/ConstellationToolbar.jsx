@@ -1,8 +1,6 @@
-const TIERS = [
-  { key: 'essential', label: 'Essential', color: '#7c5cfc' },
-  { key: 'recommended', label: 'Recommended', color: '#e8a33d' },
-  { key: 'optional', label: 'Optional', color: '#7c7c8a' },
-];
+import { CATEGORIES, CATEGORY_META } from '../lib/model';
+
+const TIERS = CATEGORIES.map((key) => ({ key, ...CATEGORY_META[key] }));
 
 const MONO = "'SF Mono', Menlo, Consolas, monospace";
 
