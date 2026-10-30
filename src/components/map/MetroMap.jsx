@@ -1,34 +1,60 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import '../../styles/map.css';
-import { seedNodeIds, slugify } from '../../lib/model';
+import { EDGE_LABELS, seedNodeIds, slugify } from '../../lib/model';
 import { CARD_H, computeMetroLayout, connectorPath, joinRoute, pathRoute } from '../../lib/metroLayout';
 import {
   hiddenIds, isIn, keptCards, pathCards, pathChanged, readingRows, relations, summaryText, toggleKind,
 } from '../../lib/readingPaths';
 import { useMapState } from '../../hooks/useMapState';
+import { useCanvasZoom } from '../../hooks/useCanvasZoom';
 import { ChatDrawer } from '../ChatDrawer';
 import { TitleCard } from './TitleCard';
 import { SeedRegion } from './SeedRegion';
 import { Connector, ConnectorLabel, ConnectorMarkers } from './Connector';
 import { PathBand, PathTrace } from './PathLine';
-import { PathContinue, PathPill, PathReset } from './PathPill';
+import { PathContinue, PathPill } from './PathPill';
 import { Legend } from './Legend';
 import { TitleDetails } from './TitleDetails';
 import { ReadingView } from './ReadingView';
 
 const MARKER_ID = 'metro-arrow';
-// Label every connector only while the map is small enough to stay readable.
-const MAX_ALWAYS_LABELLED = 14;
 
-function toggleLabel(node, kind, inPath, pathId) {
+// Connector labels are centred pills; two closer than this would overlap.
+const LABEL_W = 120;
+const LABEL_H = 28;
+
+// Labels for the selected title's connectors, told from its side: a title
+// read before it leads up to it, one read after directly follows it. Labels
+// are kept clear of each other: one that would sit on a label saying the same
+// thing is dropped, any other is nudged down until it is clear.
+function placeLabels(edges, pos, sel) {
+  const placed = [];
+  const hits = (x, y) => placed.find((p) => Math.abs(p.x - x) < LABEL_W && Math.abs(p.y - y) < LABEL_H);
+  for (const e of edges) {
+    if (e.source !== sel && e.target !== sel) continue;
+    const text = e.target === sel ? EDGE_LABELS.before : EDGE_LABELS.after;
+    const { mid } = connectorPath(pos, e.source, e.target);
+    let y = mid.y;
+    let hit = hits(mid.x, y);
+    if (hit?.text === text) continue;
+    while (hit) {
+      y = hit.y + LABEL_H;
+      hit = hits(mid.x, y);
+    }
+    placed.push({ e, text, x: mid.x, y });
+  }
+  return placed;
+}
+
+function toggleLabel(node, kind, inPath, pathName) {
   const t = node.title;
-  if (kind === 'adds') return inPath ? `Take ${t} off Path ${pathId}` : `Add ${t} to Path ${pathId}`;
+  if (kind === 'adds') return inPath ? `Take ${t} off ${pathName}` : `Add ${t} to ${pathName}`;
   if (kind === 'skip') return inPath ? `Skip ${t} in your reading path` : `Put ${t} back in your reading path`;
   return inPath ? `Remove ${t} from the map` : `Put ${t} back on the map`;
 }
 
-function actionLabel(kind, isInPath, pathId) {
-  if (kind === 'adds') return isInPath ? `Remove from Path ${pathId}` : `Add to Path ${pathId}`;
+function actionLabel(kind, isInPath, pathName) {
+  if (kind === 'adds') return isInPath ? `Remove from ${pathName}` : `Add to ${pathName}`;
   if (kind === 'skip') return isInPath ? 'Skip in reading path' : 'Put back in reading path';
   return isInPath ? 'Remove from the map' : 'Put back on the map';
 }
@@ -45,6 +71,8 @@ export function MetroMap({
 }) {
   const map = useMapState(graph);
   const [chatOpen, setChatOpen] = useState(true);
+  const scrollRef = useRef(null);
+  const zoom = useCanvasZoom(scrollRef);
   const paths = useMemo(() => graph.paths || [], [graph.paths]);
   const byId = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
 
@@ -122,7 +150,7 @@ export function MetroMap({
     : null;
 
   const summary = summaryText({ active, paths, cardsByPath, byId, state, sel, edges: visibleEdges });
-  const labelAll = !sel && active.length === 0 && visibleEdges.length <= MAX_ALWAYS_LABELLED;
+  const labels = sel ? placeLabels(visibleEdges, layout.pos, sel) : [];
   const skippedCount = graph.nodes.filter((n) => !n.anchor && (n.category === 'skip' || map.removed[n.id])).length;
 
   const handleSelect = useCallback((id, e) => {
@@ -164,14 +192,17 @@ export function MetroMap({
   if (infoNode) {
     const id = infoNode.id;
     const chips = paths.filter((p) => cardsByPath[p.id].includes(id)).map((p) => (map.skip[id]
-      ? { text: `Skipped in Path ${p.id}` }
-      : { text: `Path ${p.id} · step ${keptByPath[p.id].indexOf(id) + 1}`, path: true }));
+      ? { text: `Skipped in ${p.name}` }
+      : { text: `${p.name} · step ${keptByPath[p.id].indexOf(id) + 1}`, path: true }));
+    for (const e of graph.edges) {
+      if (e.type === 'prequel' && e.source === id) chips.push({ text: `Prequel to ${byId.get(e.target)?.title}` });
+    }
     const kind = toggleKind(infoNode, paths);
-    const pathId = paths.find((p) => p.nodeIds.includes(id))?.id;
+    const pathName = paths.find((p) => p.nodeIds.includes(id))?.name;
     const { before, after } = relations(id, visibleEdges);
     details = {
       chips, before, after,
-      action: { label: actionLabel(kind, isIn(infoNode, paths, map), pathId), go: () => map.toggleIn(infoNode) },
+      action: { label: actionLabel(kind, isIn(infoNode, paths, map), pathName), go: () => map.toggleIn(infoNode) },
     };
   }
 
@@ -200,8 +231,9 @@ export function MetroMap({
       </header>
 
       <div className="metro-body">
-        <div className="metro-scroll" onClick={map.clearAll}>
-          <div className="metro-canvas" style={{ width: layout.width, height: layout.height }}>
+        <div className="metro-scroll" ref={scrollRef} onClick={map.clearAll}>
+          <div style={{ width: layout.width * zoom, height: layout.height * zoom }}>
+          <div className="metro-canvas" style={{ width: layout.width, height: layout.height, transform: `scale(${zoom})` }}>
             {graph.nodes.length === 0 && placeholder && <div className="metro-placeholder">{placeholder}</div>}
 
             {layout.regions.map((r) => (
@@ -231,11 +263,9 @@ export function MetroMap({
               ))}
             </svg>
 
-            {visibleEdges.map((e, i) => {
-              if (!labelAll && e.source !== sel && e.target !== sel) return null;
-              const { mid } = connectorPath(layout.pos, e.source, e.target);
-              return <ConnectorLabel key={i} x={mid.x} y={mid.y} kind={e.kind} opacity={edgeOpacity(e.source, e.target)} />;
-            })}
+            {labels.map(({ e, text, x, y }) => (
+              <ConnectorLabel key={`${e.source}->${e.target}`} x={x} y={y} text={text} opacity={edgeOpacity(e.source, e.target)} />
+            ))}
 
             {visibleNodes.map((node) => {
               const p = layout.pos.get(node.id);
@@ -244,7 +274,7 @@ export function MetroMap({
               const set = node.category === 'skip' || !!map.removed[node.id];
               const kind = toggleKind(node, paths);
               const inPath = isIn(node, paths, map);
-              const pathId = paths.find((path) => path.nodeIds.includes(node.id))?.id;
+              const pathName = paths.find((path) => path.nodeIds.includes(node.id))?.name;
               const hasChildren = graph.nodes.some((n) => n.fromIds?.includes(node.id));
               const expand = expandingIds?.has(node.id) ? 'expanding'
                 : expandedIds?.has(node.id) ? (hasChildren ? (map.collapsed[node.id] ? 'collapsed' : 'shown') : null)
@@ -264,7 +294,7 @@ export function MetroMap({
                   inChat={map.chatIds.has(node.id)}
                   isRead={alreadyRead.isRead(slugify(node.title))}
                   inPath={inPath}
-                  toggleLabel={toggleLabel(node, kind, inPath, pathId)}
+                  toggleLabel={toggleLabel(node, kind, inPath, pathName)}
                   expand={onExpand ? expand : null}
                   onSelect={handleSelect}
                   onToggle={map.toggleIn}
@@ -290,14 +320,12 @@ export function MetroMap({
                 onEnter={() => map.hoverPath(path.id)}
                 onLeave={map.leavePath}
                 onClick={() => map.togglePin(path.id)}
+                onReset={pathChanged(path, byId, map) ? map.resetPath : null}
               />
-            ))}
-            {routes.map(({ path, route }) => route && pathChanged(path, byId, map) && (
-              <PathReset key={path.id} path={path} x={route.start.x + 52} y={route.start.y} onReset={map.resetPath} />
             ))}
             {continueAt && (
               <PathContinue
-                nextId={nextPath.id}
+                next={nextPath}
                 x={continueAt.x}
                 y={continueAt.y + CARD_H + 10}
                 onEnter={() => { if (!map.pins[paths[lastActive].id]) map.hoverPath(paths[lastActive].id); }}
@@ -305,6 +333,7 @@ export function MetroMap({
                 onClick={() => map.pinOnly([...active, nextPath.id])}
               />
             )}
+          </div>
           </div>
         </div>
 
@@ -330,7 +359,7 @@ export function MetroMap({
 
       {map.rv && (
         <ReadingView
-          heading={rvKeys.length > 1 ? `Reading paths ${rvKeys.join(' + ')}` : paths.find((p) => p.id === rvKeys[0])?.name || 'Reading path'}
+          heading={rvKeys.map((k) => paths.find((p) => p.id === k)?.name).filter(Boolean).join(' + ') || 'Reading path'}
           total={rvTotal}
           rows={readingRows({ keys: rvKeys, paths, cardsByPath, byId, state, edges: visibleEdges, seeds: graph.seeds })}
           paths={paths}

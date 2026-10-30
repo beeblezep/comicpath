@@ -1,5 +1,3 @@
-import { EDGE_LABELS } from '../../lib/model';
-
 // Solid = read first (rec), dashed = enhances / optional (enh).
 export function Connector({ d, kind, opacity, markerId }) {
   return <path className={`connector kind-${kind}`} d={d} style={{ opacity }} markerEnd={`url(#${markerId}-${kind})`} />;
@@ -17,6 +15,6 @@ export function ConnectorMarkers({ id }) {
   );
 }
 
-export function ConnectorLabel({ x, y, kind, opacity }) {
-  return <div className="connector-label" style={{ left: x, top: y, opacity }}>{EDGE_LABELS[kind]}</div>;
+export function ConnectorLabel({ x, y, text, opacity }) {
+  return <div className="connector-label" style={{ left: x, top: y, opacity }}>{text}</div>;
 }

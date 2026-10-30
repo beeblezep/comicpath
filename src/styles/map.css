@@ -92,7 +92,7 @@
 /* ── Body: scrolling canvas + legend ────────────────────── */
 .metro-body { flex: 1; min-height: 0; display: flex; }
 .metro-scroll { flex: 1; min-width: 0; overflow: auto; }
-.metro-canvas { position: relative; }
+.metro-canvas { position: relative; transform-origin: 0 0; }
 .metro-layer { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 .metro-placeholder {
   position: absolute; inset: 0;
@@ -150,8 +150,11 @@
 }
 @keyframes map-trace { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 
-.path-pill {
+.path-start {
   position: absolute; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 6px;
+}
+.path-pill {
   height: 28px; min-width: 80px; padding: 0 12px;
   border: 0; border-radius: 14px;
   background: var(--map-path); color: #FFFFFF;
@@ -159,14 +162,13 @@
 }
 .path-pill.is-pinned { box-shadow: 0 0 0 3px rgba(211, 48, 31, 0.3); }
 .path-reset, .path-continue {
-  position: absolute;
   height: 28px; padding: 0 10px;
   display: flex; align-items: center; gap: 6px;
   border: 1px solid var(--map-line); border-radius: 14px;
   background: var(--map-surface); color: var(--map-path-ink);
   font-size: 12px; font-weight: 600; white-space: nowrap;
 }
-.path-continue { border: 0; background: transparent; font-size: 14px; }
+.path-continue { position: absolute; border: 0; background: transparent; font-size: 14px; }
 
 /* ── Title cards ────────────────────────────────────────── */
 .title-card {

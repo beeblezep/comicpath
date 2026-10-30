@@ -82,9 +82,7 @@ export function summaryText({ active, paths, cardsByPath, byId, state, sel, edge
     for (const key of active) for (const id of cardsByPath[key]) if (!seq.includes(id)) seq.push(id);
     const kept = seq.filter((id) => !state.skip[id]);
     const skipped = seq.filter((id) => state.skip[id]);
-    const name = active.length > 1
-      ? `Reading paths ${active.join(' + ')}`
-      : paths.find((p) => p.id === active[0])?.name || `Reading path ${active[0]}`;
+    const name = active.map((k) => paths.find((p) => p.id === k)?.name || `Reading path ${k}`).join(' + ');
     return `${name} · ${kept.map((id) => titleOf(byId, id)).join(' → ')}`
       + (skipped.length ? ` · Skipping ${skipped.map((id) => titleOf(byId, id)).join(', ')}` : '')
       + (Object.values(state.pins).some(Boolean) ? ' · Use − or + on a title to change your path' : '');
@@ -115,12 +113,11 @@ export function readingRows({ keys, paths, cardsByPath, byId, state, edges, seed
       const prev = i > 0 ? kept[i - 1] : null;
       let rel = '';
       if (prev) {
-        const kinds = [...new Set(edges.filter((e) => e.source === prev && e.target === id).map((e) => e.kind))];
-        const phrases = kinds.map((k) => (k === 'rec'
-          ? `${EDGE_LABELS.rec} ${titleOf(byId, prev)}`
-          : `${titleOf(byId, prev)} leads up to this`));
+        const edge = edges.find((e) => e.source === prev && e.target === id);
         const gap = cards.slice(cards.indexOf(prev) + 1, cards.indexOf(id));
-        rel = (phrases.length ? phrases.join(' · ') : `Next after ${titleOf(byId, prev)}`)
+        rel = (edge
+          ? `${EDGE_LABELS.after} ${titleOf(byId, prev)}${edge.kind === 'rec' ? '' : ' (optional)'}`
+          : `Next after ${titleOf(byId, prev)}`)
           + (gap.length ? ` · skipping ${gap.map((g) => titleOf(byId, g)).join(', ')}` : '');
       }
       const node = byId.get(id);

@@ -5,7 +5,7 @@
 import { searchComicVineSmartly, searchVolumes, searchStoryArcs, getVolumeIssues } from './comicvine.js';
 import { FORMAT_WORDS } from './formatIntent.js';
 import {
-  GRAPH_VERSION, EDGE_TYPES, PATH_IDS, edgeKind, linkSeeds, normalizeCategory, normalizeSeedType, normalizeTitle, resolveSeedIds,
+  GRAPH_VERSION, EDGE_TYPES, demotePrequels, edgeKind, linkSeeds, orientEdges, placePrequels, normalizeCategory, normalizeSeedType, normalizeTitle, resolveSeedIds, seedPaths,
 } from './model.js';
 
 const CLAUDE_URL = '/api/claude';
@@ -69,10 +69,14 @@ const SEED_RULE = `- seeds: what the reader is reading about. Usually exactly on
 - A group seed covers titles where its members appear together. Separate seeds cover titles for each one individually, plus crossovers where they appear together.
 - Each node's "seeds" lists the names of the seeds it features (exactly as written in "seeds"). A crossover lists every seed it involves.`;
 
-const PATH_RULE = `- paths: 1-3 reading paths, each a list of node titles in reading order (exact titles). Path 1 is the main recommended route through the essential titles. Add a second path only for a distinct line worth reading in order, e.g. the second seed's own run or a major event and its lead-up; it may start partway, from a title not on path 1. Every path is built on essential titles; put optional titles in a path only at the point they would be read (the reader chooses whether to add them) — never make a path of optional titles alone. Never put skip titles in a path. Every essential title should be on a path.`;
+const PATH_RULE = `- paths: exactly one reading path per seed, in the same order as "seeds"; "seed" names it exactly as written in "seeds". A path is where to start with that seed and what to read next: its first title is the best starting point, then the seed's essential titles in reading order (exact titles). "name" says what it is for, e.g. "Batman essentials" or "Absolute Power". Never split one run or story into several paths. A crossover goes on the path of each seed it involves. Put optional titles in a path only at the point they would be read (the reader chooses whether to add them). Never put skip titles in a path. Every essential title should be on a path.`;
+
+const EDGE_DIRECTION_RULE = '- sourceTitle is always read before targetTitle, whatever the type: for branches-from the source is the original story and the target the spin-off; for prerequisite the source is the required background.';
+
+const PREQUEL_RULE = '- Reading order is story order. A prequel published after a story but set before it is read before it: link it with a "prequel" edge from the prequel to that story, put it before that story in any path, and make it optional.';
 
 const MODE_INSTRUCTIONS = {
-  full: '10-15 nodes spanning the publication history from origin to present. Use "leads-to" edges for the main chronological path. Branch off with "branches-from" for optional side stories, "crossover" for event tie-ins. Weight the most iconic stories 4-5, moderate ones 3, minor tie-ins 1-2.',
+  full: '10-15 nodes spanning the publication history from origin to present. Use "leads-to" edges for the main reading order; a later-published prequel gets a "prequel" edge instead. Branch off with "branches-from" for optional side stories, "crossover" for event tie-ins. Weight the most iconic stories 4-5, moderate ones 3, minor tie-ins 1-2.',
   'catch-up': '6-10 nodes starting from a recent good entry point to get the reader current. Mostly "leads-to" and "prerequisite" edges. Weight the entry point and destination highest (4-5). Only truly essential tie-ins.',
   'deep-dive': '8-12 nodes showing the prerequisites and lead-up to the most relevant current or recent arc, favouring the more obscure good stuff. Use "prerequisite" edges for required reading, "crossover" for event tie-ins, "branches-from" for depth stories. Weight the target arc node 5.',
 };
@@ -147,9 +151,9 @@ Structure:
   "character": { "name": "", "initials": "XX", "publisher": "", "firstAppearance": "YYYY", "description": "2-3 sentences.", "tags": [] },
   "seeds": [{ "name": "Batman", "type": "character | group | arc", "members": [] }],
   "aiNote": "1-2 sentence tip.",
-  "nodes": [{ "title": "", "year": "YYYY or YYYY-YYYY", "format": "Trade Paperback|Omnibus|Single Issues", "issues": "e.g. Batman #404-407", "why": "One sentence on why this matters.", "category": "essential | optional | skip", "seeds": ["Batman"], "weight": 3, "tags": [], "readFirst": true, "issueList": [{"num":"1","name":"","note":""}] }],
-  "edges": [{ "sourceTitle": "exact title of one node", "targetTitle": "exact title of another node", "type": "leads-to | prerequisite | branches-from | crossover", "label": "optional short label" }],
-  "paths": [{ "name": "Short name, e.g. Main line", "titles": ["exact title", "exact title"] }],
+  "nodes": [{ "title": "", "year": "YYYY or YYYY-YYYY", "format": "Trade Paperback|Omnibus|Single Issues", "issues": "e.g. Batman #404-407", "why": "One sentence on why this matters.", "category": "essential | optional | skip", "seeds": ["Batman"], "weight": 3, "tags": [], "issueList": [{"num":"1","name":"","note":""}] }],
+  "edges": [{ "sourceTitle": "exact title of one node", "targetTitle": "exact title of another node", "type": "leads-to | prerequisite | branches-from | crossover | prequel", "label": "optional short label" }],
+  "paths": [{ "seed": "Batman", "name": "Batman essentials", "titles": ["exact title", "exact title"] }],
   "pathNote": "One sentence tip about this reading path."
 }
 
@@ -159,9 +163,11 @@ ${SEED_RULE}
 - nodes: ${MODE_INSTRUCTIONS[mode] || MODE_INSTRUCTIONS.full}
 - Across nodes: 4-6 essential, 3-6 optional (including 2-3 alternate-continuity or Elseworlds stories), 2-3 skip.
 ${CATEGORY_RULE}
-- readFirst: true on the single best starting point only. issueList (3-4 issues) for the top 2 essential nodes only.
+- issueList (3-4 issues) for the top 2 essential nodes only.
 - weight: 1-5 (5 = most important).
-- Edges connect nodes by exact title. Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in). Skip nodes need no edges.
+- Edges connect nodes by exact title. Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in), prequel (set before a story published earlier). Skip nodes need no edges.
+${EDGE_DIRECTION_RULE}
+${PREQUEL_RULE}
 ${PATH_RULE}
 - Never use "Unknown" — always provide real values.`;
 }
@@ -235,7 +241,6 @@ function normalizeNode(n, id, seeds) {
     weight: Math.min(5, Math.max(1, Number(n.weight) || 3)),
     tags: Array.isArray(n.tags) ? n.tags : [],
     ...(n.format ? { format: n.format } : {}),
-    ...(n.readFirst ? { readFirst: true } : {}),
     ...(Array.isArray(n.issueList) && n.issueList.length > 0 ? { issueList: n.issueList } : {}),
   };
 }
@@ -303,55 +308,29 @@ function validateGraph(data, fallbackName, mode) {
     linkedEdges.push({ source: seedNode.id, target: n.id, type: 'branches-from', kind: 'enh', label: '' });
   }
 
+  const readNodes = demotePrequels(nodes, linkedEdges);
+  const paths = placePrequels(normalizePaths(data.paths, readNodes, titleToId, linkedEdges, seeds), linkedEdges);
   return {
     v: GRAPH_VERSION,
     id: Date.now().toString(36),
     seeds,
-    nodes,
-    edges: linkedEdges,
-    paths: normalizePaths(data.paths, nodes, titleToId, linkedEdges),
+    nodes: readNodes,
+    edges: orientEdges(linkedEdges, paths),
+    paths,
     pathNote: data.pathNote || '',
     mode: MODE_INSTRUCTIONS[mode] ? mode : 'full',
   };
 }
 
-// Resolves the model's reading paths (titles) to node ids. Synthetic seed
-// anchors and skip titles never sit on a path. Falls back to one path through
-// the essential titles if the model gave none usable.
-function normalizePaths(rawPaths, nodes, titleToId, edges) {
-  const byId = new Map(nodes.map((n) => [n.id, n]));
-  const onPath = (id) => id && !byId.get(id).anchor && byId.get(id).category !== 'skip';
-  const paths = [];
-  for (const raw of (Array.isArray(rawPaths) ? rawPaths : [])) {
-    const ids = [...new Set((raw?.titles || []).map((t) => titleToId.get(normalizeTitle(t))).filter(onPath))];
-    // A path with no essential titles would draw nothing until the reader added
-    // to it, and one entirely within an earlier path adds nothing.
-    if (!ids.some((id) => byId.get(id).category === 'essential') || paths.length === PATH_IDS.length) continue;
-    if (ids.every((id) => paths.some((p) => p.nodeIds.includes(id)))) continue;
-    const id = PATH_IDS[paths.length];
-    paths.push({ id, name: raw.name ? String(raw.name) : `Reading path ${id}`, nodeIds: ids });
-  }
-  return paths.length > 0 ? paths : [defaultPath(nodes, edges)].filter((p) => p.nodeIds.length > 0);
-}
-
-// Essential titles in reading order: follow the solid edges, then by year.
-function defaultPath(nodes, edges) {
-  const ids = nodes.filter((n) => !n.anchor && n.category === 'essential').map((n) => n.id);
-  const inSet = new Set(ids);
-  const year = (id) => parseInt(nodes.find((n) => n.id === id)?.year, 10) || 9999;
-  const preds = new Map(ids.map((id) => [id, new Set()]));
-  for (const e of edges) {
-    if (e.kind === 'rec' && inSet.has(e.source) && inSet.has(e.target)) preds.get(e.target).add(e.source);
-  }
-  const order = [];
-  const left = new Set(ids);
-  while (left.size > 0) {
-    const ready = [...left].filter((id) => [...preds.get(id)].every((p) => !left.has(p)));
-    const next = (ready.length > 0 ? ready : [...left]).sort((a, b) => year(a) - year(b))[0];
-    order.push(next);
-    left.delete(next);
-  }
-  return { id: 'A', name: 'Reading path A', nodeIds: order };
+// Resolves the model's reading paths (titles) to node ids, then keeps one
+// path per seed (see seedPaths).
+function normalizePaths(rawPaths, nodes, titleToId, edges, seeds) {
+  const candidates = (Array.isArray(rawPaths) ? rawPaths : []).map((raw) => ({
+    name: raw?.name,
+    seed: raw?.seed,
+    nodeIds: (raw?.titles || []).map((t) => titleToId.get(normalizeTitle(t))).filter(Boolean),
+  }));
+  return seedPaths(candidates, nodes, edges, seeds);
 }
 
 /* ── Related-titles prompt for path builder ──────────────── */
@@ -507,7 +486,7 @@ ${noteField}  "relatedNodes": [
     {
       "sourceTitle": "exact title of one node",
       "targetTitle": "exact title of another node",
-      "type": "leads-to | prerequisite | branches-from | crossover",
+      "type": "leads-to | prerequisite | branches-from | crossover | prequel",
       "label": "optional short label"
     }
   ]
@@ -517,9 +496,11 @@ Rules:
 ${countRule}
 - weight: 1-5 (5 = most important).
 ${edgeRule}
+${EDGE_DIRECTION_RULE}
 ${formatRule}${noteRule}- Use real titles with accurate issue numbers from actual publications.
 ${CATEGORY_RULE}
-${seeds.length ? '- "seeds" lists, by exact name, every seed above that the title features; a crossover lists each one.\n' : ''}- Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in).
+${seeds.length ? '- "seeds" lists, by exact name, every seed above that the title features; a crossover lists each one.\n' : ''}- Edge types: leads-to (reading order), prerequisite (required background), branches-from (spin-off/side story), crossover (event tie-in), prequel (set before a story published earlier).
+${PREQUEL_RULE}
 - Never use "Unknown" — always provide real values.`;
 }
 

@@ -23,7 +23,7 @@ export function ReadingView({ heading, total, rows, paths, shown, onTogglePath, 
                 aria-pressed={shown.includes(p.id)}
                 onClick={() => onTogglePath(p.id)}
               >
-                Path {p.id}
+                {p.name}
               </button>
             ))}
           </div>

@@ -23,12 +23,12 @@ export function TitleDetails({
     { label: ownSeeds.length > 1 ? 'Seeds' : 'Seed', value: ownSeeds.map((s) => s.name).join(', ') },
   ].filter((f) => f.value);
 
-  const linkList = (items, empty) => (items.length === 0
+  const linkList = (items, label, empty) => (items.length === 0
     ? <div className="details-empty">{empty}</div>
     : items.map((r) => (
       <button key={r.id} type="button" className="details-link" onClick={() => onOpen(r.id)}>
         <span className="details-link-title">{byId.get(r.id)?.title}</span>
-        <span className="details-link-label">{r.kinds.map((k) => EDGE_LABELS[k]).join(' · ')}</span>
+        <span className="details-link-label">{r.kinds.includes('rec') ? label : `${label} · optional`}</span>
       </button>
     )));
 
@@ -70,11 +70,11 @@ export function TitleDetails({
         )}
         <section className="details-section">
           <h3>Read before</h3>
-          {linkList(before, 'Nothing needs to come first.')}
+          {linkList(before, EDGE_LABELS.before, 'Nothing needs to come first.')}
         </section>
         <section className="details-section">
           <h3>Read after</h3>
-          {linkList(after, 'Nothing follows on from this title.')}
+          {linkList(after, EDGE_LABELS.after, 'Nothing follows on from this title.')}
         </section>
         {onExpand && (
           <section className="details-section">

@@ -1,4 +1,4 @@
-import { EDGE_TYPES, edgeKind, linkSeeds, normalizeCategory, normalizeTitle, resolveSeedIds } from './model.js';
+import { EDGE_TYPES, edgeKind, demotePrequels, linkSeeds, normalizeCategory, normalizeTitle, orientEdges, placePrequels, resolveSeedIds } from './model.js';
 
 function nextId(existingNodes) {
   let max = 0;
@@ -10,17 +10,21 @@ function nextId(existingNodes) {
 }
 
 // A new essential or optional title joins the reading path of a title it is
-// linked to: after it if it follows on, before it if it leads up to it.
-// Titles linked to nothing on a path stay off the paths.
+// linked to — its own seed's path if it can: after that title if it follows
+// on, before it if it leads up to it. Titles linked to nothing on a path stay
+// off the paths.
 function placeOnPaths(paths, newNodes, edges) {
   const next = paths.map((p) => ({ ...p, nodeIds: [...p.nodeIds] }));
   for (const node of newNodes) {
     if (node.category === 'skip') continue;
-    for (const e of edges) {
+    const own = (p) => (node.seedIds || []).includes(p.seedId);
+    const ordered = [...next.filter(own), ...next.filter((p) => !own(p))];
+    const links = edges.filter((e) => e.source === node.id || e.target === node.id);
+    for (const path of ordered) {
+      const e = links.find((l) => path.nodeIds.includes(l.source === node.id ? l.target : l.source));
+      if (!e) continue;
       const after = e.target === node.id ? e.source : null;
       const before = e.source === node.id ? e.target : null;
-      const path = next.find((p) => p.nodeIds.includes(after || before));
-      if (!path) continue;
       const at = path.nodeIds.indexOf(after || before);
       path.nodeIds.splice(after ? at + 1 : at, 0, node.id);
       break;
@@ -123,14 +127,15 @@ export function mergeExpansion(existingGraph, sourceNodeIds, relatedNodes, relat
     }
   }
 
-  const nodes = [...existingGraph.nodes, ...newNodes];
-  const edges = linkSeeds(nodes, [...existingGraph.edges, ...newEdges]);
+  const edges = linkSeeds([...existingGraph.nodes, ...newNodes], [...existingGraph.edges, ...newEdges]);
+  const nodes = demotePrequels([...existingGraph.nodes, ...newNodes], edges);
+  const paths = placePrequels(placeOnPaths(existingGraph.paths || [], newNodes, edges), edges);
   return {
     graph: {
       ...existingGraph,
       nodes,
-      edges,
-      paths: placeOnPaths(existingGraph.paths || [], newNodes, edges),
+      edges: orientEdges(edges, paths),
+      paths,
     },
     newNodeIds,
   };

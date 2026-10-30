@@ -1,38 +1,35 @@
-// The "Path A" pill at the start of a path, its Reset (once changed), and the
-// "Continue with Path B" hand-off under the last title of an active path.
-export function PathPill({ path, x, y, pinned, onEnter, onLeave, onClick }) {
+// The "Start here" pill over a path's first title, its Reset (once changed),
+// and the hand-off to the next path under the last title of an active path.
+export function PathPill({ path, x, y, pinned, onEnter, onLeave, onClick, onReset }) {
   return (
-    <button
-      type="button"
-      className={`path-pill${pinned ? ' is-pinned' : ''}`}
-      style={{ left: x, top: y }}
-      aria-pressed={pinned}
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
-      onFocus={onEnter}
-      onBlur={onLeave}
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
-    >
-      Path {path.id}
-    </button>
+    <div className="path-start" style={{ left: x, top: y }}>
+      <button
+        type="button"
+        className={`path-pill${pinned ? ' is-pinned' : ''}`}
+        aria-pressed={pinned}
+        onMouseEnter={onEnter}
+        onMouseLeave={onLeave}
+        onFocus={onEnter}
+        onBlur={onLeave}
+        onClick={(e) => { e.stopPropagation(); onClick(); }}
+      >
+        Start here · {path.name}
+      </button>
+      {onReset && (
+        <button
+          type="button"
+          className="path-reset"
+          aria-label={`Reset ${path.name} to the suggested route`}
+          onClick={(e) => { e.stopPropagation(); onReset(path); }}
+        >
+          ↺ Reset
+        </button>
+      )}
+    </div>
   );
 }
 
-export function PathReset({ path, x, y, onReset }) {
-  return (
-    <button
-      type="button"
-      className="path-reset"
-      style={{ left: x, top: y }}
-      aria-label={`Reset Path ${path.id} to the suggested route`}
-      onClick={(e) => { e.stopPropagation(); onReset(path); }}
-    >
-      ↺ Reset
-    </button>
-  );
-}
-
-export function PathContinue({ nextId, x, y, onEnter, onLeave, onClick }) {
+export function PathContinue({ next, x, y, onEnter, onLeave, onClick }) {
   return (
     <button
       type="button"
@@ -42,7 +39,7 @@ export function PathContinue({ nextId, x, y, onEnter, onLeave, onClick }) {
       onMouseLeave={onLeave}
       onClick={(e) => { e.stopPropagation(); onClick(); }}
     >
-      Continue with Path {nextId} ↓
+      Next: {next.name} →
     </button>
   );
 }
